@@ -7,7 +7,7 @@ crypto_tickers = ["BTC", "ETH", "BNB", "ADA", "SOL", "XRP", "DOT", "LTC", "UNI",
 etf_tickers = ["GLD", "IEF", "TLT", "SPY", "QQQ"]
 tickers = crypto_tickers + etf_tickers
 
-add_features = False
+add_features = True
 
 #%%
 for ticker in tickers:
