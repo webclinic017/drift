@@ -5,6 +5,7 @@ import keras
 from utils.normalize import normalize
 
 data = load_files('data/', False)
+data.reset_index(drop=True, inplace=True)
 
 ticker_to_predict = 'ETH_returns'
 
@@ -26,6 +27,7 @@ end = start + train_split
 x_train = data.loc[0 : train_split - 1].drop(ticker_to_predict, axis=1).values
 y_train = data.iloc[start:end][ticker_to_predict]
 
+#%%
 
 dataset_train = keras.preprocessing.timeseries_dataset_from_array(
     x_train,
