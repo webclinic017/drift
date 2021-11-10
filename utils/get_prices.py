@@ -38,11 +38,11 @@ def get_stock_price_av(symbol: str, start_date: str = None) -> pd.DataFrame:
     api_url = f'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize=full&apikey={AV_API_KEY}'
     raw_df = requests.get(api_url).json()
     df = pd.DataFrame(raw_df['Time Series (Daily)']).T
-    df = df.rename(columns = {'1. open': 'open', '2. high': 'high', '3. low': 'low', '4. close': 'close', '5. adjusted close': 'adj_close', '6. volume': 'volume'})
+    df = df.rename(columns = {'1. open': 'open', '2. high': 'high', '3. low': 'low', '5. adjusted close': 'close', '6. volume': 'volume'})
     for i in df.columns:
         df[i] = df[i].astype(float)
     df.index = pd.to_datetime(df.index)
-    df = df.iloc[::-1].drop(['7. dividend amount', '8. split coefficient'], axis = 1)
+    df = df.iloc[::-1].drop(['4. close', '7. dividend amount', '8. split coefficient'], axis = 1)
     if start_date:
         df = df[df.index >= start_date]
     df.sort_index(inplace = True, ascending= True)
