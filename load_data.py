@@ -6,7 +6,8 @@ import os
 
 def load_files(path, add_features):
     dfs = [__load_df(os.path.join(path,f), f.split('.')[0], add_features) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f))]
-    return pd.concat(dfs, axis=1)
+    dfs = pd.concat(dfs, axis=1).fillna(0.)
+    return dfs.drop(index=dfs.index[0], axis=0)
 
 def __load_df(path, prefix, add_features):
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
