@@ -73,9 +73,9 @@ print(batch_targets)
 
 # %%
 model = keras.Sequential()
-model.add(keras.layers.LSTM(units = 32, return_sequences = True, activation = 'relu', input_shape=(batch_inputs.shape[1], batch_inputs.shape[2])))
+model.add(keras.layers.Dense(units = 10, activation = 'sigmoid', input_shape=(batch_inputs.shape[1], batch_inputs.shape[2])))
 model.add(keras.layers.Dropout(0.4))
-model.add(keras.layers.Dense(units = 10, activation = 'relu'))
+model.add(keras.layers.Dense(units = 4, activation = 'sigmoid'))
 model.add(keras.layers.Dropout(0.4))
 model.add(keras.layers.Dense(units = 1))
 
