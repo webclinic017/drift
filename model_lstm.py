@@ -5,13 +5,14 @@ from tensorflow import keras
 from utils.normalize import normalize
 import tensorflow as tf
 from utils.visualize import visualize_loss
+from sklearn.preprocessing import StandardScaler
 
-data = load_files('data/', False)
+data = load_files('data/', True)
 data.reset_index(drop=True, inplace=True)
 data = data[[column for column in data.columns if not column.endswith('volume')]]
-# data = data[["ETH_returns", "BTC_returns"]]
+data = data[["BTC_returns", "BTC_mom_10", "BTC_mom_20", "BTC_mom_30", "BTC_vol_10", "BTC_mom_20", "BTC_vol_20"]]
 
-ticker_to_predict = 'ETH_returns'
+ticker_to_predict = 'BTC_returns'
 
 learning_rate = 0.002
 batch_size = 64
@@ -31,10 +32,12 @@ train_data = data.loc[0 : train_split - 1]
 val_data = data.loc[train_split:]
 
 #%% create features and target for training set & keras dataset
+feature_scaler = StandardScaler()
+target_scaler = StandardScaler()
 
-x_train = normalize(train_data).values
+x_train = feature_scaler.fit_transform(train_data.values) # you get the mean and std
 # x_train = normalize(train_data).drop(ticker_to_predict, axis=1).values
-y_train = normalize(data).iloc[start:end][ticker_to_predict].values
+y_train = target_scaler.fit_transform(data.iloc[start:end][ticker_to_predict].values.reshape(-1, 1))
 
 dataset_train = keras.preprocessing.timeseries_dataset_from_array(
     x_train,
@@ -48,9 +51,9 @@ dataset_train = keras.preprocessing.timeseries_dataset_from_array(
 x_end = len(val_data) - past - future
 label_start = train_split + past + future
 
-x_val = normalize(val_data).iloc[:x_end].values
+x_val = feature_scaler.transform(val_data.iloc[:x_end].values) # you use the training data's mean and std
 # x_val = normalize(val_data).iloc[:x_end].drop(ticker_to_predict, axis=1).values
-y_val = normalize(data).iloc[label_start:][ticker_to_predict].values
+y_val = target_scaler.transform(data.iloc[label_start:][ticker_to_predict].values.reshape(-1, 1))
 
 dataset_val = keras.utils.timeseries_dataset_from_array(
     x_val,
@@ -73,9 +76,9 @@ print(batch_targets)
 
 # %%
 model = keras.Sequential()
-model.add(keras.layers.LSTM(units = 32, return_sequences = True, activation = 'relu', input_shape=(batch_inputs.shape[1], batch_inputs.shape[2])))
+model.add(keras.layers.LSTM(units = 32, return_sequences = True, activation = 'sigmoid', input_shape=(batch_inputs.shape[1], batch_inputs.shape[2])))
 model.add(keras.layers.Dropout(0.4))
-model.add(keras.layers.Dense(units = 10, activation = 'relu'))
+model.add(keras.layers.Dense(units = 10, activation = 'sigmoid'))
 model.add(keras.layers.Dropout(0.4))
 model.add(keras.layers.Dense(units = 1))
 
