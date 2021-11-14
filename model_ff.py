@@ -1,21 +1,22 @@
 #%% Import all the stuff, load data, define constants
-from load_data import load_files
+from load_data import load_files, create_target_cum_forward_returns
 import pandas as pd
 from tensorflow import keras
 from utils.normalize import normalize
 import tensorflow as tf
 from utils.visualize import visualize_loss
 
-data = load_files('data/', add_features=False, log_returns=False)
+data = load_files('data/', add_features=True, log_returns=False)
 data.reset_index(drop=True, inplace=True)
 data = data[[column for column in data.columns if not column.endswith('volume')]]
-# data = data[["ETH_returns", "BTC_returns"]]
+data = data[["BTC_returns", "BTC_mom_10", "BTC_mom_20", "BTC_mom_30", "BTC_mom_60", "BTC_vol_10", "BTC_vol_20", "BTC_vol_60", "day_month", "day_week", "month"]]
 
-ticker_to_predict = 'ETH_returns'
+ticker_to_predict = 'BTC_returns'
+data = create_target_cum_forward_returns(data, ticker_to_predict, 10)
 
 learning_rate = 0.002
 batch_size = 64
-epochs = 100
+epochs = 500
 
 split_fraction = 0.715
 train_split = int(split_fraction * int(data.shape[0]))
