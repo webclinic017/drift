@@ -47,6 +47,7 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool) -> 
             df['mom_60'] = df['close'].pct_change(60)
             df['mom_90'] = df['close'].pct_change(90)
 
+    df = df.replace([np.inf, -np.inf], 0.)
     df = df.drop(columns=['open', 'high', 'low', 'close'])
     df.columns = [prefix + "_" + c for c in df.columns]
     return df
@@ -54,4 +55,5 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool) -> 
 # %%
 def create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
     df['target'] = df[source_column].diff(period).shift(-period)
+    df = df.iloc[:-period]
     return df
