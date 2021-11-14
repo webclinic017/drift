@@ -6,7 +6,7 @@ from utils.normalize import normalize
 import tensorflow as tf
 from utils.visualize import visualize_loss
 
-data = load_files('data/', False)
+data = load_files('data/', add_features=False, log_returns=False)
 data.reset_index(drop=True, inplace=True)
 data = data[[column for column in data.columns if not column.endswith('volume')]]
 # data = data[["ETH_returns", "BTC_returns"]]

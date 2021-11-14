@@ -7,7 +7,7 @@ import tensorflow as tf
 from utils.visualize import visualize_loss
 from sklearn.preprocessing import StandardScaler
 
-data = load_files('data/', True)
+data = load_files('data/', add_features=True, log_returns=True)
 data.reset_index(drop=True, inplace=True)
 data = data[[column for column in data.columns if not column.endswith('volume')]]
 data = data[["BTC_returns", "BTC_mom_10", "BTC_mom_20", "BTC_mom_30", "BTC_vol_10", "BTC_mom_20", "BTC_vol_20"]]
