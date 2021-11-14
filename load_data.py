@@ -31,6 +31,7 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool) -> 
         df['vol_10'] = df['returns'].rolling(10).std()*(252**0.5)
         df['vol_20'] = df['returns'].rolling(20).std()*(252**0.5)
         df['vol_30'] = df['returns'].rolling(30).std()*(252**0.5)
+        df['vol_60'] = df['returns'].rolling(30).std()*(252**0.5)
 
         # momentum (10, 20, 30, 60, 90 days)
         if log_returns:
@@ -51,3 +52,6 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool) -> 
     return df
 
 # %%
+def create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
+    df['target'] = df[source_column].diff(period).shift(-period)
+    return df
