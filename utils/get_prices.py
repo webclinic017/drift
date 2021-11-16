@@ -46,6 +46,7 @@ def get_stock_price_av(symbol: str, start_date: str = None) -> pd.DataFrame:
     if start_date:
         df = df[df.index >= start_date]
     df.sort_index(inplace = True, ascending= True)
+    df = df.rename_axis('time')
     return df
 
 

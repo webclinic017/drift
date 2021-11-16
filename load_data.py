@@ -5,9 +5,12 @@ import numpy as np
 
 #%%
 
-def load_files(path: str, add_features: bool, log_returns: bool) -> pd.DataFrame:
-    dfs = [__load_df(os.path.join(path,f), f.split('.')[0], add_features, log_returns) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f))]
-    dfs = pd.concat(dfs, axis=1).fillna(0.)
+def load_files(path: str, add_features: bool, log_returns: bool, narrow_format: bool = False) -> pd.DataFrame:
+    dfs = [__load_df(os.path.join(path,f), f.split('.')[0], add_features, log_returns, narrow_format) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f))]
+    if narrow_format:
+        dfs = pd.concat(dfs, axis=0).fillna(0.)
+    else:
+        dfs = pd.concat(dfs, axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
 
@@ -16,9 +19,12 @@ def load_files(path: str, add_features: bool, log_returns: bool) -> pd.DataFrame
         dfs['day_week'] = dfs.index.dayofweek
         dfs['month'] = dfs.index.month
 
-    return dfs.drop(index=dfs.index[0], axis=0)
+    if narrow_format:
+        return dfs
+    else:
+        return dfs.drop(index=dfs.index[0], axis=0)
 
-def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool) -> pd.DataFrame:
+def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool, narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
 
     if log_returns:
@@ -49,7 +55,10 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool) -> 
 
     df = df.replace([np.inf, -np.inf], 0.)
     df = df.drop(columns=['open', 'high', 'low', 'close'])
-    df.columns = [prefix + "_" + c for c in df.columns]
+    if narrow_format:
+        df["ticker"] = np.repeat(prefix, df.shape[0])
+    else: 
+        df.columns = [prefix + "_" + c for c in df.columns]
     return df
 
 # %%
