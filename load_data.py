@@ -66,3 +66,28 @@ def create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, peri
     df['target'] = df[source_column].diff(period).shift(-period)
     df = df.iloc[:-period]
     return df
+
+
+#%%
+def create_target_pos_neg_classes(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
+    df['target'] = df[source_column].diff(period).shift(-period)
+    df['target'] = df['target'].map(lambda x: 0 if x <= 0.0 else 1)
+    df = df.iloc[:-period]
+    return df
+
+def create_target_four_classes(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
+    def __get_class(x):
+        treshold = 0.08
+        if x <= -treshold:
+            return 0
+        elif x > -treshold and x <= 0:
+            return 1
+        elif x > 0 and x <= treshold:
+            return 2
+        else:
+            return 3
+
+    df['target'] = df[source_column].diff(period).shift(-period)
+    df['target'] = df['target'].map(__get_class)
+    df = df.iloc[:-period]
+    return df

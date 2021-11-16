@@ -7,7 +7,7 @@ from utils.normalize import normalize
 import tensorflow as tf
 from utils.visualize import visualize_loss
 from sklearn.preprocessing import MinMaxScaler
-from utils.evaluate import print_metrics
+from utils.evaluate import print_regression_metrics
 import numpy as np
 from utils.rolling import rolling_window
 
@@ -109,7 +109,7 @@ pred = model.predict(rolling_window(x_val, 11))
 pred = pred.reshape(pred.shape[0], 1)
 pred = target_scaler.inverse_transform(pred)
 
-print_metrics(y_val, pred)
+print_regression_metrics(y_val, pred)
 
 #%%
 
