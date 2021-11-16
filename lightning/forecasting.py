@@ -15,7 +15,7 @@ print("success")
 
 #%%
 # load data
-data = load_files('data/', add_features=True, log_returns=False, narrow_format=True)
+data = load_files('../data/', add_features=True, log_returns=False, narrow_format=True)
 # need to treat time as an independent column
 data = data.reset_index().rename({'index':'time'}, axis = 'columns')
 # we need a `time_idx` column for pytorch-forecasting, so we convert the time column to a time index by encoding the dates as consecutive days from the first date.
@@ -37,6 +37,11 @@ max_prediction_length = 6
 
 # training_cutoff = data["time_idx"].max() - max_prediction_length
 
+#%%
+data.head()
+data.describe()
+
+#%%
 training = TimeSeriesDataSet(
     data, # data[lambda x: x.date < training_cutoff],
     time_idx= 'time_idx',
@@ -54,8 +59,8 @@ training = TimeSeriesDataSet(
     time_varying_unknown_categoricals=[  ],
     time_varying_unknown_reals=[ 'returns' ],
     allow_missing_timesteps=True,
-    # target_normalizer=GroupNormalizer(
-    #     groups=['ADA_returns', 'BTC_returns'], transformation="softplus")
+    target_normalizer=GroupNormalizer(
+        groups=['ticker'], transformation="softplus")
 )
 
 #%%
@@ -67,8 +72,8 @@ print(training.index.time.max())
 
 validation = TimeSeriesDataSet.from_dataset(training, data, predict=True, stop_randomization=True)
 batch_size = 128
-train_dataloader = training.to_dataloader(train=True, batch_size=batch_size, num_workers=2)
-val_dataloader = validation.to_dataloader(train=False, batch_size=batch_size, num_workers=2)
+train_dataloader = training.to_dataloader(train=True, batch_size=batch_size, num_workers=0)
+val_dataloader = validation.to_dataloader(train=False, batch_size=batch_size, num_workers=0)
 
 # define trainer with early stopping
 early_stop_callback = EarlyStopping(monitor="val_loss", min_delta=1e-4, patience=1, verbose=False, mode="min")
