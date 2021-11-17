@@ -4,7 +4,7 @@ from utils.get_prices import get_crypto_price_crypto_compare, get_stock_price_av
 from itertools import combinations
 
 #%%
-crypto_tickers = ["BTC", "ETH", "BNB", "ADA", "SOL", "XRP", "DOT", "LTC", "UNI", "TRX", "FIL"]
+crypto_tickers = ["BTC", "ETH", "BNB", "ADA", "SOL", "XRP", "DOT", "LTC", "UNI", "TRX", "FIL", "USD"]
 etf_tickers = ["GLD", "IEF", "TLT", "SPY", "QQQ"]
 tickers = crypto_tickers + etf_tickers
 
