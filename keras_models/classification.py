@@ -14,13 +14,13 @@ def create_basic_lstm_model(input_shape, num_classes):
 
 def create_basic_cnn_model(input_shape, num_classes):
     model = keras.Sequential()
-    model.add(keras.layers.Conv1D(filters=64, kernel_size=3, padding="same", input_shape=input_shape))
+    model.add(keras.layers.Conv1D(filters=32, kernel_size=3, padding="same", input_shape=input_shape))
     model.add(keras.layers.BatchNormalization())
     model.add(keras.layers.ReLU())
-    model.add(keras.layers.Conv1D(filters=64, kernel_size=3, padding="same"))
+    model.add(keras.layers.Conv1D(filters=32, kernel_size=3, padding="same"))
     model.add(keras.layers.BatchNormalization())
     model.add(keras.layers.ReLU())
-    model.add(keras.layers.Conv1D(filters=64, kernel_size=3, padding="same"))
+    model.add(keras.layers.Conv1D(filters=32, kernel_size=3, padding="same"))
     model.add(keras.layers.BatchNormalization())
     model.add(keras.layers.ReLU())
     model.add(keras.layers.GlobalAveragePooling1D())
@@ -29,7 +29,7 @@ def create_basic_cnn_model(input_shape, num_classes):
 
 
 def create_resnet_cnn_model(input_shape, num_classes):
-    n_feature_maps = 64
+    n_feature_maps = 24
 
     input_layer = keras.layers.Input(input_shape)
 

@@ -2,11 +2,13 @@
 import pandas as pd
 import os
 import numpy as np
+from utils.technical_indicators import ROC, RSI, STOK, STOD
 
 #%%
 
 def load_files(path: str, add_features: bool, log_returns: bool, narrow_format: bool = False) -> pd.DataFrame:
-    dfs = [__load_df(os.path.join(path,f), f.split('.')[0], add_features, log_returns, narrow_format) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f))]
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
+    dfs = [__load_df(os.path.join(path,f), f.split('.')[0], add_features, log_returns, narrow_format) for f in files]
     if narrow_format:
         dfs = pd.concat(dfs, axis=0).fillna(0.)
     else:
@@ -52,6 +54,22 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool, nar
             df['mom_30'] = df['close'].pct_change(30)
             df['mom_60'] = df['close'].pct_change(60)
             df['mom_90'] = df['close'].pct_change(90)
+
+
+    df['roc_10'] = ROC(df['close'], 10)
+    df['roc_30'] = ROC(df['close'], 30)
+
+    df['rsi_10'] = RSI(df['close'], 10)
+    df['rsi_30'] = RSI(df['close'], 30)
+    df['rsi_100'] = RSI(df['close'], 30)
+
+    df['stok_10'] = STOK(df['close'], df['low'], df['high'], 10)
+    df['stod_10'] = STOD(df['close'], df['low'], df['high'], 10)
+    df['stok_30'] = STOK(df['close'], df['low'], df['high'], 30)
+    df['stod_30'] = STOD(df['close'], df['low'], df['high'], 30)
+    df['stok_200'] = STOK(df['close'], df['low'], df['high'], 200)
+    df['stod_200'] = STOD(df['close'], df['low'], df['high'], 200)
+
 
     df = df.replace([np.inf, -np.inf], 0.)
     df = df.drop(columns=['open', 'high', 'low', 'close'])

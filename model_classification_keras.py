@@ -19,7 +19,7 @@ data = data[[column for column in data.columns if not column.endswith('volume')]
 # data = data[["BTC_returns", "BTC_mom_10", "BTC_mom_20", "BTC_mom_30", "BTC_mom_60", "BTC_vol_10", "BTC_vol_20", "BTC_vol_60", "day_month", "day_week", "month"]]
 
 target_col = 'target'
-data = create_target_pos_neg_classes(data, 'ETH_returns', 30)
+data = create_target_pos_neg_classes(data, 'BTC_ETH_returns', 1)
 
 num_classes = 2
 learning_rate = 0.002
@@ -29,8 +29,8 @@ epochs = 100
 split_fraction = 0.8
 train_split = int(split_fraction * int(data.shape[0]))
 
-past = 10
-future = 1
+past = 60
+future = 10
 
 start = past + future
 end = start + train_split
@@ -83,18 +83,20 @@ n_features = batch_inputs.shape[2]
 # print(batch_targets)
 
 # %%
+model = create_basic_lstm_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
+# model = create_basic_cnn_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
 # model = create_resnet_cnn_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
-model = create_basic_transformer_model(
-    input_shape=(n_timestamps, n_features),
-    n_classes=num_classes,
-    head_size=64,
-    num_heads=4,
-    ff_dim=4,
-    num_transformer_blocks=4,
-    mlp_units=[64],
-    mlp_dropout=0.4,
-    dropout=0.25,
-)
+# model = create_basic_transformer_model(
+#     input_shape=(n_timestamps, n_features),
+#     n_classes=num_classes,
+#     head_size=64,
+#     num_heads=4,
+#     ff_dim=4,
+#     num_transformer_blocks=4,
+#     mlp_units=[64],
+#     mlp_dropout=0.4,
+#     dropout=0.25,
+# )
 
 optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
 model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
