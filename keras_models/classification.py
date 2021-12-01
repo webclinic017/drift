@@ -9,7 +9,7 @@ def create_basic_lstm_model(input_shape, num_classes):
     model.add(keras.layers.Dropout(0.3))
     model.add(keras.layers.Dense(units = 32, activation = 'sigmoid'))
     model.add(keras.layers.Dropout(0.3))
-    model.add(keras.layers.Dense(units = num_classes, activation = 'softmax'))
+    model.add(keras.layers.Dense(units = num_classes, activation = 'linear'))
     return model
 
 def create_basic_cnn_model(input_shape, num_classes):
@@ -24,7 +24,7 @@ def create_basic_cnn_model(input_shape, num_classes):
     model.add(keras.layers.BatchNormalization())
     model.add(keras.layers.ReLU())
     model.add(keras.layers.GlobalAveragePooling1D())
-    model.add(keras.layers.Dense(num_classes, activation="softmax"))
+    model.add(keras.layers.Dense(num_classes, activation="linear"))
     return model
 
 
@@ -95,7 +95,7 @@ def create_resnet_cnn_model(input_shape, num_classes):
 
     gap_layer = keras.layers.GlobalAveragePooling1D()(output_block_3)
 
-    output_layer = keras.layers.Dense(num_classes, activation='softmax')(gap_layer)
+    output_layer = keras.layers.Dense(num_classes, activation='linear')(gap_layer)
     model = keras.models.Model(inputs=input_layer, outputs=output_layer)
 
 

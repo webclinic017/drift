@@ -2,13 +2,28 @@
 import pandas as pd
 import os
 import numpy as np
+from pandas.core.frame import DataFrame
 from utils.technical_indicators import ROC, RSI, STOK, STOD
+from typing import Literal
 
 #%%
 
-def load_files(path: str, add_features: bool, log_returns: bool, narrow_format: bool = False) -> pd.DataFrame:
+def load_files(path: str,
+            own_asset: str,
+            load_other_assets: bool,
+            log_returns: bool,
+            add_date_features: bool,
+            own_technical_features: Literal['none', 'level1', 'level2'],
+            other_technical_features: Literal['none', 'level1', 'level2'],
+            exogenous_features: Literal['none', 'level1'],
+            index_column: Literal['date', 'int'],
+            narrow_format: bool = False
+            ) -> pd.DataFrame:
+    
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
-    dfs = [__load_df(os.path.join(path,f), f.split('.')[0], add_features, log_returns, narrow_format) for f in files]
+    files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(own_asset))]
+    def is_own_asset(own_asset: str, file: str): return file.split('.')[0].startswith(own_asset)
+    dfs = [__load_df(path=os.path.join(path,f), prefix=f.split('.')[0], log_returns=log_returns, technical_features=own_technical_features if is_own_asset(own_asset, f) else other_technical_features, narrow_format=narrow_format) for f in files]
     if narrow_format:
         dfs = pd.concat(dfs, axis=0).fillna(0.)
     else:
@@ -16,17 +31,20 @@ def load_files(path: str, add_features: bool, log_returns: bool, narrow_format: 
 
     dfs.index = pd.DatetimeIndex(dfs.index)
 
-    if add_features:
+    if add_date_features:
         dfs['day_month'] = dfs.index.day
         dfs['day_week'] = dfs.index.dayofweek
         dfs['month'] = dfs.index.month
+
+    if index_column == 'int':
+        dfs.reset_index(drop=True, inplace=True)
 
     if narrow_format:
         return dfs
     else:
         return dfs.drop(index=dfs.index[0], axis=0)
 
-def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool, narrow_format: bool = False) -> pd.DataFrame:
+def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Literal['none', 'level1', 'level2'], narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
 
     if log_returns:
@@ -34,7 +52,22 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool, nar
     else:
         df['returns'] = df['close'].pct_change()
 
-    if add_features:
+    df = __augment_derived_features(df, log_returns=log_returns, technical_features=technical_features)
+
+    df = df.replace([np.inf, -np.inf], 0.)
+    df = df.drop(columns=['open', 'high', 'low', 'close'])
+    # we're not ready for this just yet
+    if 'volume' in df.columns:
+        df = df.drop(columns=['volume'])
+    
+    if narrow_format:
+        df["ticker"] = np.repeat(prefix, df.shape[0])
+    else: 
+        df.columns = [prefix + "_" + c for c in df.columns]
+    return df
+
+def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_features: Literal['none', 'level1', 'level2']) -> pd.DataFrame:
+    if technical_features == 'level1' or technical_features == 'level2':
         # volatility (10, 20, 30 days)
         df['vol_10'] = df['returns'].rolling(10).std()*(252**0.5)
         df['vol_20'] = df['returns'].rolling(20).std()*(252**0.5)
@@ -55,29 +88,22 @@ def __load_df(path: str, prefix: str, add_features: bool, log_returns: bool, nar
             df['mom_60'] = df['close'].pct_change(60)
             df['mom_90'] = df['close'].pct_change(90)
 
+    if technical_features == 'level2':
+        df['roc_10'] = ROC(df['close'], 10)
+        df['roc_30'] = ROC(df['close'], 30)
 
-    df['roc_10'] = ROC(df['close'], 10)
-    df['roc_30'] = ROC(df['close'], 30)
+        df['rsi_10'] = RSI(df['close'], 10)
+        df['rsi_30'] = RSI(df['close'], 30)
+        df['rsi_100'] = RSI(df['close'], 30)
 
-    df['rsi_10'] = RSI(df['close'], 10)
-    df['rsi_30'] = RSI(df['close'], 30)
-    df['rsi_100'] = RSI(df['close'], 30)
-
-    df['stok_10'] = STOK(df['close'], df['low'], df['high'], 10)
-    df['stod_10'] = STOD(df['close'], df['low'], df['high'], 10)
-    df['stok_30'] = STOK(df['close'], df['low'], df['high'], 30)
-    df['stod_30'] = STOD(df['close'], df['low'], df['high'], 30)
-    df['stok_200'] = STOK(df['close'], df['low'], df['high'], 200)
-    df['stod_200'] = STOD(df['close'], df['low'], df['high'], 200)
-
-
-    df = df.replace([np.inf, -np.inf], 0.)
-    df = df.drop(columns=['open', 'high', 'low', 'close'])
-    if narrow_format:
-        df["ticker"] = np.repeat(prefix, df.shape[0])
-    else: 
-        df.columns = [prefix + "_" + c for c in df.columns]
+        df['stok_10'] = STOK(df['close'], df['low'], df['high'], 10)
+        df['stod_10'] = STOD(df['close'], df['low'], df['high'], 10)
+        df['stok_30'] = STOK(df['close'], df['low'], df['high'], 30)
+        df['stod_30'] = STOD(df['close'], df['low'], df['high'], 30)
+        df['stok_200'] = STOK(df['close'], df['low'], df['high'], 200)
+        df['stod_200'] = STOD(df['close'], df['low'], df['high'], 200)
     return df
+
 
 # %%
 def create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
@@ -86,34 +112,32 @@ def create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, peri
     return df
 
 
-#%%
-def create_target_pos_neg_classes(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
-    if period > 0:
-        df['target'] = df[source_column].diff(period).shift(-period)
-    else:
-        df['target'] = df[source_column].diff(period)
-    df['target'] = df['target'].map(lambda x: 0 if x <= 0.0 else 1)
-    if period > 0:
-        df = df.iloc[:-period]
-    return df
+def create_target_classes(df: pd.DataFrame, source_column: str, period: int, no_of_classes: Literal["two", "three"]) -> pd.DataFrame:
 
-def create_target_four_classes(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
-    def __get_class(x):
-        treshold = 0.08
-        if x <= -treshold:
+    def get_class_binary(x):
+        return 0 if x <= 0.0 else 1
+
+    def get_class_threeway(x):
+        bins = pd.qcut(df[source_column], 4, duplicates='raise', retbins=True)[1]
+        lower_threshold = bins[1]
+        upper_threshold = bins[3]
+        if x <= lower_threshold:
+            return -1
+        elif x > lower_threshold and x < upper_threshold:
             return 0
-        elif x > -treshold and x <= 0:
-            return 1
-        elif x > 0 and x <= treshold:
-            return 2
         else:
-            return 3
+            return 1
 
     if period > 0:
-        df['target'] = df[source_column].diff(period).shift(-period)
+        df['target'] = df[source_column].shift(-period)
     else:
-        df['target'] = df[source_column].diff(period)
-    df['target'] = df['target'].map(__get_class)
+        df['target'] = df[source_column]
+    
+    get_class_function = get_class_binary
+    if no_of_classes == "three":
+        get_class_function = get_class_threeway
+
+    df['target'] = df['target'].map(get_class_function)
     if period > 0:
         df = df.iloc[:-period]
     return df

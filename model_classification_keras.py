@@ -1,6 +1,6 @@
 #%% Import all the stuff, load data, define constants
 from sklearn.utils import shuffle
-from load_data import load_files, create_target_pos_neg_classes
+from load_data import load_files, create_target_classes
 import pandas as pd
 from tensorflow import keras
 from utils.normalize import normalize
@@ -13,13 +13,20 @@ from utils.rolling import rolling_window
 from keras_models.classification import create_basic_cnn_model, create_basic_lstm_model, create_resnet_cnn_model
 from keras_models.classification_transformer import create_basic_transformer_model
 
-data = load_files('data/', add_features=True, log_returns=False)
-data.reset_index(drop=True, inplace=True)
-data = data[[column for column in data.columns if not column.endswith('volume')]]
-# data = data[["BTC_returns", "BTC_mom_10", "BTC_mom_20", "BTC_mom_30", "BTC_mom_60", "BTC_vol_10", "BTC_vol_20", "BTC_vol_60", "day_month", "day_week", "month"]]
+data = load_files(path='data/',
+    own_asset='BTC_ETH',
+    load_other_assets=True,
+    log_returns=False,
+    add_date_features=True,
+    own_technical_features='level2',
+    other_technical_features='level2',
+    exogenous_features='none',
+    index_column='int'
+)
+
 
 target_col = 'target'
-data = create_target_pos_neg_classes(data, 'BTC_ETH_returns', 1)
+data = create_target_classes(data, 'BTC_ETH_returns', 1, 'two')
 
 num_classes = 2
 learning_rate = 0.002
@@ -71,7 +78,7 @@ dataset_val = keras.utils.timeseries_dataset_from_array(
 
 #%%
 
-for batch in dataset_train.take(10):
+for batch in dataset_train.take(1):
     batch_inputs, batch_targets = batch
 
 print("Input shape:", batch_inputs.shape)
@@ -83,9 +90,9 @@ n_features = batch_inputs.shape[2]
 # print(batch_targets)
 
 # %%
-model = create_basic_lstm_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
+# model = create_basic_lstm_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
 # model = create_basic_cnn_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
-# model = create_resnet_cnn_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
+model = create_resnet_cnn_model(input_shape=(n_timestamps, n_features), num_classes=num_classes)
 # model = create_basic_transformer_model(
 #     input_shape=(n_timestamps, n_features),
 #     n_classes=num_classes,
@@ -99,7 +106,8 @@ model = create_basic_lstm_model(input_shape=(n_timestamps, n_features), num_clas
 # )
 
 optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=['accuracy'])
+loss = keras.losses.CategoricalCrossentropy(from_logits=True)
+model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
 model.summary()
 
 # %%
