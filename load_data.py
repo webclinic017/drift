@@ -4,33 +4,34 @@ import os
 import numpy as np
 from pandas.core.frame import DataFrame
 from utils.technical_indicators import ROC, RSI, STOK, STOD
-from typing import List, Literal
+from typing import Literal
 
 #%%
 
-def load_files(path: str,
-            own_asset: str,
-            own_asset_lags: List[int],
+def load_data(path: str,
+            target_asset: str,
+            target_asset_lags: list[int],
             load_other_assets: bool,
-            other_asset_lags: List[int],
+            other_asset_lags: list[int],
             log_returns: bool,
             add_date_features: bool,
             own_technical_features: Literal['none', 'level1', 'level2'],
             other_technical_features: Literal['none', 'level1', 'level2'],
             exogenous_features: Literal['none', 'level1'],
             index_column: Literal['date', 'int'],
+            method: Literal['regression', 'classification'],
             narrow_format: bool = False,
-            ) -> pd.DataFrame:
+        ) -> tuple[pd.DataFrame, pd.Series]:
     
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
-    files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(own_asset))]
-    def is_own_asset(own_asset: str, file: str): return file.split('.')[0].startswith(own_asset)
+    files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(target_asset))]
+    def is_target_asset(target_asset: str, file: str): return file.split('.')[0].startswith(target_asset)
     dfs = [__load_df(
         path=os.path.join(path,f),
         prefix=f.split('.')[0],
         log_returns=log_returns,
-        technical_features=own_technical_features if is_own_asset(own_asset, f) else other_technical_features,
-        lags= own_asset_lags if is_own_asset(own_asset, f) else other_asset_lags,
+        technical_features=own_technical_features if is_target_asset(target_asset, f) else other_technical_features,
+        lags= target_asset_lags if is_target_asset(target_asset, f) else other_asset_lags,
         narrow_format=narrow_format,
     ) for f in files]
     if narrow_format:
@@ -49,11 +50,22 @@ def load_files(path: str,
         dfs.reset_index(drop=True, inplace=True)
 
     if narrow_format:
-        return dfs
-    else:
-        return dfs.drop(index=dfs.index[0], axis=0)
+        dfs = dfs.drop(index=dfs.index[0], axis=0)
 
-def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Literal['none', 'level1', 'level2'], lags: List[int], narrow_format: bool = False) -> pd.DataFrame:
+    ## Create target 
+    target_col = 'target'
+    returns_col = target_asset + '_returns'
+    if method == 'regression':
+        dfs = create_target_cum_forward_returns(dfs, returns_col, 1)
+    elif method == 'classification':
+        dfs = create_target_classes(dfs, returns_col, 1, 'two')
+        
+    X = dfs.drop(columns=[target_col])
+    y = dfs[target_col]
+
+    return X, y
+
+def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Literal['none', 'level1', 'level2'], lags: list[int], narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
 
     if log_returns:
@@ -84,7 +96,7 @@ def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_fe
         df['vol_10'] = df['returns'].rolling(10).std()*(252**0.5)
         df['vol_20'] = df['returns'].rolling(20).std()*(252**0.5)
         df['vol_30'] = df['returns'].rolling(30).std()*(252**0.5)
-        df['vol_60'] = df['returns'].rolling(30).std()*(252**0.5)
+        df['vol_60'] = df['returns'].rolling(60).std()*(252**0.5)
 
         # momentum (10, 20, 30, 60, 90 days)
         if log_returns:

@@ -47,7 +47,7 @@ def evaluate_predictions_regression(model_name: str, y_true, y_pred, sliding_win
 def evaluate_predictions_classification(model_name: str, y, preds, sliding_window_size: int):
     print("Model: ", model_name)
     evaluate_from = sliding_window_size+1
-    y = pd.Series(y[evaluate_from:-1])
+    y = pd.Series(y[evaluate_from:])
     preds = pd.Series(preds[evaluate_from:])
     print(accuracy_score(y, preds))
     print(confusion_matrix(y, preds))
