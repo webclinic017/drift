@@ -15,7 +15,9 @@ from keras_models.classification_transformer import create_basic_transformer_mod
 
 data = load_files(path='data/',
     own_asset='BTC_ETH',
+    own_asset_lags=[1,2,3,4,5,6,8,10,15],
     load_other_assets=True,
+    other_asset_lags=[1,2,3,4],
     log_returns=False,
     add_date_features=True,
     own_technical_features='level2',

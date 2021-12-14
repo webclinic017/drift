@@ -4,26 +4,35 @@ import os
 import numpy as np
 from pandas.core.frame import DataFrame
 from utils.technical_indicators import ROC, RSI, STOK, STOD
-from typing import Literal
+from typing import List, Literal
 
 #%%
 
 def load_files(path: str,
             own_asset: str,
+            own_asset_lags: List[int],
             load_other_assets: bool,
+            other_asset_lags: List[int],
             log_returns: bool,
             add_date_features: bool,
             own_technical_features: Literal['none', 'level1', 'level2'],
             other_technical_features: Literal['none', 'level1', 'level2'],
             exogenous_features: Literal['none', 'level1'],
             index_column: Literal['date', 'int'],
-            narrow_format: bool = False
+            narrow_format: bool = False,
             ) -> pd.DataFrame:
     
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
     files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(own_asset))]
     def is_own_asset(own_asset: str, file: str): return file.split('.')[0].startswith(own_asset)
-    dfs = [__load_df(path=os.path.join(path,f), prefix=f.split('.')[0], log_returns=log_returns, technical_features=own_technical_features if is_own_asset(own_asset, f) else other_technical_features, narrow_format=narrow_format) for f in files]
+    dfs = [__load_df(
+        path=os.path.join(path,f),
+        prefix=f.split('.')[0],
+        log_returns=log_returns,
+        technical_features=own_technical_features if is_own_asset(own_asset, f) else other_technical_features,
+        lags= own_asset_lags if is_own_asset(own_asset, f) else other_asset_lags,
+        narrow_format=narrow_format,
+    ) for f in files]
     if narrow_format:
         dfs = pd.concat(dfs, axis=0).fillna(0.)
     else:
@@ -44,13 +53,16 @@ def load_files(path: str,
     else:
         return dfs.drop(index=dfs.index[0], axis=0)
 
-def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Literal['none', 'level1', 'level2'], narrow_format: bool = False) -> pd.DataFrame:
+def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Literal['none', 'level1', 'level2'], lags: List[int], narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
 
     if log_returns:
         df['returns'] = np.log(df['close']).diff(1)
     else:
         df['returns'] = df['close'].pct_change()
+    
+    for lag in lags:
+        df[f'lag_{lag}'] = df['returns'].shift(lag)
 
     df = __augment_derived_features(df, log_returns=log_returns, technical_features=technical_features)
 

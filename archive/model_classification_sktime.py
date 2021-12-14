@@ -35,7 +35,9 @@ print('Predicting: ', ticket_to_predict)
 
 data = load_files(path='data/',
     own_asset=ticket_to_predict,
-    load_other_assets=True,
+    own_asset_lags=[1,2,3,4,5,6,8,10,15],
+    load_other_assets=False,
+    other_asset_lags=[1,2,3,4],
     log_returns=True,
     add_date_features=True,
     own_technical_features='level2',

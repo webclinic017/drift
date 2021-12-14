@@ -30,10 +30,12 @@ print('Predicting: ', ticket_to_predict)
 
 data = load_files(path='data/',
     own_asset=ticket_to_predict,
+    own_asset_lags=[1,2,3,4,5,6,8,10,15],
     load_other_assets=False,
+    other_asset_lags=[1,2,3,4],
     log_returns=True,
     add_date_features=True,
-    own_technical_features='level1',
+    own_technical_features='level2',
     other_technical_features='none',
     exogenous_features='none',
     index_column='int'
@@ -41,12 +43,12 @@ data = load_files(path='data/',
 
 target_col = 'target'
 returns_col = ticket_to_predict + '_returns'
-data = create_target_classes(data, returns_col, 1, 'two')
+data = create_target_classes(data, returns_col, 1, 'three')
 
-X = data.drop(columns=[target_col])
+X = data.drop(columns=['target'])
 y = data[target_col]
 
-X_train, X_test, y_train, y_test = temporal_train_test_split(X, y, test_size=0.1)
+X_train, X_test, y_train, y_test = temporal_train_test_split(X, y, test_size=0.2)
 feature_scaler = MinMaxScaler(feature_range= (-1, 1))
 X_test_orig = X_test.copy()
 X_train = feature_scaler.fit_transform(X_train)
@@ -55,53 +57,19 @@ X_test = feature_scaler.transform(X_test)
 
 #%%
 
-sliding_window_size = 120
+sliding_window_size = 10
 X_train = sliding_window_and_flatten(X_train, sliding_window_size)
-# X_test = sliding_window_and_flatten(X_test, sliding_window_size)
+X_test = sliding_window_and_flatten(X_test, sliding_window_size)
 X_test_orig = X_test_orig.iloc[sliding_window_size-1:]
 y_train = y_train[sliding_window_size-1:]
-# y_test = y_test[sliding_window_size-1:]
+y_test = y_test[sliding_window_size-1:]
 
-
-def walk_forward_train_test(
-        create_model,
-        X_train: pd.DataFrame,
-        y_train: pd.Series,
-        window_size: int,
-        retrain_every: int
-    ):
-    predictions = [None] * (len(y_train)-1)
-    models = [None] * (len(y_train)-1)
-
-    train_from = sliding_window_size+1
-    train_till = len(y_train)-2
-    
-    iterations_since_retrain = 0
-
-    for i in range(train_from, train_till):
-        if i % 10 == 0: print('Fold: ', i)
-        iterations_since_retrain += 1
-        window_start = i - window_size
-        window_end = i
-        X_train_slice = X_train[window_start:window_end]
-        y_train_slice = y_train[window_start:window_end]
-
-        if iterations_since_retrain >= retrain_every or models[i-1] is None:
-            model = create_model()
-            model.fit(X_train_slice, y_train_slice)
-            models.append(model)
-        else:
-            model = models[i-1]
-        models[window_end] = model
-
-        predictions[window_end+1] = model.predict(X_train[window_end+1].reshape(1, -1)).item()
-    return models, predictions
-
-
-#%%
-models, preds = walk_forward_train_test(lambda : GaussianNB(), X_train, y_train, 120, 10)
+assert X_train.shape[0] == y_train.shape[0]
+assert X_test.shape[0] == y_test.shape[0]
+scoring = 'accuracy'
 
 # %%
+num_folds = 10
 
 models = []
 models.append(('LR', LogisticRegression(n_jobs=-1)))
@@ -113,34 +81,60 @@ models.append(('NB', GaussianNB()))
 models.append(('AB', AdaBoostClassifier()))
 # models.append(('GBM', GradientBoostingClassifier()))
 models.append(('RF', RandomForestClassifier(n_jobs=-1)))
+
+results = []
+names = []
+for name, model in models:
+    kfold = KFold(n_splits=num_folds, shuffle=False)
+    cv_results = cross_val_score(model, X_train, y_train, cv=kfold, scoring=scoring)
+    results.append(cv_results)
+    names.append(name)
+    msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+    print(msg)
+
+# # compare algorithms
+# fig = plt.figure()
+# fig.suptitle('Algorithm Comparison')
+# ax = fig.add_subplot(111)
+# plt.boxplot(results)
+# ax.set_xticklabels(names)
+# fig.set_size_inches(15,8)
+# plt.show()
+
+#%%
+# n_estimators = [20,80]
+# max_depth= [5,10, 15]
+# criterion = ["gini","entropy"]
+# param_grid = dict(n_estimators=n_estimators, max_depth=max_depth, criterion = criterion )
 # model = RandomForestClassifier(n_jobs=-1)
-# model = KNeighborsClassifier()
+# kfold = KFold(n_splits=10, shuffle=False)
+# grid = GridSearchCV(estimator=model, param_grid=param_grid, scoring=scoring, cv=kfold)
+# grid_result = grid.fit(X_train, y_train)
+
+# #Print Results
+# print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+# means = grid_result.cv_results_['mean_test_score']
+# stds = grid_result.cv_results_['std_test_score']
+# params = grid_result.cv_results_['params']
+# ranks = grid_result.cv_results_['rank_test_score']
+# for mean, stdev, param, rank in zip(means, stds, params, ranks):
+#     print("#%d %f (%f) with: %r" % (rank, mean, stdev, param))
+
+
+#%% prepare model
+model = RandomForestClassifier(criterion='entropy', n_estimators=80, max_depth=5, n_jobs=-1) 
+# model = LogisticRegression() 
+# model = MLPClassifier(hidden_layer_sizes=[200, 100, 50], shuffle=False, max_iter=1000)
 model = GaussianNB()
-# model = AdaBoostClassifier()
-
-# re-train the model every n steps
-# store the model
-# iterate over all potential folds
-# retrieve model for the range
-# predict on the input data
-# store the predictions
-
-predictions = [0] * (len(y_train)-1)
-
-
-for i in range(sliding_window_size+1, len(y_train)-2):
-    if i % 10 == 0: print('Fold: ', i)
-    X_train_up_to_i = X_train[i-sliding_window_size:i]
-    y_train_up_to_i = y_train[i-sliding_window_size:i]
-    model.fit(X_train_up_to_i, y_train_up_to_i)
-    predictions[i+1] = model.predict(X_train[i+1].reshape(1, -1)).item()
+model.fit(X_train, y_train)
 
 
 #%%
-
-print(accuracy_score(y_train[500:-1], predictions[500:]))
-print(confusion_matrix(y_train[500:-1], predictions[500:]))
-print(classification_report(y_train[500:-1], predictions[500:]))
+# estimate accuracy on validation set
+predictions = model.predict(X_test)
+print(accuracy_score(y_test, predictions))
+print(confusion_matrix(y_test, predictions))
+print(classification_report(y_test, predictions))
 
 
 #%%
@@ -151,14 +145,14 @@ print(classification_report(y_train[500:-1], predictions[500:]))
 # print(feat_importance)
 
 #%% Create column for Strategy Returns by multiplying the daily returns by the position that was held at close of business the previous day
-# backtestdata = pd.DataFrame(index= X_test_orig.index)
-# backtestdata['signal_pred'] = predictions
-# backtestdata['signal_actual'] = y_test
-# backtestdata['returns'] = X_test_orig[returns_col]
-# backtestdata['only_positive_returns'] = backtestdata['returns'] * backtestdata['signal_actual'].shift(1)
-# backtestdata['strategy_returns'] = backtestdata['returns'] * backtestdata['signal_pred'].shift(1)
+backtestdata = pd.DataFrame(index= X_test_orig.index)
+backtestdata['signal_pred'] = predictions
+backtestdata['signal_actual'] = y_test
+backtestdata['returns'] = X_test_orig[returns_col]
+backtestdata['only_positive_returns'] = backtestdata['returns'] * backtestdata['signal_actual'].shift(1)
+backtestdata['strategy_returns'] = backtestdata['returns'] * backtestdata['signal_pred'].shift(1)
 
 # %%
-# print(backtestdata.cumsum().apply(np.exp).tail(1))
+print(backtestdata.cumsum().apply(np.exp).tail(1))
 
 # %%
