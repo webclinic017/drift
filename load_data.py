@@ -56,9 +56,9 @@ def load_data(path: str,
     target_col = 'target'
     returns_col = target_asset + '_returns'
     if method == 'regression':
-        dfs = create_target_cum_forward_returns(dfs, returns_col, 1)
+        dfs = __create_target_cum_forward_returns(dfs, returns_col, 1)
     elif method == 'classification':
-        dfs = create_target_classes(dfs, returns_col, 1, 'two')
+        dfs = __create_target_classes(dfs, returns_col, 1, 'two')
         
     X = dfs.drop(columns=[target_col])
     y = dfs[target_col]
@@ -130,13 +130,13 @@ def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_fe
 
 
 # %%
-def create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
+def __create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
     df['target'] = df[source_column].diff(period).shift(-period)
     df = df.iloc[:-period]
     return df
 
 
-def create_target_classes(df: pd.DataFrame, source_column: str, period: int, no_of_classes: Literal["two", "three"]) -> pd.DataFrame:
+def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, no_of_classes: Literal["two", "three"]) -> pd.DataFrame:
 
     def get_class_binary(x):
         return 0 if x <= 0.0 else 1

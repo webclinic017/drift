@@ -1,3 +1,4 @@
+from typing import Literal
 from sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_score, r2_score, classification_report
 from sklearn.metrics import confusion_matrix
 import pandas as pd
@@ -10,46 +11,49 @@ def format_data_for_backtest(aggregated_data: pd.DataFrame, returns_col: str, on
     return pd.concat([backtest_data, pd.Series(preds)], axis='columns')
 
 
-def evaluate_predictions_regression(model_name: str, y_true, y_pred, sliding_window_size: int):
+def __preprocess(y_true: pd.Series, y_pred: pd.Series, method: Literal['classification', 'regression']):
+    y_pred.name = 'y_pred'
+    y_true.name = 'y_true'
+    df = pd.concat([y_pred, y_true],axis=1).dropna()
+
+    if method == 'regression':
+        df['sign_pred'] = df.y_pred.apply(np.sign)
+    else:
+        df['sign_pred'] = df.y_pred.apply(lambda x: 1 if x>0 else -1)
+    df['sign_true'] = df.y_true.apply(np.sign)
+    df['is_correct'] = 0
+    df.loc[df.sign_pred * df.sign_true > 0 ,'is_correct'] = 1 # only registers 1 when prediction was made AND it was correct
+    df['is_incorrect'] = 0
+    df.loc[df.sign_pred * df.sign_true < 0,'is_incorrect'] = 1 # only registers 1 when prediction was made AND it was wrong
+    df['is_predicted'] = df.is_correct + df.is_incorrect
+    df['result'] = df.sign_pred * df.y_true 
+    return df
+
+def evaluate_predictions(model_name: str, y_true: pd.Series, y_pred: pd.Series, sliding_window_size: int, method: Literal['classification', 'regression']):
     evaluate_from = sliding_window_size+1
-    y_true = pd.Series(y_true[evaluate_from:-1])
+    y_true = pd.Series(y_true[evaluate_from:])
     y_pred = pd.Series(y_pred[evaluate_from:])
 
-    def preprocess(y_true, y_pred):
-        y_pred.name = 'y_pred'
-        y_true.name = 'y_true'
-        df = pd.concat([y_pred, y_true],axis=1).dropna()
-
-        df['sign_pred'] = df.y_pred.apply(np.sign)
-        df['sign_true'] = df.y_true.apply(np.sign)
-        df['is_correct'] = 0
-        df.loc[df.sign_pred * df.sign_true > 0 ,'is_correct'] = 1 # only registers 1 when prediction was made AND it was correct
-        df['is_incorrect'] = 0
-        df.loc[df.sign_pred * df.sign_true < 0,'is_incorrect'] = 1 # only registers 1 when prediction was made AND it was wrong
-        df['is_predicted'] = df.is_correct + df.is_incorrect
-        df['result'] = df.sign_pred * df.y_true 
-        return df
-    
-    df = preprocess(y_true, y_pred)
+    df = __preprocess(y_true, y_pred, method)
     
     scorecard = pd.Series()
-    scorecard.loc['RSQ'] = r2_score(df.y_true,df.y_pred)
-    scorecard.loc['MAE'] = mean_absolute_error(df.y_true,df.y_pred)
+    if method == 'regression':
+        scorecard.loc['RSQ'] = r2_score(df.y_true,df.y_pred)
+        scorecard.loc['MAE'] = mean_absolute_error(df.y_true,df.y_pred)
+    elif method == 'classification':
+        scorecard.loc['RSQ'] = 0.
+        scorecard.loc['MAE Matrix'] = 0.
     scorecard.loc['directional_accuracy'] = df.is_correct.sum()*1. / (df.is_predicted.sum()*1.)*100
     scorecard.loc['edge'] = df.result.mean()
     scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
     scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
-    scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
+    if method == 'regression':
+        scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
+    elif method == 'classification':
+        scorecard.loc['edge_to_mae'] = 0.
+
+    # TODO: add confusion matrix, f1 score, precision, recall
     print("Model name: ", model_name)
     print(scorecard)
     return scorecard  
-
-def evaluate_predictions_classification(model_name: str, y, preds, sliding_window_size: int):
-    print("Model: ", model_name)
-    evaluate_from = sliding_window_size+1
-    y = pd.Series(y[evaluate_from:])
-    preds = pd.Series(preds[evaluate_from:])
-    print(accuracy_score(y, preds))
-    print(confusion_matrix(y, preds))
-    print(classification_report(y, preds))
 

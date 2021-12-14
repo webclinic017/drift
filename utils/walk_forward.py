@@ -10,9 +10,8 @@ def walk_forward_train_test(
                             y: pd.Series,
                             window_size: int,
                             retrain_every: int
-                        ) -> tuple[list[SKLearnModel], list[float]]:
+                        ) -> tuple[pd.Series, pd.Series]:
                         
-    print("Training: ", model_name)
     predictions = pd.Series(index=y.index)
     models = pd.Series(index=y.index)
 
