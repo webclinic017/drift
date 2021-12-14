@@ -8,7 +8,7 @@
             "name": "Run pipeline",
             "type": "python",
             "request": "launch",
-            "module": "model_walk_forward"
+            "module": "run_pipeline",
         }
     ]
 }

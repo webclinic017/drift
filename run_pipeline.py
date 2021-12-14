@@ -2,7 +2,7 @@ from typing import Literal
 from sklearnex import patch_sklearn
 patch_sklearn()
 
-from load_data import load_data
+from load_data import get_all_assets, load_data
 from utils.evaluate import evaluate_predictions
 
 import pandas as pd
@@ -24,8 +24,8 @@ regression_models = [
     ('KNN', KNeighborsRegressor(n_neighbors=15)),
     # ('MLP', MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
     ('AB', AdaBoostRegressor()),
-    # ('RF', lambda: RandomForestRegressor(n_jobs=-1)),
-    ('SVR', SVR(kernel='rbf', C=1e3, gamma=0.1))
+    # ('RF', RandomForestRegressor(n_jobs=-1)),
+    # ('SVR', SVR(kernel='rbf', C=1e3, gamma=0.1))
 ]
 classification_models = [
     ('LR', LogisticRegression(n_jobs=-1)),
@@ -47,7 +47,7 @@ def run_whole_pipeline(
                     retrain_every: int,
                     scaling: bool,
                     ):
-    print('Predicting: ', ticker_to_predict)
+    print('--------\nPredicting: ', ticker_to_predict)
 
     X, y = load_data(path='data/',
         target_asset=ticker_to_predict,
@@ -70,6 +70,8 @@ def run_whole_pipeline(
         X = pd.DataFrame(feature_scaler.fit_transform(X), columns=X.columns, index=X.index)
         # TODO: should scale y as well probably
 
+    results = pd.DataFrame()
+
     for model_name, model in models:
 
         model_over_time, preds = walk_forward_train_test(
@@ -80,23 +82,25 @@ def run_whole_pipeline(
             window_size = sliding_window_size,
             retrain_every = retrain_every
         )
-        evaluate_predictions(model_name, y, preds, sliding_window_size, method)
+        result = evaluate_predictions(model_name, y, preds, sliding_window_size, method)
+        column_name = ticker_to_predict + "_" + model_name
+        results[column_name] = result
 
+    return results
 
-ticker_to_predict = 'BTC_USD'
-run_whole_pipeline(
-    ticker_to_predict = ticker_to_predict,
-    models = regression_models,
-    method = 'regression',
-    sliding_window_size = 120,
-    retrain_every = 50,
-    scaling = False
-)
-run_whole_pipeline(
-    ticker_to_predict = ticker_to_predict,
-    models = classification_models,
-    method = 'classification',
-    sliding_window_size = 120,
-    retrain_every = 50,
-    scaling = False
-)
+results = pd.DataFrame()
+all_assets = get_all_assets('data/')
+
+for asset in all_assets:
+    for method in ['regression', 'classification']:
+        current_result = run_whole_pipeline(
+            ticker_to_predict = asset,
+            models = regression_models if method == 'regression' else classification_models,
+            method = method,
+            sliding_window_size = 120,
+            retrain_every = 50,
+            scaling = False
+        )
+        results = pd.concat([results, current_result], axis=1)
+
+results.to_csv('results.csv')
