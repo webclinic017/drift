@@ -5,8 +5,13 @@ import numpy as np
 from pandas.core.frame import DataFrame
 from utils.technical_indicators import ROC, RSI, STOK, STOD
 from typing import Literal
+from sklearn.preprocessing import OneHotEncoder
 
 #%%
+
+def get_all_assets(path: str) -> list[str]:
+    return [f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
+
 
 def load_data(path: str,
             target_asset: str,
@@ -42,9 +47,9 @@ def load_data(path: str,
     dfs.index = pd.DatetimeIndex(dfs.index)
 
     if add_date_features:
-        dfs['day_month'] = dfs.index.day
-        dfs['day_week'] = dfs.index.dayofweek
-        dfs['month'] = dfs.index.month
+        dfs = pd.concat([dfs, pd.get_dummies(dfs.index.day, drop_first=True, prefix="day_month").set_index(dfs.index)], axis=1)
+        dfs = pd.concat([dfs, pd.get_dummies(dfs.index.dayofweek, drop_first=True, prefix="day_week").set_index(dfs.index)] , axis=1)
+        dfs = pd.concat([dfs, pd.get_dummies(dfs.index.month, drop_first=True, prefix="month").set_index(dfs.index)], axis = 1)
 
     if index_column == 'int':
         dfs.reset_index(drop=True, inplace=True)
@@ -128,6 +133,8 @@ def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_fe
         df['stod_200'] = STOD(df['close'], df['low'], df['high'], 200)
     return df
 
+
+# %%
 
 # %%
 def __create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
