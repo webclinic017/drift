@@ -1,14 +1,13 @@
 from typing import Literal
-from sklearn.metrics import mean_squared_error, mean_absolute_error, accuracy_score, r2_score, classification_report
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import mean_absolute_error, accuracy_score, r2_score, f1_score, precision_score, recall_score
+from quantstats.stats import expected_return, sharpe, skew, sortino
 import pandas as pd
 import numpy as np
 
-def format_data_for_backtest(aggregated_data: pd.DataFrame, returns_col: str, only_test_data: pd.DataFrame, preds) -> pd.DataFrame:
-    backtest_data = aggregated_data.iloc[-only_test_data.shape[0]:].copy()[returns_col]
-    assert backtest_data.shape[0] == only_test_data.shape[0]
-    backtest_data = backtest_data.reset_index(drop=True)    
-    return pd.concat([backtest_data, pd.Series(preds)], axis='columns')
+def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.02) -> pd.Series:
+    delta_pos = signal.diff(1).abs().fillna(0.)
+    costs = transaction_cost * delta_pos
+    return (signal * returns) - costs
 
 
 def __preprocess(y_true: pd.Series, y_pred: pd.Series, method: Literal['classification', 'regression']):
@@ -26,33 +25,54 @@ def __preprocess(y_true: pd.Series, y_pred: pd.Series, method: Literal['classifi
     df['is_incorrect'] = 0
     df.loc[df.sign_pred * df.sign_true < 0,'is_incorrect'] = 1 # only registers 1 when prediction was made AND it was wrong
     df['is_predicted'] = df.is_correct + df.is_incorrect
-    df['result'] = df.sign_pred * df.y_true 
+    df['result'] = backtest(df.y_true, df.sign_pred)
+
     return df
 
 def evaluate_predictions(model_name: str, y_true: pd.Series, y_pred: pd.Series, sliding_window_size: int, method: Literal['classification', 'regression']):
-    evaluate_from = sliding_window_size+1
+    # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
+    first_nonzero_return = np.where(y_true != 0)[0][0]
+    evaluate_from = first_nonzero_return + sliding_window_size + 1
+    
     y_true = pd.Series(y_true[evaluate_from:])
+    # if there are lots of zeros in the ground truth returns, probably something is wrong, but we can tolerate a couple of days of missing data.
+    is_zero = y_true[y_true == 0]
+    assert len(is_zero) < 5
+    # we can't deal with 0 returns, so we'll just remap the few examples to 1
+    y_true = y_true.apply(lambda x: 1 if x == 0 else x)
     y_pred = pd.Series(y_pred[evaluate_from:])
 
     df = __preprocess(y_true, y_pred, method)
     
     scorecard = pd.Series()
     if method == 'regression':
-        scorecard.loc['RSQ'] = r2_score(df.y_true,df.y_pred)
-        scorecard.loc['MAE'] = mean_absolute_error(df.y_true,df.y_pred)
+        scorecard.loc['RSQ'] = r2_score(df.y_true, df.y_pred)
+        scorecard.loc['MAE'] = mean_absolute_error(df.y_true, df.y_pred)
     elif method == 'classification':
         scorecard.loc['RSQ'] = 0.
         scorecard.loc['MAE Matrix'] = 0.
-    scorecard.loc['directional_accuracy'] = df.is_correct.sum()*1. / (df.is_predicted.sum()*1.)*100
+    sign_true = df.sign_true.astype(int)
+    sign_pred = df.sign_pred.astype(int)
+    
+    scorecard.loc['sharpe'] = sharpe(df.result)
+    scorecard.loc['sortino'] = sortino(df.result)
+    scorecard.loc['skew'] = skew(df.result)
+
+    scorecard.loc['accuracy'] = accuracy_score(sign_true, sign_pred) * 100
+    scorecard.loc['recall'] = recall_score(sign_true, sign_pred, labels = [1, -1])
+    scorecard.loc['precision'] = precision_score(sign_true, sign_pred, labels = [1, -1])
+    scorecard.loc['f1_score'] = f1_score(sign_true, sign_pred, labels = [1, -1])
     scorecard.loc['edge'] = df.result.mean()
     scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
     scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
+
+
     if method == 'regression':
         scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
     elif method == 'classification':
         scorecard.loc['edge_to_mae'] = 0.
 
-    # TODO: add confusion matrix, f1 score, precision, recall
+    scorecard = scorecard.round(3)
     print("Model name: ", model_name)
     print(scorecard)
     return scorecard  

@@ -1,12 +1,13 @@
+from logging import log
 from typing import Literal
 from sklearnex import patch_sklearn
 patch_sklearn()
 
-from load_data import get_all_assets, load_data
+from load_data import get_crypto_assets, get_etf_assets, load_data
 from utils.evaluate import evaluate_predictions
 
 import pandas as pd
-from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, LogisticRegression
+from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, LogisticRegression, Ridge
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -19,7 +20,9 @@ from sklearn.preprocessing import MinMaxScaler
 from utils.walk_forward import walk_forward_train_test
 
 regression_models = [
-    ('LR', LinearRegression(n_jobs=-1)),
+    # ('LR', LinearRegression(n_jobs=-1)),
+    ('Lasso', Lasso(alpha=0.1, max_iter=10000)),
+    ('Ridge', Ridge(alpha=1.0)),
     ('BayesianRidge', BayesianRidge()),
     ('KNN', KNeighborsRegressor(n_neighbors=15)),
     # ('MLP', MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
@@ -41,6 +44,7 @@ classification_models = [
 
 def run_whole_pipeline(
                     ticker_to_predict: str,
+                    load_data_args: dict,
                     models,
                     method: Literal['regression', 'classification'],
                     sliding_window_size: int,
@@ -49,20 +53,7 @@ def run_whole_pipeline(
                     ):
     print('--------\nPredicting: ', ticker_to_predict)
 
-    X, y = load_data(path='data/',
-        target_asset=ticker_to_predict,
-        target_asset_lags=[1,2,3,4,5,6,8,10,15],
-        load_other_assets=False,
-        other_asset_lags=[],
-        log_returns=True,
-        add_date_features=True,
-        own_technical_features='level2',
-        other_technical_features='none',
-        exogenous_features='none',
-        index_column='int',
-        method=method,
-    )
-
+    X, y = load_data(**load_data_args)
 
     if scaling:
         # TODO: should move scaling to an expanding window compomenent, probably worth not turning it on for now
@@ -82,19 +73,42 @@ def run_whole_pipeline(
             window_size = sliding_window_size,
             retrain_every = retrain_every
         )
-        result = evaluate_predictions(model_name, y, preds, sliding_window_size, method)
+        result = evaluate_predictions(
+            model_name = model_name,
+            y_true = y,
+            y_pred = preds,
+            sliding_window_size = sliding_window_size,
+            method = method,
+        )
         column_name = ticker_to_predict + "_" + model_name
         results[column_name] = result
 
     return results
 
 results = pd.DataFrame()
-all_assets = get_all_assets('data/')
+all_assets = get_crypto_assets('data/')
+
+
 
 for asset in all_assets:
     for method in ['regression']:
+        load_data_args = dict(path='data/',
+            target_asset= asset,
+            target_asset_lags= [1,2,3,4,5,6,8,10,15],
+            load_other_assets= False,
+            other_asset_lags= [],
+            log_returns= True,
+            add_date_features= True,
+            own_technical_features= 'level2',
+            other_technical_features= 'none',
+            exogenous_features= 'none',
+            index_column= 'int',
+            method= method,
+        )
+
         current_result = run_whole_pipeline(
             ticker_to_predict = asset,
+            load_data_args = load_data_args,
             models = regression_models if method == 'regression' else classification_models,
             method = method,
             sliding_window_size = 120,

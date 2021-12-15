@@ -38,6 +38,11 @@ def walk_forward_train_test(
         models[window_end] = current_model
 
         next_timestep = X.iloc[window_end+1].to_numpy().reshape(1, -1)
-        predictions[window_end+1] = current_model.predict(next_timestep).item()
+        prediction = current_model.predict(next_timestep).item()
+        if prediction == 0.:
+            # TODO: we shouldn't feed in zeros to the model, and skip training / predicting when everything is 0
+            # print("Warning: model predicted 0., overriding it with 0.0001")
+            prediction = 0.0001
+        predictions[window_end+1] = prediction
 
     return models, predictions

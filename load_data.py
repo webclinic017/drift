@@ -9,8 +9,11 @@ from sklearn.preprocessing import OneHotEncoder
 
 #%%
 
-def get_all_assets(path: str) -> list[str]:
-    return [f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
+def get_crypto_assets(path: str) -> list[str]:
+    return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and '_' in f and not f.startswith('.')])
+
+def get_etf_assets(path: str) -> list[str]:
+    return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and '_' not in f and not f.startswith('.')])
 
 
 def load_data(path: str,
