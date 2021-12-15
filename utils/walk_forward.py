@@ -12,8 +12,8 @@ def walk_forward_train_test(
                             retrain_every: int
                         ) -> tuple[pd.Series, pd.Series]:
                         
-    predictions = pd.Series(index=y.index)
-    models = pd.Series(index=y.index)
+    predictions = pd.Series(index=y.index).rename(model_name)
+    models = pd.Series(index=y.index).rename(model_name)
 
     train_from = window_size
     train_till = y.index[-1]
@@ -30,7 +30,7 @@ def walk_forward_train_test(
 
         if iterations_since_retrain >= retrain_every or pd.isna(models[i-1]):
             current_model = clone(model)
-            current_model.fit(X_slice.to_numpy(), y_slice)
+            current_model.fit(X_slice.to_numpy(), y_slice.to_numpy())
             iterations_since_retrain = 0
         else:
             current_model = models[i-1]

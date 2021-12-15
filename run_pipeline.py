@@ -92,7 +92,7 @@ results = pd.DataFrame()
 all_assets = get_all_assets('data/')
 
 for asset in all_assets:
-    for method in ['regression', 'classification']:
+    for method in ['regression']:
         current_result = run_whole_pipeline(
             ticker_to_predict = asset,
             models = regression_models if method == 'regression' else classification_models,
