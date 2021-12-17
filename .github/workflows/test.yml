@@ -1,0 +1,42 @@
+name: run-test
+on: [push]
+jobs:
+  run:
+    runs-on: [ubuntu-latest]
+    # optionally use a convenient Ubuntu LTS + CUDA + DVC + CML image
+    # container: docker://dvcorg/cml:0-dvc2-base1-gpu
+    # container: docker://ghcr.io/iterative/cml:0-dvc2-base1-gpu
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: false
+          activate-environment: quant
+          environment-file: environment.yml
+          python-version: 3.9
+      - uses: iterative/setup-cml@v1
+      - name: Run pytest
+        shell: bash -l {0}
+#         env: 
+#           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          pytest --junit-xml pytest.xml
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Unit Test Results (Python ${{ matrix.python-version }})
+          path: pytest.xml
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: pytest.xml
+
+#       - name: Write CML report
+#         env:
+#           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         run: |
+#           # Post reports as comments in GitHub PRs
+#           # cat results.txt >> report.md
+#           # cml-send-comment report.md

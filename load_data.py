@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 #%%
 
 def get_crypto_assets(path: str) -> list[str]:
-    return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and '_' in f and not f.startswith('.')])
+    return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')])
 
 def get_etf_assets(path: str) -> list[str]:
     return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and '_' not in f and not f.startswith('.')])
@@ -29,7 +29,14 @@ def load_data(path: str,
             index_column: Literal['date', 'int'],
             method: Literal['regression', 'classification'],
             narrow_format: bool = False,
-        ) -> tuple[pd.DataFrame, pd.Series]:
+        ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
+    """
+    Loads asset data from the specified path.
+    Returns:
+        - DataFrame `X` with all the training data
+        - Series `y` with the target asset returns shifted by 1 day OR if it's a classification problem, the target class)
+        - Series `forward_returns` with the target asset returns shifted by 1 day
+    """
     
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
     files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(target_asset))]
@@ -37,7 +44,7 @@ def load_data(path: str,
     dfs = [__load_df(
         path=os.path.join(path,f),
         prefix=f.split('.')[0],
-        log_returns=log_returns,
+        returns='log_returns' if log_returns else 'returns',
         technical_features=own_technical_features if is_target_asset(target_asset, f) else other_technical_features,
         lags= target_asset_lags if is_target_asset(target_asset, f) else other_asset_lags,
         narrow_format=narrow_format,
@@ -63,28 +70,60 @@ def load_data(path: str,
     ## Create target 
     target_col = 'target'
     returns_col = target_asset + '_returns'
+    prediction_horizon = 1
+    forward_returns = __create_target_cum_forward_returns(dfs, returns_col, prediction_horizon)
     if method == 'regression':
-        dfs = __create_target_cum_forward_returns(dfs, returns_col, 1)
+        dfs[target_col] = forward_returns
     elif method == 'classification':
-        dfs = __create_target_classes(dfs, returns_col, 1, 'two')
-        
+        dfs[target_col] = __create_target_classes(dfs, returns_col, prediction_horizon, 'two')
+    # we need to drop the last row, because we forward-shift the target (see what happens if you call .shift[-1] on a pd.Series) 
+    dfs = dfs.iloc[:-prediction_horizon]
+    forward_returns = forward_returns.iloc[:-prediction_horizon]
+    
     X = dfs.drop(columns=[target_col])
     y = dfs[target_col]
 
-    return X, y
+    return X, y, forward_returns
 
-def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Literal['none', 'level1', 'level2'], lags: list[int], narrow_format: bool = False) -> pd.DataFrame:
+# %%
+
+def load_crypto_only_returns(path: str, index_column: Literal['date', 'int'], returns: Literal['price', 'returns']) -> pd.DataFrame:
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')]
+    dfs = [__load_df(
+        path=os.path.join(path,f),
+        prefix=f.split('.')[0],
+        returns=returns,
+        technical_features='none',
+        lags=[],
+        narrow_format=False,
+    ) for f in files]
+    dfs = pd.concat(dfs, axis=1)
+    dfs = dfs.applymap(lambda x: np.nan if x == 0 else x)
+    dfs.index = pd.DatetimeIndex(dfs.index)
+    dfs.columns = [column.split('_')[0] for column in dfs.columns]
+    if index_column == 'int':
+        dfs.reset_index(drop=True, inplace=True)
+
+    return dfs
+
+def load_crypto_assets_availability(path: str, index_column: Literal['date', 'int']) -> pd.DataFrame:
+    return load_crypto_only_returns(path, index_column, 'returns').applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
+
+
+def __load_df(path: str, prefix: str, returns: Literal['price', 'returns', 'log_returns'], technical_features: Literal['none', 'level1', 'level2'], lags: list[int], narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
 
-    if log_returns:
+    if returns == 'log_returns':
         df['returns'] = np.log(df['close']).diff(1)
+    elif returns == 'price':
+        df['returns'] = df['close']
     else:
         df['returns'] = df['close'].pct_change()
     
     for lag in lags:
         df[f'lag_{lag}'] = df['returns'].shift(lag)
 
-    df = __augment_derived_features(df, log_returns=log_returns, technical_features=technical_features)
+    df = __augment_derived_features(df, log_returns=True if returns == 'log_returns' else False, technical_features=technical_features)
 
     df = df.replace([np.inf, -np.inf], 0.)
     df = df.drop(columns=['open', 'high', 'low', 'close'])
@@ -100,7 +139,7 @@ def __load_df(path: str, prefix: str, log_returns: bool, technical_features: Lit
 
 def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_features: Literal['none', 'level1', 'level2']) -> pd.DataFrame:
     if technical_features == 'level1' or technical_features == 'level2':
-        # volatility (10, 20, 30 days)
+        # volatility (10, 20, 30, 60 days)
         df['vol_10'] = df['returns'].rolling(10).std()*(252**0.5)
         df['vol_20'] = df['returns'].rolling(20).std()*(252**0.5)
         df['vol_30'] = df['returns'].rolling(30).std()*(252**0.5)
@@ -137,16 +176,15 @@ def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_fe
     return df
 
 
-# %%
 
 # %%
-def __create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.DataFrame:
-    df['target'] = df[source_column].diff(period).shift(-period)
-    df = df.iloc[:-period]
-    return df
+def __create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.Series:
+    assert period > 0
+    return df[source_column].shift(-period)
 
 
-def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, no_of_classes: Literal["two", "three"]) -> pd.DataFrame:
+def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, no_of_classes: Literal["two", "three"]) -> pd.Series:
+    assert period > 0
 
     def get_class_binary(x):
         return 0 if x <= 0.0 else 1
@@ -162,16 +200,10 @@ def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, n
         else:
             return 1
 
-    if period > 0:
-        df['target'] = df[source_column].shift(-period)
-    else:
-        df['target'] = df[source_column]
+    target_column = df[source_column].shift(-period)
     
     get_class_function = get_class_binary
     if no_of_classes == "three":
         get_class_function = get_class_threeway
 
-    df['target'] = df['target'].map(get_class_function)
-    if period > 0:
-        df = df.iloc[:-period]
-    return df
+    return target_column.map(get_class_function)

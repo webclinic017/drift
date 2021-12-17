@@ -1,53 +1,63 @@
 from typing import Literal
 from sklearn.metrics import mean_absolute_error, accuracy_score, r2_score, f1_score, precision_score, recall_score
 from quantstats.stats import expected_return, sharpe, skew, sortino
+from utils.helpers import get_first_valid_return_index
 import pandas as pd
 import numpy as np
 
-def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.02) -> pd.Series:
+def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.01) -> pd.Series:
     delta_pos = signal.diff(1).abs().fillna(0.)
     costs = transaction_cost * delta_pos
     return (signal * returns) - costs
 
 
-def __preprocess(y_true: pd.Series, y_pred: pd.Series, method: Literal['classification', 'regression']):
+def __preprocess(target_returns: pd.Series, y_pred: pd.Series, method: Literal['classification', 'regression']) -> pd.DataFrame:
     y_pred.name = 'y_pred'
-    y_true.name = 'y_true'
-    df = pd.concat([y_pred, y_true],axis=1).dropna()
+    target_returns.name = 'target_returns'
+    df = pd.concat([y_pred, target_returns],axis=1).dropna()
 
-    if method == 'regression':
-        df['sign_pred'] = df.y_pred.apply(np.sign)
-    else:
-        df['sign_pred'] = df.y_pred.apply(lambda x: 1 if x>0 else -1)
-    df['sign_true'] = df.y_true.apply(np.sign)
+    df['sign_pred'] = df.y_pred.apply(lambda x: 1 if x>0 else -1)
+    def sign_true(x):
+        if x > 0:
+            return 1
+        else:
+            return -1
+    df['sign_true'] = df.target_returns.apply(sign_true)
     df['is_correct'] = 0
     df.loc[df.sign_pred * df.sign_true > 0 ,'is_correct'] = 1 # only registers 1 when prediction was made AND it was correct
     df['is_incorrect'] = 0
     df.loc[df.sign_pred * df.sign_true < 0,'is_incorrect'] = 1 # only registers 1 when prediction was made AND it was wrong
     df['is_predicted'] = df.is_correct + df.is_incorrect
-    df['result'] = backtest(df.y_true, df.sign_pred)
+    df['result'] = backtest(df.target_returns, df.sign_pred)
 
     return df
 
-def evaluate_predictions(model_name: str, y_true: pd.Series, y_pred: pd.Series, sliding_window_size: int, method: Literal['classification', 'regression']):
+def evaluate_predictions(
+                        model_name: str,
+                        target_returns: pd.Series,
+                        y_pred: pd.Series,
+                        sliding_window_size: int,
+                        method: Literal['classification', 'regression']
+                        ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
-    first_nonzero_return = np.where(y_true != 0)[0][0]
+    first_nonzero_return = get_first_valid_return_index(target_returns)
     evaluate_from = first_nonzero_return + sliding_window_size + 1
     
-    y_true = pd.Series(y_true[evaluate_from:])
-    # if there are lots of zeros in the ground truth returns, probably something is wrong, but we can tolerate a couple of days of missing data.
-    is_zero = y_true[y_true == 0]
-    assert len(is_zero) < 5
-    # we can't deal with 0 returns, so we'll just remap the few examples to 1
-    y_true = y_true.apply(lambda x: 1 if x == 0 else x)
+    target_returns = pd.Series(target_returns[evaluate_from:])
+    if method == 'regression':
+        # if there are lots of zeros in the ground truth returns, probably something is wrong, but we can tolerate a couple of days of missing data.
+        is_zero = target_returns[target_returns == 0]
+        assert len(is_zero) < 15
+    # we can't deal with 0 returns, so we'll just remap the few examples to 0.0001 
+    target_returns = target_returns.apply(lambda x: 0.0001 if x == 0 else x)
     y_pred = pd.Series(y_pred[evaluate_from:])
 
-    df = __preprocess(y_true, y_pred, method)
+    df = __preprocess(target_returns, y_pred, method)
     
     scorecard = pd.Series()
     if method == 'regression':
-        scorecard.loc['RSQ'] = r2_score(df.y_true, df.y_pred)
-        scorecard.loc['MAE'] = mean_absolute_error(df.y_true, df.y_pred)
+        scorecard.loc['RSQ'] = r2_score(df.target_returns, df.y_pred)
+        scorecard.loc['MAE'] = mean_absolute_error(df.target_returns, df.y_pred)
     elif method == 'classification':
         scorecard.loc['RSQ'] = 0.
         scorecard.loc['MAE Matrix'] = 0.

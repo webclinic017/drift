@@ -49,13 +49,3 @@ def get_stock_price_av(symbol: str, start_date: str = None) -> pd.DataFrame:
     df = df.rename_axis('time')
     return df
 
-
-
-# %%
-# btc = get_crypto_price_av(symbol = 'BTC', exchange = 'USD', start_date = '2018-01-01')
-# btc
-
-# %%
-
-# spy = get_stock_price_av(symbol = 'SPY', start_date = '2018-01-01')
-# spy

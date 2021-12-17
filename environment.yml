@@ -1,0 +1,20 @@
+name: quant
+channels:
+  - johnsnowlabs
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - seaborn
+  - scikit-learn-intelex
+  - ipython
+  - scipy
+  - scikit-learn
+  - numba
+  - pytorch
+  - matplotlib
+  - numpy
+  - quantstats
+  - pytorch-lightning
+  - pytest
+prefix: /usr/local/anaconda3/envs/quant
