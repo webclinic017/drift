@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 import pandas as pd
 from training.walk_forward import walk_forward_train_test

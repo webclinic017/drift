@@ -1,6 +1,6 @@
 #%% Import all the stuff, load data, define constants
 from sklearn.utils import shuffle
-from load_data import load_files, create_target_cum_forward_returns
+from utils.load_data import load_files, create_target_cum_forward_returns
 import pandas as pd
 from tensorflow import keras
 from utils.normalize import normalize

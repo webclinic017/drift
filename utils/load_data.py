@@ -187,7 +187,7 @@ def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, n
     assert period > 0
 
     def get_class_binary(x):
-        return 0 if x <= 0.0 else 1
+        return -1 if x <= 0.0 else 1
 
     def get_class_threeway(x):
         bins = pd.qcut(df[source_column], 4, duplicates='raise', retbins=True)[1]

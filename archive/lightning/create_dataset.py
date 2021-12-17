@@ -8,7 +8,7 @@ from pytorch_forecasting.metrics import QuantileLoss
 import sys
 sys.path.insert(0, '..')
 
-from load_data import load_files
+from utils.load_data import load_files
 
 print("success")
 

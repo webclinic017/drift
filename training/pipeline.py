@@ -50,7 +50,6 @@ def run_single_asset_trainig_pipeline(
             model_name = model_name,
             target_returns = target_returns,
             y_pred = preds,
-            sliding_window_size = sliding_window_size,
             method = method,
         )
         column_name = ticker_to_predict + "_" + model_name

@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 import sys
 sys.path.insert(0, '..')
 
-from load_data import load_files
+from utils.load_data import load_files
 
 
 

@@ -1,5 +1,5 @@
 #%% Import all the stuff, load data, define constants
-from load_data import load_files, create_target_classes
+from utils.load_data import load_files, create_target_classes
 import pandas as pd
 import numpy as np
 from utils.sktime import from_df_to_sktime_data

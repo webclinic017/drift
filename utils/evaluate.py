@@ -5,7 +5,7 @@ from utils.helpers import get_first_valid_return_index
 import pandas as pd
 import numpy as np
 
-def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.01) -> pd.Series:
+def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.00) -> pd.Series:
     delta_pos = signal.diff(1).abs().fillna(0.)
     costs = transaction_cost * delta_pos
     return (signal * returns) - costs
@@ -36,20 +36,18 @@ def evaluate_predictions(
                         model_name: str,
                         target_returns: pd.Series,
                         y_pred: pd.Series,
-                        sliding_window_size: int,
                         method: Literal['classification', 'regression']
                         ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
-    first_nonzero_return = get_first_valid_return_index(target_returns)
-    evaluate_from = first_nonzero_return + sliding_window_size + 1
+    first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(y_pred))
+    evaluate_from = first_nonzero_return + 1
     
     target_returns = pd.Series(target_returns[evaluate_from:])
     if method == 'regression':
         # if there are lots of zeros in the ground truth returns, probably something is wrong, but we can tolerate a couple of days of missing data.
         is_zero = target_returns[target_returns == 0]
         assert len(is_zero) < 15
-    # we can't deal with 0 returns, so we'll just remap the few examples to 0.0001 
-    target_returns = target_returns.apply(lambda x: 0.0001 if x == 0 else x)
+
     y_pred = pd.Series(y_pred[evaluate_from:])
 
     df = __preprocess(target_returns, y_pred, method)

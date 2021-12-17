@@ -2,7 +2,7 @@
 from sklearnex import patch_sklearn
 patch_sklearn()
 
-from load_data import create_target_classes, load_files
+from utils.load_data import create_target_classes, load_files
 from sktime.forecasting.model_selection import temporal_train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -122,7 +122,7 @@ for model_name, create_model in models_to_try:
         retrain_every = retrain_every
     )
 
-    evaluate_predictions(model_name, y_train, preds, sliding_window_size)
+    evaluate_predictions(model_name, y_train, preds)
 
 
 #%%

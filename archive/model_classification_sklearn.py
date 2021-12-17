@@ -2,7 +2,7 @@
 from sklearnex import patch_sklearn
 patch_sklearn()
 
-from load_data import create_target_cum_forward_returns, create_target_classes, load_files
+from utils.load_data import create_target_cum_forward_returns, create_target_classes, load_files
 from sktime.forecasting.model_selection import temporal_train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
