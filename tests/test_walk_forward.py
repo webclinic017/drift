@@ -5,7 +5,10 @@ from sklearn.base import BaseEstimator
 
 no_of_rows = 100
 
-def __generate_test_data(no_of_rows):
+def __generate_incremental_test_data(no_of_rows) -> tuple[pd.DataFrame, pd.Series]:
+    ''' Test data, where X[n][any_column] == y[n]+1
+    '''
+    
     no_columns = 6
     X = [[row] * no_columns for row in range(no_of_rows)]
     assert X[0][0] == 0
@@ -23,22 +26,34 @@ def __generate_test_data(no_of_rows):
     return X, y
 
 
+
+class IncrementingStubModel(BaseEstimator):
+    '''
+    A deteministic model that can predict the future with 100% accuracy
+    It verifies that the X[n][any_column]+1 == y[n]
+    '''
+
+    def __init__(self, window_length) -> None:
+        super().__init__()
+        self.window_length = window_length
+
+    def fit(self, X, y):
+        assert len(X) == self.window_length
+        for i in range(len(X)):
+            assert X[i][0] + 1 == y[i]
+
+    def predict(self, X):
+        return np.array([X[0][0] + 1])
+
+
 def test_walk_forward_train_test():
-    X, y = __generate_test_data(no_of_rows)
+    X, y = __generate_incremental_test_data(no_of_rows)
 
     window_length = 10
-    class StubModel(BaseEstimator):
 
-        def fit(self, X, y):
-            assert len(X) == window_length
-            for i in range(len(X)):
-                assert X[i][0] + 1 == y[i]
-
-        def predict(self, X):
-            return np.array([X[0][0] + 1])
-
-    model = StubModel()
+    model = IncrementingStubModel(window_length = window_length)
     scaler = None
+
     models, predictions = walk_forward_train_test(
         model_name='test',
         model=model,
@@ -48,6 +63,8 @@ def test_walk_forward_train_test():
         window_size=window_length,
         retrain_every=10,
         scaler=scaler)
-    for i in range(window_length, no_of_rows):
-        predictions[i] == y[i]
     
+    # verify if predictions are the same as y
+    for i in range(window_length+2, no_of_rows):
+        assert predictions[i] == y[i]
+
