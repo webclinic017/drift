@@ -14,6 +14,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier
 
+import feature_extractors.feature_extractor_presets as feature_extractor_presets
 from training.pipeline import run_single_asset_trainig_pipeline
 
 
@@ -51,15 +52,13 @@ retrain_every = 20
 scaler = 'minmax' # 'normalize' 'minmax' 'standardize' 'none'
 include_original_data_in_ensemble = True
 method = 'classification'
+forecasting_horizon = 1
 data_parameters = dict(path=path,
-    target_asset_lags= [1,2,3,4,5,6,8,10,15],
     load_other_assets= False,
-    other_asset_lags= [],
     log_returns= True,
-    add_date_features= False,
-    own_technical_features= 'level2',
-    other_technical_features= 'none',
-    exogenous_features= 'none',
+    forecasting_horizon = forecasting_horizon,
+    own_features= feature_extractor_presets.date + feature_extractor_presets.level1,
+    other_features= [],
     index_column= 'int',
     method= method,
 )

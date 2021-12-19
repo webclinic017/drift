@@ -4,7 +4,8 @@ import os
 import numpy as np
 from pandas.core.frame import DataFrame
 from utils.technical_indicators import ROC, RSI, STOK, STOD
-from typing import Literal
+from utils.typing import FeatureExtractor
+from typing import Callable, Literal
 from sklearn.preprocessing import OneHotEncoder
 
 #%%
@@ -18,14 +19,11 @@ def get_etf_assets(path: str) -> list[str]:
 
 def load_data(path: str,
             target_asset: str,
-            target_asset_lags: list[int],
             load_other_assets: bool,
-            other_asset_lags: list[int],
             log_returns: bool,
-            add_date_features: bool,
-            own_technical_features: Literal['none', 'level1', 'level2'],
-            other_technical_features: Literal['none', 'level1', 'level2'],
-            exogenous_features: Literal['none', 'level1'],
+            forecasting_horizon: int,
+            own_features: list[tuple[str, FeatureExtractor, list[int]]],
+            other_features: list[tuple[str, FeatureExtractor, list[int]]],
             index_column: Literal['date', 'int'],
             method: Literal['regression', 'classification'],
             narrow_format: bool = False,
@@ -45,8 +43,7 @@ def load_data(path: str,
         path=os.path.join(path,f),
         prefix=f.split('.')[0],
         returns='log_returns' if log_returns else 'returns',
-        technical_features=own_technical_features if is_target_asset(target_asset, f) else other_technical_features,
-        lags= target_asset_lags if is_target_asset(target_asset, f) else other_asset_lags,
+        feature_extractors=own_features if is_target_asset(target_asset, f) else other_features,
         narrow_format=narrow_format,
     ) for f in files]
     if narrow_format:
@@ -55,11 +52,6 @@ def load_data(path: str,
         dfs = pd.concat(dfs, axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
-
-    if add_date_features:
-        dfs = pd.concat([dfs, pd.get_dummies(dfs.index.day, drop_first=True, prefix="day_month").set_index(dfs.index)], axis=1)
-        dfs = pd.concat([dfs, pd.get_dummies(dfs.index.dayofweek, drop_first=True, prefix="day_week").set_index(dfs.index)] , axis=1)
-        dfs = pd.concat([dfs, pd.get_dummies(dfs.index.month, drop_first=True, prefix="month").set_index(dfs.index)], axis = 1)
 
     if index_column == 'int':
         dfs.reset_index(drop=True, inplace=True)
@@ -70,15 +62,14 @@ def load_data(path: str,
     ## Create target 
     target_col = 'target'
     returns_col = target_asset + '_returns'
-    prediction_horizon = 1
-    forward_returns = __create_target_cum_forward_returns(dfs, returns_col, prediction_horizon)
+    forward_returns = __create_target_cum_forward_returns(dfs, returns_col, forecasting_horizon)
     if method == 'regression':
         dfs[target_col] = forward_returns
     elif method == 'classification':
-        dfs[target_col] = __create_target_classes(dfs, returns_col, prediction_horizon, 'two')
+        dfs[target_col] = __create_target_classes(dfs, returns_col, forecasting_horizon, 'two')
     # we need to drop the last row, because we forward-shift the target (see what happens if you call .shift[-1] on a pd.Series) 
-    dfs = dfs.iloc[:-prediction_horizon]
-    forward_returns = forward_returns.iloc[:-prediction_horizon]
+    dfs = dfs.iloc[:-forecasting_horizon]
+    forward_returns = forward_returns.iloc[:-forecasting_horizon]
     
     X = dfs.drop(columns=[target_col])
     y = dfs[target_col]
@@ -93,8 +84,7 @@ def load_crypto_only_returns(path: str, index_column: Literal['date', 'int'], re
         path=os.path.join(path,f),
         prefix=f.split('.')[0],
         returns=returns,
-        technical_features='none',
-        lags=[],
+        feature_extractors=[],
         narrow_format=False,
     ) for f in files]
     dfs = pd.concat(dfs, axis=1)
@@ -110,7 +100,11 @@ def load_crypto_assets_availability(path: str, index_column: Literal['date', 'in
     return load_crypto_only_returns(path, index_column, 'returns').applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
 
 
-def __load_df(path: str, prefix: str, returns: Literal['price', 'returns', 'log_returns'], technical_features: Literal['none', 'level1', 'level2'], lags: list[int], narrow_format: bool = False) -> pd.DataFrame:
+def __load_df(path: str,
+            prefix: str,
+            returns: Literal['price', 'returns', 'log_returns'],
+            feature_extractors: list[tuple[str, FeatureExtractor, list[int]]],
+            narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(path, header=0, index_col=0).fillna(0)
 
     if returns == 'log_returns':
@@ -119,11 +113,8 @@ def __load_df(path: str, prefix: str, returns: Literal['price', 'returns', 'log_
         df['returns'] = df['close']
     else:
         df['returns'] = df['close'].pct_change()
-    
-    for lag in lags:
-        df[f'lag_{lag}'] = df['returns'].shift(lag)
 
-    df = __augment_derived_features(df, log_returns=True if returns == 'log_returns' else False, technical_features=technical_features)
+    df = __apply_feature_extractors(df, log_returns=True if returns == 'log_returns' else False, feature_extractors = feature_extractors)
 
     df = df.replace([np.inf, -np.inf], 0.)
     df = df.drop(columns=['open', 'high', 'low', 'close'])
@@ -134,47 +125,24 @@ def __load_df(path: str, prefix: str, returns: Literal['price', 'returns', 'log_
     if narrow_format:
         df["ticker"] = np.repeat(prefix, df.shape[0])
     else: 
-        df.columns = [prefix + "_" + c for c in df.columns]
+        df.columns = [prefix + "_" + c if 'date' not in c else c for c in df.columns]
     return df
 
-def __augment_derived_features(df: pd.DataFrame, log_returns: bool, technical_features: Literal['none', 'level1', 'level2']) -> pd.DataFrame:
-    if technical_features == 'level1' or technical_features == 'level2':
-        # volatility (10, 20, 30, 60 days)
-        df['vol_10'] = df['returns'].rolling(10).std()*(252**0.5)
-        df['vol_20'] = df['returns'].rolling(20).std()*(252**0.5)
-        df['vol_30'] = df['returns'].rolling(30).std()*(252**0.5)
-        df['vol_60'] = df['returns'].rolling(60).std()*(252**0.5)
 
-        # momentum (10, 20, 30, 60, 90 days)
-        if log_returns:
-            df['mom_10'] = np.log(df['close']).diff(10)
-            df['mom_20'] = np.log(df['close']).diff(20)
-            df['mom_30'] = np.log(df['close']).diff(30)
-            df['mom_60'] = np.log(df['close']).diff(60)
-            df['mom_90'] = np.log(df['close']).diff(90)
-        else:
-            df['mom_10'] = df['close'].pct_change(10)
-            df['mom_20'] = df['close'].pct_change(20)
-            df['mom_30'] = df['close'].pct_change(30)
-            df['mom_60'] = df['close'].pct_change(60)
-            df['mom_90'] = df['close'].pct_change(90)
+def __apply_feature_extractors(df: pd.DataFrame,
+                            log_returns: bool,
+                            feature_extractors: list[tuple[str, FeatureExtractor, list[int]]]) -> pd.DataFrame:
 
-    if technical_features == 'level2':
-        df['roc_10'] = ROC(df['close'], 10)
-        df['roc_30'] = ROC(df['close'], 30)
-
-        df['rsi_10'] = RSI(df['close'], 10)
-        df['rsi_30'] = RSI(df['close'], 30)
-        df['rsi_100'] = RSI(df['close'], 30)
-
-        df['stok_10'] = STOK(df['close'], df['low'], df['high'], 10)
-        df['stod_10'] = STOD(df['close'], df['low'], df['high'], 10)
-        df['stok_30'] = STOK(df['close'], df['low'], df['high'], 30)
-        df['stod_30'] = STOD(df['close'], df['low'], df['high'], 30)
-        df['stok_200'] = STOK(df['close'], df['low'], df['high'], 200)
-        df['stod_200'] = STOD(df['close'], df['low'], df['high'], 200)
+    for name, extractor, periods in feature_extractors:
+        for period in periods:
+            features = extractor(df, period, log_returns)
+            if type(features) == pd.DataFrame:
+                df = pd.concat([df, features], axis=1)
+            elif type(features) == pd.Series:
+                df[name + '_' + str(period)] = extractor(df, period, log_returns)
+            else:
+                assert False, "Feature extractor must return a pd.DataFrame or pd.Series"
     return df
-
 
 
 # %%

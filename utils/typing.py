@@ -1,7 +1,13 @@
-from typing import Protocol
+from typing import Protocol, Callable, Union
+import pandas as pd
 
 class SKLearnModel(Protocol):
     def fit(self, X, y, sample_weight=None): ...
     def predict(self, X): ...
     def score(self, X, y, sample_weight=None): ...
     def set_params(self, **params): ...
+
+
+Period = int
+IsLogReturn = bool
+FeatureExtractor = Callable[[pd.DataFrame, Period, IsLogReturn], Union[pd.DataFrame, pd.Series]]
