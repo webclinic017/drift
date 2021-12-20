@@ -25,6 +25,7 @@ def run_single_asset_trainig_pipeline(
                     sliding_window_size: int,
                     retrain_every: int,
                     scaler: Literal['normalize', 'minmax', 'standardize', 'none'],
+                    wandb
                     ) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
@@ -32,9 +33,10 @@ def run_single_asset_trainig_pipeline(
 
     results = pd.DataFrame()
     predictions = pd.DataFrame()
+    
+    wandb_active = type(wandb) is not type(None)
 
     for model_name, model in models:
-
         model_over_time, preds = walk_forward_train_test(
             model_name=model_name,
             model = model,
@@ -55,5 +57,15 @@ def run_single_asset_trainig_pipeline(
         column_name = ticker_to_predict + "_" + model_name
         results[column_name] = result
         predictions[column_name] = preds
+        
+        if wandb_active:
+            run = wandb.init(project="price-forecasting", config={"model_type": model_name, "ticker": ticker_to_predict}, reinit=True)
+            wandb.run.name = ticker_to_predict + "-" + model_name+ "-" + wandb.run.id
+            wandb.run.save()
+            
+            for rownum,(indx,val) in enumerate(result.iteritems()):
+                run.log({"model_type": model_name, indx:val })
+                
+            run.finish()
 
     return results, predictions
