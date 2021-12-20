@@ -1,0 +1,47 @@
+program: rnn_sweep.py
+method: bayes
+project: integer-sequence
+name: Finding best hyperparameters for price prediction
+early_terminate:
+  type: hyperband
+  min_iter: 2000
+metric:
+  goal: maximize
+  name: accuracy_test
+parameters:
+    path : 'data/'
+    sliding_window_size: 
+      values:
+        - 90
+        - 150
+        - 365
+        - 730
+      distribution: categorical
+    retrain_every: 
+      values:
+        - 7
+        - 14
+        - 30
+        - 60
+      distribution: categorical
+    scaler: 'minmax' # 'normalize' 'minmax' 'standardize' 'none'
+    include_original_data_in_ensemble: True
+    method: 
+      values:
+        - 'classification'
+        - 'regression'
+      distribution: categorical
+    forecasting_horizon: 
+      value: 1
+      distribution: constant
+
+
+
+
+
+
+
+
+
+
+

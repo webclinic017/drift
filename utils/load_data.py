@@ -27,6 +27,7 @@ def load_data(path: str,
             index_column: Literal['date', 'int'],
             method: Literal['regression', 'classification'],
             narrow_format: bool = False,
+            all_assets:list=[]
         ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     Loads asset data from the specified path.
@@ -35,6 +36,7 @@ def load_data(path: str,
         - Series `y` with the target asset returns shifted by 1 day OR if it's a classification problem, the target class)
         - Series `forward_returns` with the target asset returns shifted by 1 day
     """
+
     
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
     files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(target_asset))]

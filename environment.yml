@@ -17,4 +17,6 @@ dependencies:
   - quantstats
   - pytorch-lightning
   - pytest
+  - wandb
+  - python-dotenv
 prefix: /usr/local/anaconda3/envs/quant
