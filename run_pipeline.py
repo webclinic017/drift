@@ -142,7 +142,6 @@ for asset in data_config['all_assets']:
 if WANDB: 
     combined_metrics = results.mean(axis=1)
     wandb.log({'results': results})
-    wandb.log({'combined': combined_metrics})
     
     
     if wandb.run is not None:

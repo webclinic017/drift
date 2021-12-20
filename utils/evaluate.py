@@ -62,6 +62,7 @@ def evaluate_predictions(
     sign_true = df.sign_true.astype(int)
     sign_pred = df.sign_pred.astype(int)
     
+    scorecard.loc['no_of_samples'] = len(target_returns) - evaluate_from
     scorecard.loc['sharpe'] = sharpe(df.result)
     scorecard.loc['sortino'] = sortino(df.result)
     scorecard.loc['skew'] = skew(df.result)
@@ -73,6 +74,17 @@ def evaluate_predictions(
     scorecard.loc['edge'] = df.result.mean()
     scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
     scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
+    
+    for index, row in sign_true.value_counts().iteritems():
+        scorecard.loc['sign_true_ratio_' + str(index)] = row / len(sign_true)
+    
+    for index, row in sign_pred.value_counts().iteritems():
+        scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(sign_pred)
+    
+
+
+    # scorecard.loc['ratio_of_classes_y'] = ' / '.join([str(index) + " " + str(round(row / len(sign_true), 2)) for index, row in sign_true.value_counts().iteritems()])
+    # scorecard.loc['ratio_of_classes_pred'] = ' / '.join([str(round(row / len(sign_pred), 2)) for index, row in sign_pred.value_counts().iteritems()])
 
 
     if method == 'regression':
