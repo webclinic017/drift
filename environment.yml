@@ -6,7 +6,7 @@ channels:
 dependencies:
   - python=3.9
   - seaborn
-  - scikit-learn-intelex
+  - scikit-learn-intelex=2021.4.0
   - ipython
   - scipy
   - scikit-learn

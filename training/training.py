@@ -15,7 +15,7 @@ def __get_scaler(type: Literal['normalize', 'minmax', 'standardize', 'none']):
     else:
         return None
 
-def run_single_asset_trainig_pipeline(
+def run_single_asset_trainig(
                     ticker_to_predict: str,
                     X: pd.DataFrame,
                     y: pd.Series,
@@ -25,7 +25,9 @@ def run_single_asset_trainig_pipeline(
                     sliding_window_size: int,
                     retrain_every: int,
                     scaler: Literal['normalize', 'minmax', 'standardize', 'none'],
-                    wandb
+                    wandb,
+                    project_name:str,
+                    sweep:bool
                     ) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
@@ -59,14 +61,21 @@ def run_single_asset_trainig_pipeline(
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions["model_" + column_name] = preds
         
-        if wandb_active:
-            run = wandb.init(project="price-forecasting", config={"model_type": model_name, "ticker": ticker_to_predict}, reinit=True)
-            wandb.run.name = ticker_to_predict + "-" + model_name+ "-" + wandb.run.id
-            wandb.run.save()
+        if wandb_active and not sweep:
+                run = wandb.init(project=project_name, config={"model_type": model_name, "ticker": ticker_to_predict}, reinit=True)
+                wandb.run.name = ticker_to_predict + "-" + model_name+ "-" + wandb.run.id
+                wandb.run.save()
             
-            for rownum,(indx,val) in enumerate(result.iteritems()):
-                run.log({"model_type": model_name, indx:val })
-                
-            run.finish()
+                for rownum,(indx,val) in enumerate(result.iteritems()):
+                    run.log({"model_type": model_name, indx:val })
+                    
+                run.finish()
+    
+    if wandb_active and sweep:
+        mean_results = results.mean()
+         
+        wandb.log({"model_type": 'avarage_model', 'results':results })
+        for rownum,(indx,val) in enumerate(mean_results.iteritems()):
+            wandb.log({"model_type": 'avarage_model', indx:val })
 
     return results, predictions

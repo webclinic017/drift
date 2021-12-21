@@ -1,115 +1,23 @@
-from sklearnex import patch_sklearn
-patch_sklearn()
-
-from utils.load_data import get_crypto_assets, get_etf_assets, load_data
-
+from utils.load_data import load_data
 import pandas as pd
-import numpy as np
-from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, LogisticRegression, Ridge
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.svm import SVR
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier
-from models.base import SKLearnModel
-from models.momentum import StaticMomentumModel
-from models.average import StaticAverageModel
-from models.naive import StaticNaiveModel
+from training.training import run_single_asset_trainig
+from utils.launch_wandb import launch_wandb, seperate_configs
+from models.model_map import map_model_name_to_function
+from default_config import get_default_config
 
-import feature_extractors.feature_extractor_presets as feature_extractor_presets
-from training.pipeline import run_single_asset_trainig_pipeline
-
-
-
-def get_config() -> tuple[dict, dict, dict]:
-
-    training_config = dict(
-        sliding_window_size = 150,
-        retrain_every = 20,
-        scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
-        include_original_data_in_ensemble = True,
-    )
-
-    data_config = dict(
-        path='data/',
-        all_assets = get_crypto_assets('data/'),
-        load_other_assets= False,
-        log_returns= True,
-        forecasting_horizon = 1,
-        own_features= feature_extractor_presets.date + feature_extractor_presets.level1,
-        other_features= [],
-        index_column= 'int',
-        method= 'classification',
-    )
-
-    regression_models = [
-        # ('Lasso', SKLearnModel(Lasso(alpha=0.1, max_iter=1000))),
-        ('Ridge', SKLearnModel(Ridge(alpha=0.1))),
-        ('BayesianRidge', SKLearnModel(BayesianRidge())),
-        # ('KNN', SKLearnModel(KNeighborsRegressor(n_neighbors=25))),
-        # ('AB', SKLearnModel(AdaBoostRegressor(random_state=1))),
-        # ('LR', SKLearnModel(LinearRegression(n_jobs=-1))),
-        # ('MLP', SKLearnModel(MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000))),
-        # ('RF', SKLearnModel(RandomForestRegressor(n_jobs=-1))),
-        # ('SVR', SKLearnModel(SVR(kernel='rbf', C=1e3, gamma=0.1)))
-    ]
-    regression_ensemble_model = [('Ensemble - Average', StaticAverageModel())]
-    # regression_ensemble_model = [('Ensemble - Ridge', SKLearnModel(Ridge(alpha=0.1)))]
-
-    classification_models = [
-        ('LR', SKLearnModel(LogisticRegression(n_jobs=-1))),
-        ('LDA', SKLearnModel(LinearDiscriminantAnalysis())),
-        ('KNN', SKLearnModel(KNeighborsClassifier())),
-        ('CART', SKLearnModel(DecisionTreeClassifier())),
-        ('StaticMomentum', StaticMomentumModel(allow_short=True)),
-        # ('StaticNaive', StaticNaiveModel()),
-        # ('NB', SKLearnModel(GaussianNB())),
-        # ('AB', SKLearnModel(AdaBoostClassifier())),
-        # ('RF', SKLearnModel(RandomForestClassifier(n_jobs=-1)))
-    ]
-    classification_ensemble_model = [('Ensemble - Average', StaticAverageModel())]
-    # classification_ensemble_model = [('Ensemble - CART', SKLearnModel(DecisionTreeClassifier()))]
-
-    model_config = dict(
-        level_1_models = regression_models if data_config['method'] == 'regression' else classification_models,
-        level_2_model = regression_ensemble_model if data_config['method'] == 'regression' else classification_ensemble_model,
-    )
-    return model_config, training_config, data_config
-
-def launch_wandb(config, sweep=False):
-        from wandb_setup import get_wandb
-        wandb = get_wandb()   
-        
-        if type(wandb) == type(None): 
-            return None
-        elif sweep:
-            wandb.init(project="price-forecasting",  config = config)             
-            return wandb
-        else:
-            wandb.init(project="price-forecasting", config=config, reinit=True)
-            return wandb
-    
-
-def run_pipeline(with_wandb: bool, sweep: bool):
-    model_config, training_config, data_config = get_config()
+def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
+    model_config, training_config, data_config = get_default_config()
     
     wandb = None
     if with_wandb: 
-        wandb = launch_wandb(dict(**model_config, **training_config, **data_config), sweep)
-        
-        if type(wandb) is not type(None):
-            for k in training_config: training_config[k] = wandb.config[k]
-        # for k in model_config: model_config[k] = wandb.config[k]
-        # for k in data_config: data_config[k] = wandb.config[k]
-            
-    pipeline(model_config, training_config, data_config, wandb)  
+        wandb = launch_wandb(project_name=project_name, default_config=dict(**model_config, **training_config, **data_config), sweep=sweep)
+        model_config, training_config, data_config = seperate_configs(wandb, model_config, training_config, data_config)
+
+    model_config = map_model_name_to_function(model_config, data_config['method'])
+    pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
     
 
-# Run pipeline
-
-def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
+def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict ):
     results = pd.DataFrame()
 
     for asset in data_config['all_assets']:
@@ -123,7 +31,7 @@ def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
         X, y, target_returns = load_data(**data_params)
 
         # 2. Train Level-1 models
-        current_result, current_predictions = run_single_asset_trainig_pipeline(
+        current_result, current_predictions = run_single_asset_trainig(
             ticker_to_predict = asset,
             X = X,
             y = y,
@@ -133,32 +41,37 @@ def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
             sliding_window_size = training_config['sliding_window_size'],
             retrain_every =  training_config['retrain_every'],
             scaler =  training_config['scaler'],
-            wandb = wandb
+            wandb = wandb,
+            project_name=project_name,
+            sweep=sweep
         )
         results = pd.concat([results, current_result], axis=1)
         all_predictions = pd.concat([all_predictions, current_predictions], axis=1)
 
-        # 3. Train Level-2 (Ensemble) model
-        ensemble_X = all_predictions
-        if training_config['include_original_data_in_ensemble']:
-            ensemble_X = pd.concat([ensemble_X, X], axis=1)
+        if len(model_config['level_2_models']) > 0: 
+            # 3. Train Level-2 (Ensemble) model
+            
+            ensemble_X = all_predictions
+            if training_config['include_original_data_in_ensemble']:
+                ensemble_X = pd.concat([ensemble_X, X], axis=1)
 
-        ensemble_result, ensemble_preds = run_single_asset_trainig_pipeline(
-            ticker_to_predict = asset,
-            X = ensemble_X,
-            y = y,
-            target_returns = target_returns,
-            models = model_config['level_2_model'],
-            method = data_config['method'],
-            sliding_window_size = training_config['sliding_window_size'],
-            retrain_every = training_config['retrain_every'],
-            scaler = training_config['scaler'],
-            wandb = wandb
-        )
+            ensemble_result, ensemble_preds = run_single_asset_trainig(
+                ticker_to_predict = asset,
+                X = ensemble_X,
+                y = y,
+                target_returns = target_returns,
+                models = model_config['level_2_models'],
+                method = data_config['method'],
+                sliding_window_size = training_config['sliding_window_size'],
+                retrain_every = training_config['retrain_every'],
+                scaler = training_config['scaler'],
+                wandb = wandb,
+                project_name=project_name,
+                sweep=sweep
+            )
 
-        results = pd.concat([results, ensemble_result], axis=1)
-        all_predictions = pd.concat([all_predictions, ensemble_preds], axis=1)
-
+            results = pd.concat([results, ensemble_result], axis=1)
+            all_predictions = pd.concat([all_predictions, ensemble_preds], axis=1)
 
     results.to_csv('results.csv')
 
@@ -168,7 +81,9 @@ def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
     print("Mean Sharpe ratio for Level-1 models: ", level1_columns.loc['sharpe'].mean())
     print("Mean Sharpe ratio for Level-2 (Ensemble) models: ", ensemble_columns.loc['sharpe'].mean())
 
-    
+    if sweep:
+        if wandb.run is not None:
+            wandb.finish()
     
 if __name__ == '__main__':
-    run_pipeline(with_wandb = False, sweep = False)
+    setup_pipeline(project_name='price-prediction', with_wandb = False, sweep = False)

@@ -1,28 +1,49 @@
-program: rnn_sweep.py
-method: bayes
-project: integer-sequence
+program: run_pipeline.py
+method: grid
+project: price-forecasting
 name: Finding best hyperparameters for price prediction
-early_terminate:
-  type: hyperband
-  min_iter: 2000
-metric:
-  goal: maximize
-  name: sharpe
+# early_terminate:
+#   type: hyperband
+#   min_iter: 2000
+# metric:
+#   goal: maximize
+#   name: sharpe
 parameters:
-    path : 'data/'
+    path : 
+      value: 'data/'
     sliding_window_size: 
       values: [50, 90, 130, 160, 180, 280, 380, 500]
       distribution: categorical
     retrain_every: 
       values: [7, 14, 30, 60, 100]
+      distribution: categorical
     scaler:
       values: ['minmax', 'normalize', 'minmax', 'standardize', 'none']
+      distribution: categorical
     include_original_data_in_ensemble:
-      values: [True, False]
+      value: True
     method: 
-      values: ['classification', 'regression']
+      value: 'classification'
     forecasting_horizon: 
       values: [1,2,3,4,5,6,7,8,9,10]
+      distribution: categorical
+    load_other_assets: 
+      value: False
+    log_returns: 
+      value: True
+    own_features: 
+      value: []
+    other_features: 
+      value: []
+    index_column: 
+      value: 'int'
+    level_1_models: 
+      value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF"]
+      distribution: constant
+    level_2_models: 
+      value: ['Ensemble_CART']
+      distribution: constant
+
 
 
 
