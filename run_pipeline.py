@@ -15,6 +15,8 @@ from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier
 from models.base import SKLearnModel
 from models.momentum import StaticMomentumModel
+from models.average import StaticAverageModel
+from models.naive import StaticNaiveModel
 
 import feature_extractors.feature_extractor_presets as feature_extractor_presets
 from training.pipeline import run_single_asset_trainig_pipeline
@@ -53,19 +55,22 @@ def get_config() -> tuple[dict, dict, dict]:
         # ('RF', SKLearnModel(RandomForestRegressor(n_jobs=-1))),
         # ('SVR', SKLearnModel(SVR(kernel='rbf', C=1e3, gamma=0.1)))
     ]
-    regression_ensemble_model = [('Ensemble - Ridge', SKLearnModel(Ridge(alpha=0.1)))]
+    regression_ensemble_model = [('Ensemble - Average', StaticAverageModel())]
+    # regression_ensemble_model = [('Ensemble - Ridge', SKLearnModel(Ridge(alpha=0.1)))]
 
     classification_models = [
         ('LR', SKLearnModel(LogisticRegression(n_jobs=-1))),
-        # ('LDA', SKLearnModel(LinearDiscriminantAnalysis())),
-        # ('KNN', SKLearnModel(KNeighborsClassifier())),
-        # ('CART', SKLearnModel(DecisionTreeClassifier())),
-        ('StaticMomentum', StaticMomentumModel(allow_short=True))
+        ('LDA', SKLearnModel(LinearDiscriminantAnalysis())),
+        ('KNN', SKLearnModel(KNeighborsClassifier())),
+        ('CART', SKLearnModel(DecisionTreeClassifier())),
+        ('StaticMomentum', StaticMomentumModel(allow_short=True)),
+        # ('StaticNaive', StaticNaiveModel()),
         # ('NB', SKLearnModel(GaussianNB())),
         # ('AB', SKLearnModel(AdaBoostClassifier())),
         # ('RF', SKLearnModel(RandomForestClassifier(n_jobs=-1)))
     ]
-    classification_ensemble_model = [('Ensemble - CART', SKLearnModel(DecisionTreeClassifier()))]
+    classification_ensemble_model = [('Ensemble - Average', StaticAverageModel())]
+    # classification_ensemble_model = [('Ensemble - CART', SKLearnModel(DecisionTreeClassifier()))]
 
     model_config = dict(
         level_1_models = regression_models if data_config['method'] == 'regression' else classification_models,

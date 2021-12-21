@@ -1,20 +1,24 @@
 
 from typing import Literal, Optional
 from sklearn.base import clone
+from abc import ABC, abstractmethod, abstractproperty
 
-class Model:
+class Model(ABC):
 
     # data_format: Literal['dataframe', 'numpy'] 
     data_scaling: Literal["scaled", "unscaled"]
     # data_format: Literal["wide", "narrow"]
     only_column: Optional[str]
 
+    @abstractmethod
     def fit(self, X, y):
         pass
 
+    @abstractmethod
     def predict(self, X):
         pass
 
+    @abstractmethod
     def clone(self):
         pass
 

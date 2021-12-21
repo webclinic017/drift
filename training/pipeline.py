@@ -56,7 +56,8 @@ def run_single_asset_trainig_pipeline(
         )
         column_name = ticker_to_predict + "_" + model_name
         results[column_name] = result
-        predictions[column_name] = preds
+        # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
+        predictions["model_" + column_name] = preds
         
         if wandb_active:
             run = wandb.init(project="price-forecasting", config={"model_type": model_name, "ticker": ticker_to_predict}, reinit=True)
