@@ -7,33 +7,22 @@ early_terminate:
   min_iter: 2000
 metric:
   goal: maximize
-  name: accuracy_test
+  name: sharpe
 parameters:
     path : 'data/'
     sliding_window_size: 
-      values:
-        - 90
-        - 150
-        - 365
-        - 730
+      values: [50, 90, 130, 160, 180, 280, 380, 500]
       distribution: categorical
     retrain_every: 
-      values:
-        - 7
-        - 14
-        - 30
-        - 60
-      distribution: categorical
-    scaler: 'minmax' # 'normalize' 'minmax' 'standardize' 'none'
-    include_original_data_in_ensemble: True
+      values: [7, 14, 30, 60, 100]
+    scaler:
+      values: ['minmax', 'normalize', 'minmax', 'standardize', 'none']
+    include_original_data_in_ensemble:
+      values: [True, False]
     method: 
-      values:
-        - 'classification'
-        - 'regression'
-      distribution: categorical
+      values: ['classification', 'regression']
     forecasting_horizon: 
-      value: 1
-      distribution: constant
+      values: [1,2,3,4,5,6,7,8,9,10]
 
 
 

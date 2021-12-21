@@ -21,41 +21,12 @@ from typing import Tuple
 
 
 def get_config()->Tuple[dict, dict, dict]:
-    # Parameters
-    model_config = dict(
-        regression_models = [
-            # ('Lasso', Lasso(alpha=0.1, max_iter=1000)),
-            ('Ridge', Ridge(alpha=0.1)),
-            ('BayesianRidge', BayesianRidge()),
-            # ('KNN', KNeighborsRegressor(n_neighbors=25)),
-            # ('AB', AdaBoostRegressor(random_state=1)),
-            # ('LR', LinearRegression(n_jobs=-1)),
-            # ('MLP', MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
-            # ('RF', RandomForestRegressor(n_jobs=-1)),
-            # ('SVR', SVR(kernel='rbf', C=1e3, gamma=0.1))
-        ],
-        regression_ensemble_model = [('Ensemble - Ridge', Ridge(alpha=0.1))],
-
-        classification_models = [
-            ('LR', LogisticRegression(n_jobs=-1)),
-            # ('LDA', LinearDiscriminantAnalysis()),
-            # ('KNN', KNeighborsClassifier()),
-            # ('CART', DecisionTreeClassifier()),
-            # ('NB', GaussianNB()),
-            # ('AB', AdaBoostClassifier()),
-            # ('RF', RandomForestClassifier(n_jobs=-1))
-        ],
-        classification_ensemble_model = [('Ensemble - CART', DecisionTreeClassifier())]
-    )
 
     training_config = dict(
-        # path = 'data/',
         sliding_window_size = 150,
         retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
         include_original_data_in_ensemble = True,
-        # method = 'regression',
-        # forecasting_horizon = 1
         )
 
     data_config = dict(
@@ -67,9 +38,38 @@ def get_config()->Tuple[dict, dict, dict]:
         own_features= feature_extractor_presets.date + feature_extractor_presets.level1,
         other_features= [],
         index_column= 'int',
-        method= 'regression',
+        method= 'classification',
     )
-    
+
+    classification_models = [
+        ('LR', LogisticRegression(n_jobs=-1)),
+        # ('LDA', LinearDiscriminantAnalysis()),
+        ('KNN', KNeighborsClassifier()),
+        # ('CART', DecisionTreeClassifier()),
+        # ('NB', GaussianNB()),
+        # ('AB', AdaBoostClassifier()),
+        # ('RF', RandomForestClassifier(n_jobs=-1))
+    ]
+
+    regression_models = [
+        # ('Lasso', Lasso(alpha=0.1, max_iter=1000)),
+        ('Ridge', Ridge(alpha=0.1)),
+        ('BayesianRidge', BayesianRidge()),
+        # ('KNN', KNeighborsRegressor(n_neighbors=25)),
+        # ('AB', AdaBoostRegressor(random_state=1)),
+        # ('LR', LinearRegression(n_jobs=-1)),
+        # ('MLP', MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
+        # ('RF', RandomForestRegressor(n_jobs=-1)),
+        # ('SVR', SVR(kernel='rbf', C=1e3, gamma=0.1))
+    ]
+
+    regression_ensemble_model = [('Ensemble - Ridge', Ridge(alpha=0.1))]
+    classification_ensemble_model = [('Ensemble - CART', DecisionTreeClassifier())]
+
+    model_config = dict(
+        level_1_models = regression_models if data_config['method'] == 'regression' else classification_models,
+        level_2_model = regression_ensemble_model if data_config['method'] == 'regression' else classification_ensemble_model,
+    )
     return model_config, training_config, data_config
 
 def launch_wandb(config, sweep=False):
@@ -86,7 +86,7 @@ def launch_wandb(config, sweep=False):
             return wandb
     
 
-def run_pipeline(with_wandb, sweep):
+def run_pipeline(with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = get_config()
     
     wandb = None
@@ -122,7 +122,7 @@ def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
             X = X,
             y = y,
             target_returns = target_returns,
-            models = model_config['regression_models'] if data_config['method'] == 'regression' else model_config['classification_models'],
+            models = model_config['level_1_models'],
             method = data_config['method'],
             sliding_window_size = training_config['sliding_window_size'],
             retrain_every =  training_config['retrain_every'],
@@ -142,7 +142,7 @@ def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
             X = ensemble_X,
             y = y,
             target_returns = target_returns,
-            models = model_config['regression_ensemble_model'] if data_config['method'] == 'regression' else model_config['classification_ensemble_model'],
+            models = model_config['level_2_model'],
             method = data_config['method'],
             sliding_window_size = training_config['sliding_window_size'],
             retrain_every = training_config['retrain_every'],
@@ -165,4 +165,4 @@ def pipeline(model_config:dict, training_config:dict, data_config:dict, wandb):
     
     
 if __name__ == '__main__':
-    run_pipeline(False, False)
+    run_pipeline(with_wandb = False, sweep = False)
