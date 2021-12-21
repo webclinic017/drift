@@ -13,21 +13,22 @@ from sklearn.svm import SVR
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier
+from models.base import SKLearnModel
+from models.momentum import StaticMomentumModel
 
 import feature_extractors.feature_extractor_presets as feature_extractor_presets
 from training.pipeline import run_single_asset_trainig_pipeline
 
-from typing import Tuple
 
 
-def get_config()->Tuple[dict, dict, dict]:
+def get_config() -> tuple[dict, dict, dict]:
 
     training_config = dict(
         sliding_window_size = 150,
         retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
         include_original_data_in_ensemble = True,
-        )
+    )
 
     data_config = dict(
         path='data/',
@@ -41,30 +42,30 @@ def get_config()->Tuple[dict, dict, dict]:
         method= 'classification',
     )
 
-    classification_models = [
-        ('LR', LogisticRegression(n_jobs=-1)),
-        # ('LDA', LinearDiscriminantAnalysis()),
-        ('KNN', KNeighborsClassifier()),
-        # ('CART', DecisionTreeClassifier()),
-        # ('NB', GaussianNB()),
-        # ('AB', AdaBoostClassifier()),
-        # ('RF', RandomForestClassifier(n_jobs=-1))
-    ]
-
     regression_models = [
-        # ('Lasso', Lasso(alpha=0.1, max_iter=1000)),
-        ('Ridge', Ridge(alpha=0.1)),
-        ('BayesianRidge', BayesianRidge()),
-        # ('KNN', KNeighborsRegressor(n_neighbors=25)),
-        # ('AB', AdaBoostRegressor(random_state=1)),
-        # ('LR', LinearRegression(n_jobs=-1)),
-        # ('MLP', MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
-        # ('RF', RandomForestRegressor(n_jobs=-1)),
-        # ('SVR', SVR(kernel='rbf', C=1e3, gamma=0.1))
+        # ('Lasso', SKLearnModel(Lasso(alpha=0.1, max_iter=1000))),
+        ('Ridge', SKLearnModel(Ridge(alpha=0.1))),
+        ('BayesianRidge', SKLearnModel(BayesianRidge())),
+        # ('KNN', SKLearnModel(KNeighborsRegressor(n_neighbors=25))),
+        # ('AB', SKLearnModel(AdaBoostRegressor(random_state=1))),
+        # ('LR', SKLearnModel(LinearRegression(n_jobs=-1))),
+        # ('MLP', SKLearnModel(MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000))),
+        # ('RF', SKLearnModel(RandomForestRegressor(n_jobs=-1))),
+        # ('SVR', SKLearnModel(SVR(kernel='rbf', C=1e3, gamma=0.1)))
     ]
+    regression_ensemble_model = [('Ensemble - Ridge', SKLearnModel(Ridge(alpha=0.1)))]
 
-    regression_ensemble_model = [('Ensemble - Ridge', Ridge(alpha=0.1))]
-    classification_ensemble_model = [('Ensemble - CART', DecisionTreeClassifier())]
+    classification_models = [
+        ('LR', SKLearnModel(LogisticRegression(n_jobs=-1))),
+        # ('LDA', SKLearnModel(LinearDiscriminantAnalysis())),
+        # ('KNN', SKLearnModel(KNeighborsClassifier())),
+        # ('CART', SKLearnModel(DecisionTreeClassifier())),
+        ('StaticMomentum', StaticMomentumModel(allow_short=True))
+        # ('NB', SKLearnModel(GaussianNB())),
+        # ('AB', SKLearnModel(AdaBoostClassifier())),
+        # ('RF', SKLearnModel(RandomForestClassifier(n_jobs=-1)))
+    ]
+    classification_ensemble_model = [('Ensemble - CART', SKLearnModel(DecisionTreeClassifier()))]
 
     model_config = dict(
         level_1_models = regression_models if data_config['method'] == 'regression' else classification_models,

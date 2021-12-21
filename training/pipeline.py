@@ -3,7 +3,7 @@ from typing import Literal
 from training.walk_forward import walk_forward_train_test
 from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
 from utils.evaluate import evaluate_predictions
-from utils.typing import SKLearnModel
+from models.base import Model
 
 def __get_scaler(type: Literal['normalize', 'minmax', 'standardize', 'none']):
     if type == 'normalize':
@@ -20,7 +20,7 @@ def run_single_asset_trainig_pipeline(
                     X: pd.DataFrame,
                     y: pd.Series,
                     target_returns: pd.Series,
-                    models: list[tuple[str, SKLearnModel]],
+                    models: list[tuple[str, Model]],
                     method: Literal['regression', 'classification'],
                     sliding_window_size: int,
                     retrain_every: int,

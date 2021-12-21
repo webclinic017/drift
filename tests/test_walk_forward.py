@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from training.walk_forward import walk_forward_train_test
-from sklearn.base import BaseEstimator
+from models.base import Model
 
 no_of_rows = 100
 
@@ -27,11 +27,14 @@ def __generate_incremental_test_data(no_of_rows) -> tuple[pd.DataFrame, pd.Serie
 
 
 
-class IncrementingStubModel(BaseEstimator):
+class IncrementingStubModel(Model):
     '''
     A deteministic model that can predict the future with 100% accuracy
     It verifies that the X[n][any_column]+1 == y[n]
     '''
+
+    data_scaling = "unscaled"
+    only_column = None
 
     def __init__(self, window_length) -> None:
         super().__init__()
@@ -45,6 +48,8 @@ class IncrementingStubModel(BaseEstimator):
     def predict(self, X):
         return np.array([X[0][0] + 1])
 
+    def clone(self):
+        return self
 
 def test_walk_forward_train_test():
     X, y = __generate_incremental_test_data(no_of_rows)

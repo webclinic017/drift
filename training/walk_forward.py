@@ -1,12 +1,13 @@
 import pandas as pd
-from sklearn.base import clone
-from utils.typing import SKLearnModel
+from models.base import Model
 import numpy as np
 from utils.helpers import get_first_valid_return_index
 
+from sklearn.base import clone
+
 def walk_forward_train_test(
                             model_name: str,
-                            model: SKLearnModel,
+                            model: Model,
                             X: pd.DataFrame,
                             y: pd.Series,
                             target_returns: pd.Series,
@@ -23,7 +24,12 @@ def walk_forward_train_test(
     train_till = len(y)
     iterations_before_retrain = 0
 
-    if scaler is not None:
+    if model.only_column is not None:
+        X = X[[column for column in X.columns if model.only_column in column]]
+
+    is_scaling_on = scaler is not None and model.data_scaling == 'scaled'
+
+    if is_scaling_on:
         scaler = clone(scaler)
 
     for index in range(train_from, train_till):
@@ -32,7 +38,7 @@ def walk_forward_train_test(
             train_window_start = index - window_size - 1
             train_window_end = index - 1
             
-            if scaler is not None:
+            if is_scaling_on:
                 # First we need to fit on the expanding window data slice
                 # This is our only way to avoid lookahead bia
                 X_expanding_window = X[first_nonzero_return:train_window_end]
@@ -41,12 +47,12 @@ def walk_forward_train_test(
             X_slice = X[train_window_start:train_window_end]
             y_slice = y[train_window_start:train_window_end]
 
-            if scaler is not None:
+            if is_scaling_on:
                 X_slice = scaler.transform(X_slice.values)
             else:
                 X_slice = X_slice.to_numpy()
 
-            current_model = clone(model)
+            current_model = model.clone()
             current_model.fit(X_slice, y_slice.to_numpy())
             iterations_before_retrain = retrain_every
         else:
@@ -55,7 +61,7 @@ def walk_forward_train_test(
         models[index] = current_model
 
         next_timestep = X.iloc[index].to_numpy().reshape(1, -1)
-        if scaler is not None:
+        if is_scaling_on:
             next_timestep = scaler.transform(next_timestep)
 
         prediction = current_model.predict(next_timestep).item()

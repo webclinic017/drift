@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from training.walk_forward import walk_forward_train_test
-from sklearn.base import BaseEstimator
+from models.base import Model
 from utils.evaluate import evaluate_predictions
 
 no_of_rows = 100
@@ -29,11 +29,14 @@ def __generate_even_odd_test_data(no_of_rows) -> tuple[pd.DataFrame, pd.Series]:
 
     return X, y
 
-class EvenOddStubModel(BaseEstimator):
+class EvenOddStubModel(Model):
     '''
     A deteministic model that can predict the future with 100% accuracy
     It verifies that the X[n][any_column] == 1 if n is even,
     '''
+
+    data_scaling = "unscaled"
+    only_column = None
 
     def __init__(self, window_length) -> None:
         super().__init__()
@@ -46,6 +49,9 @@ class EvenOddStubModel(BaseEstimator):
 
     def predict(self, X):
         return np.array([-1 if X[0][0] == 1 else 1])
+
+    def clone(self):
+        return self
 
 
 def test_evaluation():
