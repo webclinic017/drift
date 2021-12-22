@@ -1,9 +1,9 @@
 from utils.load_data import load_data
 import pandas as pd
 from training.training import run_single_asset_trainig
-from utils.launch_wandb import launch_wandb, seperate_configs
+from reporting.wandb import launch_wandb, send_report_to_wandb, seperate_configs
 from models.model_map import map_model_name_to_function
-from default_config import get_default_config
+from config import get_default_config, validate_config, get_model_name
 
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = get_default_config()
@@ -17,8 +17,10 @@ def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
     
 
+
 def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict ):
     results = pd.DataFrame()
+    validate_config(model_config, training_config, data_config)
 
     for asset in data_config['all_assets']:
         print('--------\nPredicting: ', asset)
@@ -72,7 +74,9 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
 
             results = pd.concat([results, ensemble_result], axis=1)
             all_predictions = pd.concat([all_predictions, ensemble_preds], axis=1)
-
+        
+    # 4. Save & report results
+    send_report_to_wandb(results, wandb, project_name, get_model_name(model_config))
     results.to_csv('results.csv')
 
     level1_columns = results[[column for column in results.columns if 'Ensemble' not in column]]

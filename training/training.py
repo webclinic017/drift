@@ -61,21 +61,5 @@ def run_single_asset_trainig(
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions["model_" + column_name] = preds
         
-        if wandb_active and not sweep:
-                run = wandb.init(project=project_name, config={"model_type": model_name, "ticker": ticker_to_predict}, reinit=True)
-                wandb.run.name = ticker_to_predict + "-" + model_name+ "-" + wandb.run.id
-                wandb.run.save()
-            
-                for rownum,(indx,val) in enumerate(result.iteritems()):
-                    run.log({"model_type": model_name, indx:val })
-                    
-                run.finish()
-    
-    if wandb_active and sweep:
-        mean_results = results.mean()
-         
-        wandb.log({"model_type": 'avarage_model', 'results':results })
-        for rownum,(indx,val) in enumerate(mean_results.iteritems()):
-            wandb.log({"model_type": 'avarage_model', indx:val })
 
     return results, predictions

@@ -46,8 +46,8 @@ model_map = {
     )
 }
 
-model_names_classification = model_map["classification_models"].keys()
-model_names_regression = model_map["regression_models"].keys()
+model_names_classification = list(model_map["classification_models"].keys())
+model_names_regression = list(model_map["regression_models"].keys())
 
 
 def map_model_name_to_function(model_config:dict, method:str) -> dict:

@@ -1,5 +1,5 @@
 program: run_sweep.py
-method: grid
+method: bayes
 project: price-forecasting
 name: Finding best hyperparameters for price prediction
 # early_terminate:
@@ -12,10 +12,10 @@ parameters:
     path : 
       value: 'data/'
     sliding_window_size: 
-      values: [50, 90, 130, 160, 180, 280, 380, 500]
+      values: [90, 130, 160, 180, 280, 380]
       distribution: categorical
     retrain_every: 
-      values: [7, 14, 30, 60, 100]
+      values: [14, 30, 60, 100]
       distribution: categorical
     scaler:
       values: ['minmax', 'normalize', 'minmax', 'standardize', 'none']
@@ -24,8 +24,7 @@ parameters:
       values: [True, False]
       distribution: categorical
     method: 
-      values: ['classification', 'regression']
-      distribution: categorical
+      value: 'classification'
     forecasting_horizon: 
       values: [1,2,3,4,5,6,7,8,9,10]
       distribution: categorical
@@ -42,20 +41,9 @@ parameters:
     index_column: 
       value: 'int'
     level_1_models: 
-      value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF"]
-      distribution: constant
+      values: [["LR"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"]]
+      distribution: categorical
     level_2_models: 
-      value: ['Ensemble_Average']
+      value: []
       distribution: constant
-
-
-
-
-
-
-
-
-
-
-
 

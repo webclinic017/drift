@@ -2,9 +2,6 @@
 import requests
 import pandas as pd
 
-AV_API_KEY = 'UY5VGSWBE88SHGI6'
-CC_API_KEY = 'bfb8b5f54b21354608020a6654b370617b2fcabd2c8c2ce04ab881682a1d9dc9'
-
 # %%
 def get_crypto_price_crypto_compare(symbol: str, exchange: str, days: int) -> pd.DataFrame:
     api_url = f'https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={exchange}&limit={days}&api_key={CC_API_KEY}'
