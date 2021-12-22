@@ -11,7 +11,11 @@ def __get_close_low_high(df: pd.DataFrame) -> tuple[pd.Series, pd.Series, pd.Ser
 
 ## Feature extractors
 
+def feature_debug_future_lookahead(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
+    return df['returns'].shift(-period)
+
 def feature_lag(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
+    assert period > 0
     return df['returns'].shift(period)
 
 def feature_day_of_week(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.DataFrame:

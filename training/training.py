@@ -22,6 +22,7 @@ def run_single_asset_trainig(
                     target_returns: pd.Series,
                     models: list[tuple[str, Model]],
                     method: Literal['regression', 'classification'],
+                    expanding_window: bool,
                     sliding_window_size: int,
                     retrain_every: int,
                     scaler: Literal['normalize', 'minmax', 'standardize', 'none'],
@@ -45,6 +46,7 @@ def run_single_asset_trainig(
             X = X,
             y = y,
             target_returns = target_returns,
+            expanding_window = expanding_window,
             window_size = sliding_window_size,
             retrain_every = retrain_every,
             scaler = scaler

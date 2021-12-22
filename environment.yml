@@ -8,6 +8,7 @@ dependencies:
   - seaborn
   - scikit-learn-intelex=2021.4.0
   - ipython
+  - ipykernel
   - scipy
   - scikit-learn
   - numba

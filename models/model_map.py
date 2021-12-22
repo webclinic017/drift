@@ -15,25 +15,25 @@ from models.naive import StaticNaiveModel
 
 model_map = {
     "regression_models": dict(
-        Lasso = SKLearnModel(Lasso(alpha=0.1, max_iter=1000)),
+        LR = SKLearnModel(LinearRegression(n_jobs=-1)),
+        Lasso = SKLearnModel(Lasso(alpha=100, random_state=1)),
         Ridge = SKLearnModel(Ridge(alpha=0.1)),
         BayesianRidge = SKLearnModel(BayesianRidge()),
         KNN = SKLearnModel(KNeighborsRegressor(n_neighbors=25)),
         AB = SKLearnModel(AdaBoostRegressor(random_state=1)),
-        LR = SKLearnModel(LinearRegression(n_jobs=-1)),
         MLP = SKLearnModel(MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
         RF = SKLearnModel(RandomForestRegressor(n_jobs=-1)),
         SVR = SKLearnModel(SVR(kernel='rbf', C=1e3, gamma=0.1)),
         StaticNaive = StaticNaiveModel(),
     ),
     "classification_models": dict(
-        LR= SKLearnModel(LogisticRegression(n_jobs=-1)),
+        LR= SKLearnModel(LogisticRegression(solver='liblinear', C=10, max_iter=1000)),
         LDA= SKLearnModel(LinearDiscriminantAnalysis()),
         KNN= SKLearnModel(KNeighborsClassifier()),
-        CART= SKLearnModel(DecisionTreeClassifier()),
+        CART= SKLearnModel(DecisionTreeClassifier(max_depth=15, random_state=1)),
         NB= SKLearnModel(GaussianNB()),
-        AB= SKLearnModel(AdaBoostClassifier()),
-        RF= SKLearnModel(RandomForestClassifier(n_jobs=-1)),
+        AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
+        RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20)),
         StaticMom= StaticMomentumModel(allow_short=True),
     ),     
     "classification_ensemble_models": dict(

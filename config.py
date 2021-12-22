@@ -5,8 +5,9 @@ from models.model_map import model_names_classification, model_names_regression
 def get_default_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
-        sliding_window_size = 150,
-        retrain_every = 20,
+        expanding_window = True,
+        sliding_window_size = 200,
+        retrain_every = 100,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
         include_original_data_in_ensemble = True,
     )

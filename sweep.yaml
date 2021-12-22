@@ -11,6 +11,9 @@ metric:
 parameters:
     path : 
       value: 'data/'
+    expanding_window:
+      values: [True, False]
+      distribution: categorical
     sliding_window_size: 
       values: [90, 130, 160, 180, 280, 380]
       distribution: categorical

@@ -65,6 +65,7 @@ def test_walk_forward_train_test():
         X=X,
         y=y,
         target_returns=y,
+        expanding_window=False,
         window_size=window_length,
         retrain_every=10,
         scaler=scaler)

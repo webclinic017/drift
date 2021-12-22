@@ -11,6 +11,7 @@ def walk_forward_train_test(
                             X: pd.DataFrame,
                             y: pd.Series,
                             target_returns: pd.Series,
+                            expanding_window: bool,
                             window_size: int,
                             retrain_every: int,
                             scaler,
@@ -35,7 +36,11 @@ def walk_forward_train_test(
     for index in range(train_from, train_till):
 
         if iterations_before_retrain <= 0 or pd.isna(models[index-1]):
-            train_window_start = index - window_size - 1
+            if expanding_window:
+                train_window_start = first_nonzero_return
+            else:
+                train_window_start = index - window_size - 1
+
             train_window_end = index - 1
             
             if is_scaling_on:

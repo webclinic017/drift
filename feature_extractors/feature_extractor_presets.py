@@ -1,4 +1,6 @@
-from feature_extractors.feature_extractors import feature_lag, feature_mom, feature_ROC, feature_RSI, feature_STOD, feature_STOK, feature_vol, feature_day_of_month, feature_day_of_week, feature_month
+from feature_extractors.feature_extractors import feature_lag, feature_mom, feature_ROC, feature_RSI, feature_STOD, feature_STOK, feature_vol, feature_day_of_month, feature_day_of_week, feature_month, feature_debug_future_lookahead
+
+debug_future_lookahead = [('debug_future', feature_debug_future_lookahead, [1])]
 
 lags = [('lag', feature_lag, [1,2,3,4,5,6,7,8,9])]
 
