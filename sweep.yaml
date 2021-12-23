@@ -24,15 +24,14 @@ parameters:
       values: ['minmax', 'none']
       distribution: categorical
     include_original_data_in_ensemble:
-      values: False
+      value: False
     method: 
       value: 'classification'
     no_of_classes:
       values: ['two', 'three-balanced', 'three-imbalanced']
       distribution: categorical
     forecasting_horizon: 
-      values: 1
-      distribution: categorical
+      value: 1
     load_other_assets: 
       values: [True, False]
       distribution: categorical
