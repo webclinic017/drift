@@ -1,6 +1,7 @@
 from typing import Literal
 from sklearn.metrics import mean_absolute_error, accuracy_score, r2_score, f1_score, precision_score, recall_score
-from quantstats.stats import expected_return, sharpe, skew, sortino
+from quantstats.stats import skew, sortino
+from utils.metrics import probabilistic_sharpe_ratio, sharpe_ratio, average_holding_period
 from utils.helpers import get_first_valid_return_index
 import pandas as pd
 import numpy as np
@@ -54,44 +55,48 @@ def evaluate_predictions(
     df = __preprocess(target_returns, y_pred, y_true, method, no_of_classes)
     
     scorecard = pd.Series()
-    if method == 'regression':
-        scorecard.loc['RSQ'] = r2_score(df.target_returns, df.y_pred)
-        scorecard.loc['MAE'] = mean_absolute_error(df.target_returns, df.y_pred)
-    elif method == 'classification':
-        scorecard.loc['RSQ'] = 0.
-        scorecard.loc['MAE Matrix'] = 0.
-    sign_true = df.sign_true.astype(int)
-    sign_pred = df.sign_pred.astype(int)
+    # we probably will not need regression models at all
+    # if method == 'regression':
+    #     scorecard.loc['RSQ'] = r2_score(df.target_returns, df.y_pred)
+    #     scorecard.loc['MAE'] = mean_absolute_error(df.target_returns, df.y_pred)
+    # elif method == 'classification':
+    #     scorecard.loc['RSQ'] = 0.
+    #     scorecard.loc['MAE Matrix'] = 0.
+    
     
     def count_non_zero(series: pd.Series) -> int:
         return len(series[series != 0])
-    scorecard.loc['no_of_samples'] = count_non_zero(y_pred[evaluate_from:])
-    scorecard.loc['sharpe'] = sharpe(df.result)
+    no_of_samples = count_non_zero(df.y_pred)
+    scorecard.loc['no_of_samples'] = no_of_samples
+    sharpe = sharpe_ratio(df.result)
+    scorecard.loc['sharpe'] = sharpe
+    benchmark_sharpe = sharpe_ratio(df.target_returns)
+    scorecard.loc['benchmark_sharpe'] = benchmark_sharpe
+    scorecard.loc['prob_sharpe'] = probabilistic_sharpe_ratio(sharpe, benchmark_sharpe, no_of_samples)
     scorecard.loc['sortino'] = sortino(df.result)
     scorecard.loc['skew'] = skew(df.result)
 
     labels = [1, -1] if no_of_classes == 'two' else [1, -1, 0]
     avg_type = 'weighted' if no_of_classes == 'two' else 'macro'
 
-    scorecard.loc['accuracy'] = accuracy_score(sign_true, sign_pred) * 100
-    scorecard.loc['recall'] = recall_score(sign_true, sign_pred, labels = labels, average=avg_type)
-    scorecard.loc['precision'] = precision_score(sign_true, sign_pred, labels = labels, average=avg_type)
-    scorecard.loc['f1_score'] = f1_score(sign_true, sign_pred, labels = labels, average=avg_type)
+    scorecard.loc['accuracy'] = accuracy_score(df.sign_true, df.sign_pred) * 100
+    scorecard.loc['recall'] = recall_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+    scorecard.loc['precision'] = precision_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+    scorecard.loc['f1_score'] = f1_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
     scorecard.loc['edge'] = df.result.mean()
     scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
     scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
     
-    for index, row in sign_true.value_counts().iteritems():
-        scorecard.loc['sign_true_ratio_' + str(index)] = row / len(sign_true)
+    for index, row in df.sign_true.value_counts().iteritems():
+        scorecard.loc['sign_true_ratio_' + str(index)] = row / len(df.sign_true)
     
-    for index, row in sign_pred.value_counts().iteritems():
-        scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(sign_pred)
-    
+    for index, row in df.sign_pred.value_counts().iteritems():
+        scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
 
-    if method == 'regression':
-        scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
-    elif method == 'classification':
-        scorecard.loc['edge_to_mae'] = 0.
+    # if method == 'regression':
+    #     scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
+    # elif method == 'classification':
+    #     scorecard.loc['edge_to_mae'] = 0.
 
     scorecard = scorecard.round(3)
     print("Model name: ", model_name)

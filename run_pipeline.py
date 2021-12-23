@@ -82,9 +82,16 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
     level1_columns = results[[column for column in results.columns if 'Ensemble' not in column]]
     ensemble_columns = results[[column for column in results.columns if 'Ensemble' in column]]
 
-    print("Mean no of samples: ", results.loc['no_of_samples'].mean())
+    print("\n--------\n")
+    print("Benchmark buy-and-hold sharpe: ", round(results.loc['benchmark_sharpe'].mean(), 3))
+
+    print("Level-1: Number of samples evaluated: ", level1_columns.loc['no_of_samples'].sum())
     print("Mean Sharpe ratio for Level-1 models: ", round(level1_columns.loc['sharpe'].mean(), 3))
+    print("Mean Probabilistic Sharpe ratio for Level-1 models: ", round(level1_columns.loc['prob_sharpe'].mean(), 3))
+
+    print("Level-2 (Ensemble): Number of samples evaluated: ", ensemble_columns.loc['no_of_samples'].sum())
     print("Mean Sharpe ratio for Level-2 (Ensemble) models: ", round(ensemble_columns.loc['sharpe'].mean(), 3))
+    print("Mean Probabilistic Sharpe ratio for Level-2 (Ensemble) models: ", round(ensemble_columns.loc['prob_sharpe'].mean(), 3))
 
     if sweep:
         if wandb.run is not None:
