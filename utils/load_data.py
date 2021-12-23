@@ -2,11 +2,8 @@
 import pandas as pd
 import os
 import numpy as np
-from pandas.core.frame import DataFrame
-from utils.technical_indicators import ROC, RSI, STOK, STOD
 from utils.typing import FeatureExtractor
-from typing import Callable, Literal
-from sklearn.preprocessing import OneHotEncoder
+from typing import Literal
 
 #%%
 
@@ -26,6 +23,7 @@ def load_data(path: str,
             other_features: list[tuple[str, FeatureExtractor, list[int]]],
             index_column: Literal['date', 'int'],
             method: Literal['regression', 'classification'],
+            no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
             narrow_format: bool = False,
             all_assets:list=[]
         ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
@@ -68,7 +66,7 @@ def load_data(path: str,
     if method == 'regression':
         dfs[target_col] = forward_returns
     elif method == 'classification':
-        dfs[target_col] = __create_target_classes(dfs, returns_col, forecasting_horizon, 'two')
+        dfs[target_col] = __create_target_classes(dfs, returns_col, forecasting_horizon, no_of_classes)
     # we need to drop the last row, because we forward-shift the target (see what happens if you call .shift[-1] on a pd.Series) 
     dfs = dfs.iloc[:-forecasting_horizon]
     forward_returns = forward_returns.iloc[:-forecasting_horizon]
@@ -77,29 +75,6 @@ def load_data(path: str,
     y = dfs[target_col]
 
     return X, y, forward_returns
-
-# %%
-
-def load_crypto_only_returns(path: str, index_column: Literal['date', 'int'], returns: Literal['price', 'returns']) -> pd.DataFrame:
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')]
-    dfs = [__load_df(
-        path=os.path.join(path,f),
-        prefix=f.split('.')[0],
-        returns=returns,
-        feature_extractors=[],
-        narrow_format=False,
-    ) for f in files]
-    dfs = pd.concat(dfs, axis=1)
-    dfs = dfs.applymap(lambda x: np.nan if x == 0 else x)
-    dfs.index = pd.DatetimeIndex(dfs.index)
-    dfs.columns = [column.split('_')[0] for column in dfs.columns]
-    if index_column == 'int':
-        dfs.reset_index(drop=True, inplace=True)
-
-    return dfs
-
-def load_crypto_assets_availability(path: str, index_column: Literal['date', 'int']) -> pd.DataFrame:
-    return load_crypto_only_returns(path, index_column, 'returns').applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
 
 
 def __load_df(path: str,
@@ -156,24 +131,88 @@ def __create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, pe
 def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, no_of_classes: Literal["two", "three"]) -> pd.Series:
     assert period > 0
 
-    def get_class_binary(x):
+    def get_class_binary(x: float) -> int:
         return -1 if x <= 0.0 else 1
 
-    def get_class_threeway(x):
-        bins = pd.qcut(df[source_column], 4, duplicates='raise', retbins=True)[1]
-        lower_threshold = bins[1]
-        upper_threshold = bins[3]
-        if x <= lower_threshold:
-            return -1
-        elif x > lower_threshold and x < upper_threshold:
-            return 0
-        else:
-            return 1
+    def get_class_threeway_balanced(series: pd.Series) -> pd.Series:
+
+        def get_bins_threeway(x):
+            bins = pd.qcut(df[source_column], 3, retbins=True, duplicates = 'drop')[1]
+            
+            if len(bins) != 4:
+                # if we don't have enough data for the quantiles, we'll need to add hard-coded values
+                lower_bound = bins[0]
+                upper_bound = bins[-1]
+                bins = [lower_bound] + [-0.02, 0.02] + [upper_bound]
+            return bins
+        bins = get_bins_threeway(series)
+
+        def map_class_threeway(current_value):
+            lower_threshold = bins[1]
+            upper_threshold = bins[2]
+            if current_value <= lower_threshold:
+                return -1
+            elif current_value > lower_threshold and current_value < upper_threshold:
+                return 0
+            else:
+                return 1
+        return series.map(map_class_threeway)
+
+    def get_class_threeway_imbalanced(series: pd.Series) -> pd.Series:
+
+        def get_bins_threeway(x):
+            bins = pd.qcut(df[source_column], 4, retbins=True, duplicates = 'drop')[1]
+            
+            if len(bins) != 5:
+                # if we don't have enough data for the quantiles, we'll need to add hard-coded values
+                lower_bound = bins[0]
+                upper_bound = bins[-1]
+                bins = [lower_bound] + [-0.02, 0.0, 0.02] + [upper_bound]
+            return bins
+        bins = get_bins_threeway(series)
+
+        def map_class_threeway(current_value):
+            lower_threshold = bins[1]
+            upper_threshold = bins[3]
+            if current_value <= lower_threshold:
+                return -1
+            elif current_value > lower_threshold and current_value < upper_threshold:
+                return 0
+            else:
+                return 1
+        return series.map(map_class_threeway)
 
     target_column = df[source_column].shift(-period)
     
-    get_class_function = get_class_binary
-    if no_of_classes == "three":
-        get_class_function = get_class_threeway
+    if no_of_classes == "three-balanced":
+        return get_class_threeway_balanced(target_column)
+    elif no_of_classes == "three-imbalanced":
+        return get_class_threeway_imbalanced(target_column)
+    else:
+        return target_column.map(get_class_binary)
 
-    return target_column.map(get_class_function)
+
+
+
+# These are needed for the portfolio feature, maybe we can do this in a more elegant way
+# def load_crypto_only_returns(path: str, index_column: Literal['date', 'int'], returns: Literal['price', 'returns']) -> pd.DataFrame:
+#     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')]
+#     dfs = [__load_df(
+#         path=os.path.join(path,f),
+#         prefix=f.split('.')[0],
+#         returns=returns,
+#         feature_extractors=[],
+#         narrow_format=False,
+#     ) for f in files]
+#     dfs = pd.concat(dfs, axis=1)
+#     dfs = dfs.applymap(lambda x: np.nan if x == 0 else x)
+#     dfs.index = pd.DatetimeIndex(dfs.index)
+#     dfs.columns = [column.split('_')[0] for column in dfs.columns]
+#     if index_column == 'int':
+#         dfs.reset_index(drop=True, inplace=True)
+
+#     return dfs
+
+# def load_crypto_assets_availability(path: str, index_column: Literal['date', 'int']) -> pd.DataFrame:
+#     return load_crypto_only_returns(path, index_column, 'returns').applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
+

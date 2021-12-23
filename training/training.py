@@ -26,10 +26,8 @@ def run_single_asset_trainig(
                     sliding_window_size: int,
                     retrain_every: int,
                     scaler: Literal['normalize', 'minmax', 'standardize', 'none'],
-                    wandb,
-                    project_name:str,
-                    sweep:bool
-                    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+                    no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
     scaler = __get_scaler(scaler)
@@ -37,8 +35,6 @@ def run_single_asset_trainig(
     results = pd.DataFrame()
     predictions = pd.DataFrame()
     
-    wandb_active = type(wandb) is not type(None)
-
     for model_name, model in models:
         model_over_time, preds = walk_forward_train_test(
             model_name=model_name,
@@ -56,7 +52,9 @@ def run_single_asset_trainig(
             model_name = model_name,
             target_returns = target_returns,
             y_pred = preds,
+            y_true = y,
             method = method,
+            no_of_classes=no_of_classes
         )
         column_name = ticker_to_predict + "_" + model_name
         results[column_name] = result

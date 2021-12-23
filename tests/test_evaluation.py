@@ -85,7 +85,9 @@ def test_evaluation():
         model_name='test',
         target_returns=fake_target_returns,
         y_pred=processed_predictions_to_match_returns,
-        method='classification'
+        y_true=y,
+        method='classification',
+        no_of_classes='two'
     )
 
     assert result['accuracy'] == 100.0

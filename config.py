@@ -6,7 +6,7 @@ from models.model_map import model_names_classification, model_names_regression
 def get_default_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
-        expanding_window = True,
+        expanding_window = False,
         sliding_window_size = 200,
         retrain_every = 100,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
@@ -23,13 +23,14 @@ def get_default_config() -> tuple[dict, dict, dict]:
         other_features = [],
         index_column= 'int',
         method= 'classification',
+        no_of_classes= 'two'
     )
 
     # regression_models = ["Lasso", "Ridge", "BayesianRidge", "KNN", "AB", "LR", "MLP", "RF", "SVR"]
-    regression_models = model_names_regression
+    regression_models = ["Lasso", "KNN", "RF"]
     regression_ensemble_models = ['Ensemble_Average']
-    # classification_models = ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "StaticMom"]
-    classification_models = model_names_classification        
+    classification_models = ["LR", "LDA", "KNN", "CART", "RF"]
+    # classification_models = model_names_classification        
     classification_ensemble_models = ['Ensemble_Average']
 
     model_config = dict(

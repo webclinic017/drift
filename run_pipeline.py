@@ -46,9 +46,7 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             sliding_window_size = training_config['sliding_window_size'],
             retrain_every =  training_config['retrain_every'],
             scaler =  training_config['scaler'],
-            wandb = wandb,
-            project_name=project_name,
-            sweep=sweep
+            no_of_classes = data_config['no_of_classes']
         )
         results = pd.concat([results, current_result], axis=1)
         all_predictions = pd.concat([all_predictions, current_predictions], axis=1)
@@ -71,9 +69,7 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
                 sliding_window_size = training_config['sliding_window_size'],
                 retrain_every = training_config['retrain_every'],
                 scaler = training_config['scaler'],
-                wandb = wandb,
-                project_name=project_name,
-                sweep=sweep
+                no_of_classes = data_config['no_of_classes']
             )
 
             results = pd.concat([results, ensemble_result], axis=1)
@@ -86,8 +82,9 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
     level1_columns = results[[column for column in results.columns if 'Ensemble' not in column]]
     ensemble_columns = results[[column for column in results.columns if 'Ensemble' in column]]
 
-    print("Mean Sharpe ratio for Level-1 models: ", level1_columns.loc['sharpe'].mean())
-    print("Mean Sharpe ratio for Level-2 (Ensemble) models: ", ensemble_columns.loc['sharpe'].mean())
+    print("Mean no of samples: ", results.loc['no_of_samples'].mean())
+    print("Mean Sharpe ratio for Level-1 models: ", round(level1_columns.loc['sharpe'].mean(), 3))
+    print("Mean Sharpe ratio for Level-2 (Ensemble) models: ", round(ensemble_columns.loc['sharpe'].mean(), 3))
 
     if sweep:
         if wandb.run is not None:

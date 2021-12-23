@@ -11,23 +11,22 @@ def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.00) -> 
     return (signal * returns) - costs
 
 
-def __preprocess(target_returns: pd.Series, y_pred: pd.Series, method: Literal['classification', 'regression']) -> pd.DataFrame:
+def __preprocess(target_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, method: Literal['classification', 'regression'], no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']) -> pd.DataFrame:
     y_pred.name = 'y_pred'
     target_returns.name = 'target_returns'
     df = pd.concat([y_pred, target_returns],axis=1).dropna()
 
-    df['sign_pred'] = df.y_pred.apply(lambda x: 1 if x>0 else -1)
-    def sign_true(x):
-        if x > 0:
-            return 1
-        else:
-            return -1
-    df['sign_true'] = df.target_returns.apply(sign_true)
-    df['is_correct'] = 0
-    df.loc[df.sign_pred * df.sign_true > 0 ,'is_correct'] = 1 # only registers 1 when prediction was made AND it was correct
-    df['is_incorrect'] = 0
-    df.loc[df.sign_pred * df.sign_true < 0,'is_incorrect'] = 1 # only registers 1 when prediction was made AND it was wrong
-    df['is_predicted'] = df.is_correct + df.is_incorrect
+    def categorize_binary(x): return 1 if x > 0 else -1
+    def categorize_threeway(x): return 0 if x == 0 else 1 if x > 0 else -1
+    categorize = categorize_binary if no_of_classes == 'two' else categorize_threeway
+    # make sure that we evaluate binary/three-way predictions even if the model is a regression
+    if method == 'regression':
+        df['sign_pred'] = df.y_pred.apply(categorize)
+        df['sign_true'] = df.target_returns.apply(categorize)
+    else:
+        df['sign_pred'] = df.y_pred.apply(categorize)
+        df['sign_true'] = y_true
+
     df['result'] = backtest(df.target_returns, df.sign_pred)
 
     return df
@@ -36,7 +35,9 @@ def evaluate_predictions(
                         model_name: str,
                         target_returns: pd.Series,
                         y_pred: pd.Series,
-                        method: Literal['classification', 'regression']
+                        y_true: pd.Series,
+                        method: Literal['classification', 'regression'],
+                        no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                         ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
     first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(y_pred))
@@ -50,7 +51,7 @@ def evaluate_predictions(
 
     y_pred = pd.Series(y_pred[evaluate_from:])
 
-    df = __preprocess(target_returns, y_pred, method)
+    df = __preprocess(target_returns, y_pred, y_true, method, no_of_classes)
     
     scorecard = pd.Series()
     if method == 'regression':
@@ -62,15 +63,20 @@ def evaluate_predictions(
     sign_true = df.sign_true.astype(int)
     sign_pred = df.sign_pred.astype(int)
     
-    scorecard.loc['no_of_samples'] = len(target_returns) - evaluate_from
+    def count_non_zero(series: pd.Series) -> int:
+        return len(series[series != 0])
+    scorecard.loc['no_of_samples'] = count_non_zero(y_pred[evaluate_from:])
     scorecard.loc['sharpe'] = sharpe(df.result)
     scorecard.loc['sortino'] = sortino(df.result)
     scorecard.loc['skew'] = skew(df.result)
 
+    labels = [1, -1] if no_of_classes == 'two' else [1, -1, 0]
+    avg_type = 'weighted' if no_of_classes == 'two' else 'macro'
+
     scorecard.loc['accuracy'] = accuracy_score(sign_true, sign_pred) * 100
-    scorecard.loc['recall'] = recall_score(sign_true, sign_pred, labels = [1, -1])
-    scorecard.loc['precision'] = precision_score(sign_true, sign_pred, labels = [1, -1])
-    scorecard.loc['f1_score'] = f1_score(sign_true, sign_pred, labels = [1, -1])
+    scorecard.loc['recall'] = recall_score(sign_true, sign_pred, labels = labels, average=avg_type)
+    scorecard.loc['precision'] = precision_score(sign_true, sign_pred, labels = labels, average=avg_type)
+    scorecard.loc['f1_score'] = f1_score(sign_true, sign_pred, labels = labels, average=avg_type)
     scorecard.loc['edge'] = df.result.mean()
     scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
     scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
@@ -81,11 +87,6 @@ def evaluate_predictions(
     for index, row in sign_pred.value_counts().iteritems():
         scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(sign_pred)
     
-
-
-    # scorecard.loc['ratio_of_classes_y'] = ' / '.join([str(index) + " " + str(round(row / len(sign_true), 2)) for index, row in sign_true.value_counts().iteritems()])
-    # scorecard.loc['ratio_of_classes_pred'] = ' / '.join([str(round(row / len(sign_pred), 2)) for index, row in sign_pred.value_counts().iteritems()])
-
 
     if method == 'regression':
         scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
