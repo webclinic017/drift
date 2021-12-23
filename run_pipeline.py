@@ -1,8 +1,9 @@
 from utils.load_data import load_data
 import pandas as pd
 from training.training import run_single_asset_trainig
-from reporting.wandb import launch_wandb, send_report_to_wandb, seperate_configs
+from reporting.wandb import launch_wandb, send_report_to_wandb, register_config_with_wandb
 from models.model_map import map_model_name_to_function
+from feature_extractors.feature_extractor_presets import preprocess_feature_extractors_config
 from config import get_default_config, validate_config, get_model_name
 
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
@@ -11,9 +12,10 @@ def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     wandb = None
     if with_wandb: 
         wandb = launch_wandb(project_name=project_name, default_config=dict(**model_config, **training_config, **data_config), sweep=sweep)
-        model_config, training_config, data_config = seperate_configs(wandb, model_config, training_config, data_config)
+        register_config_with_wandb(wandb, model_config, training_config, data_config)
 
     model_config = map_model_name_to_function(model_config, data_config['method'])
+    data_config = preprocess_feature_extractors_config(data_config)
     pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
     
 

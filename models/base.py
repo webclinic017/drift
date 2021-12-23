@@ -11,7 +11,7 @@ class Model(ABC):
     only_column: Optional[str]
 
     @abstractmethod
-    def fit(self, X, y):
+    def fit(self, X, y, prev_model):
         pass
 
     @abstractmethod
@@ -32,7 +32,7 @@ class SKLearnModel(Model):
     def __init__(self, model):
         self.model = model
 
-    def fit(self, X, y):
+    def fit(self, X, y, prev_model):
         self.model.fit(X, y)
 
     def predict(self, X):

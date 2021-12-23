@@ -58,7 +58,7 @@ def walk_forward_train_test(
                 X_slice = X_slice.to_numpy()
 
             current_model = model.clone()
-            current_model.fit(X_slice, y_slice.to_numpy())
+            current_model.fit(X_slice, y_slice.to_numpy(), models[index-1])
             iterations_before_retrain = retrain_every
         else:
             current_model = models[index-1]

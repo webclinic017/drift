@@ -15,10 +15,10 @@ parameters:
       values: [True, False]
       distribution: categorical
     sliding_window_size: 
-      values: [90, 130, 160, 180, 280, 380]
+      values: [180, 280, 380]
       distribution: categorical
     retrain_every: 
-      values: [14, 30, 60, 100]
+      values: [10, 20, 30]
       distribution: categorical
     scaler:
       values: ['minmax', 'normalize', 'minmax', 'standardize', 'none']
@@ -37,10 +37,6 @@ parameters:
     log_returns: 
       values: [True, False]
       distribution: categorical
-    own_features: 
-      value: []
-    other_features: 
-      value: []
     index_column: 
       value: 'int'
     level_1_models: 
@@ -49,4 +45,8 @@ parameters:
     level_2_models: 
       value: []
       distribution: constant
-
+    own_features:
+      values: [['only_mom', 'date_days'], [], ['level_1', 'date_days'], ['level_1', 'date_days', 'level_2']]
+      distribution: categorical
+    other_features:
+      value: []

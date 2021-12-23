@@ -42,7 +42,7 @@ class EvenOddStubModel(Model):
         super().__init__()
         self.window_length = window_length
 
-    def fit(self, X, y):
+    def fit(self, X, y, prev_model):
         assert len(X) == self.window_length
         for i in range(len(X)):
             assert y[i] == -1 if X[i][0] == 1 else 1

@@ -4,3 +4,6 @@ import numpy as np
 
 def get_first_valid_return_index(series: pd.Series) -> int:
     return np.where(np.logical_and(series != 0, np.logical_not(np.isnan(series))))[0][0]
+
+def flatten(list_of_lists: list) -> list:
+    return [item for sublist in list_of_lists for item in sublist]

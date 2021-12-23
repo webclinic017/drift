@@ -15,15 +15,16 @@ def launch_wandb(project_name:str, default_config:dict, sweep:bool=False):
         return wandb
     
     
-def seperate_configs(wandb: Optional[object], model_config:dict, training_config:dict, data_config:dict) -> tuple[dict,dict,dict]:
+def register_config_with_wandb(wandb: Optional[object], model_config:dict, training_config:dict, data_config:dict):
     config: dict = wandb.config
 
     if type(wandb) is not type(None):
-        for k in training_config: training_config[k] = config[k]
-        for k in model_config: model_config[k] = config[k]
-        # for k in data_config: data_config[k] = config[k]
-
-    return model_config, training_config, data_config
+        for k in training_config:
+            training_config[k] = config[k]
+        for k in model_config:
+            model_config[k] = config[k]
+        for k in data_config:
+            data_config[k] = config[k]
 
 
 def send_report_to_wandb(results: pd.DataFrame, wandb:Optional[object], project_name: str, model_name: str):

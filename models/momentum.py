@@ -14,7 +14,7 @@ class StaticMomentumModel(Model):
         super().__init__()
         self.allow_short = allow_short
 
-    def fit(self, X, y):
+    def fit(self, X, y, prev_model):
         # This is a static model, it can' learn anything
         pass
 

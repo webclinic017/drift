@@ -40,7 +40,7 @@ class IncrementingStubModel(Model):
         super().__init__()
         self.window_length = window_length
 
-    def fit(self, X, y):
+    def fit(self, X, y, prev_model):
         assert len(X) == self.window_length
         for i in range(len(X)):
             assert X[i][0] + 1 == y[i]

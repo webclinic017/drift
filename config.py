@@ -1,5 +1,6 @@
+from collections import defaultdict
 from utils.load_data import get_crypto_assets
-import feature_extractors.feature_extractor_presets as feature_extractor_presets
+from feature_extractors.feature_extractor_presets import presets
 from models.model_map import model_names_classification, model_names_regression
 
 def get_default_config() -> tuple[dict, dict, dict]:
@@ -18,8 +19,8 @@ def get_default_config() -> tuple[dict, dict, dict]:
         load_other_assets= False,
         log_returns= True,
         forecasting_horizon = 1,
-        own_features= feature_extractor_presets.date + feature_extractor_presets.level1,
-        other_features= [],
+        own_features = ['level_1', 'date_days'],
+        other_features = [],
         index_column= 'int',
         method= 'classification',
     )
