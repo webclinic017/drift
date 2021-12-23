@@ -35,15 +35,8 @@ model_map = {
         AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
         RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20, random_state=1)),
         StaticMom= StaticMomentumModel(allow_short=True),
-    ),     
-    "classification_ensemble_models": dict(
-        Ensemble_CART = SKLearnModel(DecisionTreeClassifier()),
         Ensemble_Average = StaticAverageModel(),
     ),
-    "regression_ensemble_models": dict(
-        Ensemble_Ridge = SKLearnModel(Ridge(alpha=0.1)),
-        Ensemble_Average = StaticAverageModel(),
-    )
 }
 
 model_names_classification = list(model_map["classification_models"].keys())
@@ -52,7 +45,7 @@ model_names_regression = list(model_map["regression_models"].keys())
 
 def map_model_name_to_function(model_config:dict, method:str) -> dict:
     for level in ['level_1_models', 'level_2_models']:
-        model_category = method + '_models' if level=='level_1_models' else method + '_ensemble_models'
+        model_category = method + '_models'
         model_config[level] = [(model_name, model_map[model_category][model_name]) for model_name in  model_config[level]]
 
     return model_config

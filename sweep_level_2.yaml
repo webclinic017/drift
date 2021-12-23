@@ -1,10 +1,7 @@
 program: run_sweep.py
 method: bayes
 project: price-forecasting
-name: Finding best hyperparameters for price prediction
-# early_terminate:
-#   type: hyperband
-#   min_iter: 2000
+name: Level-2 models
 metric:
   goal: maximize
   name: sharpe
@@ -21,10 +18,10 @@ parameters:
       values: [10, 20, 30]
       distribution: categorical
     scaler:
-      values: ['minmax', 'none']
-      distribution: categorical
+      value: 'minmax'
     include_original_data_in_ensemble:
-      value: False
+      values: [True, False]
+      distribution: categorical
     method: 
       value: 'classification'
     no_of_classes:
@@ -40,12 +37,13 @@ parameters:
     index_column: 
       value: 'int'
     level_1_models: 
-      values: [["LR"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"]]
-      distribution: categorical
+      value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "StaticMom"]
     level_2_models: 
-      value: []
+      values: [["LR"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"], ["Ensemble_Average"]]
+      distribution: categorical
     own_features:
-      values: [['only_mom', 'date_days'], [], ['level_1', 'date_days'], ['level_1', 'date_days', 'level_2']]
+      values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]
       distribution: categorical
     other_features:
-      value: []
+      values: [[], ['level_1'], ['level_2']]
+      distribution: categorical

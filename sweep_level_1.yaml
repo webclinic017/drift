@@ -1,0 +1,48 @@
+program: run_sweep.py
+method: bayes
+project: price-forecasting
+name: Level-1 models
+metric:
+  goal: maximize
+  name: sharpe
+parameters:
+    path : 
+      value: 'data/'
+    expanding_window:
+      values: [True, False]
+      distribution: categorical
+    sliding_window_size: 
+      values: [180, 280, 380, 480, 580]
+      distribution: categorical
+    retrain_every: 
+      values: [10, 20, 30]
+      distribution: categorical
+    scaler:
+      value: 'minmax'
+    include_original_data_in_ensemble:
+      value: False
+    method: 
+      value: 'classification'
+    no_of_classes:
+      values: ['two', 'three-balanced', 'three-imbalanced']
+      distribution: categorical
+    forecasting_horizon: 
+      value: 1
+    load_other_assets: 
+      values: [True, False]
+      distribution: categorical
+    log_returns: 
+      value: True
+    index_column: 
+      value: 'int'
+    level_1_models: 
+      values: [["LR"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"]]
+      distribution: categorical
+    level_2_models: 
+      value: []
+    own_features:
+      values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]
+      distribution: categorical
+    other_features:
+      values: [[], ['level_1'], ['level_2']]
+      distribution: categorical

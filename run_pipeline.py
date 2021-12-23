@@ -5,6 +5,7 @@ from reporting.wandb import launch_wandb, send_report_to_wandb, register_config_
 from models.model_map import map_model_name_to_function
 from feature_extractors.feature_extractor_presets import preprocess_feature_extractors_config
 from config import get_default_config, validate_config, get_model_name
+from utils.helpers import get_first_valid_return_index
 
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = get_default_config()
@@ -33,6 +34,11 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
         data_params['target_asset'] = asset
 
         X, y, target_returns = load_data(**data_params)
+        first_valid_index = get_first_valid_return_index(X.iloc[:,0])
+        samples_to_train = len(y) - first_valid_index
+        if samples_to_train < training_config['sliding_window_size'] * 2.6:
+            print("Not enough samples to train")
+            continue
 
         # 2. Train Level-1 models
         current_result, current_predictions = run_single_asset_trainig(
@@ -46,14 +52,14 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             sliding_window_size = training_config['sliding_window_size'],
             retrain_every =  training_config['retrain_every'],
             scaler =  training_config['scaler'],
-            no_of_classes = data_config['no_of_classes']
+            no_of_classes = data_config['no_of_classes'],
+            level = 1
         )
         results = pd.concat([results, current_result], axis=1)
         all_predictions = pd.concat([all_predictions, current_predictions], axis=1)
 
         if len(model_config['level_2_models']) > 0: 
             # 3. Train Level-2 (Ensemble) model
-            
             ensemble_X = all_predictions
             if training_config['include_original_data_in_ensemble']:
                 ensemble_X = pd.concat([ensemble_X, X], axis=1)
@@ -69,7 +75,8 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
                 sliding_window_size = training_config['sliding_window_size'],
                 retrain_every = training_config['retrain_every'],
                 scaler = training_config['scaler'],
-                no_of_classes = data_config['no_of_classes']
+                no_of_classes = data_config['no_of_classes'],
+                level = 2
             )
 
             results = pd.concat([results, ensemble_result], axis=1)

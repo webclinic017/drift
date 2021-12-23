@@ -7,8 +7,8 @@ def get_default_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
         expanding_window = False,
-        sliding_window_size = 200,
-        retrain_every = 100,
+        sliding_window_size = 220,
+        retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
         include_original_data_in_ensemble = True,
     )
@@ -26,12 +26,10 @@ def get_default_config() -> tuple[dict, dict, dict]:
         no_of_classes= 'two'
     )
 
-    # regression_models = ["Lasso", "Ridge", "BayesianRidge", "KNN", "AB", "LR", "MLP", "RF", "SVR"]
     regression_models = ["Lasso", "KNN", "RF"]
-    regression_ensemble_models = ['Ensemble_Average']
-    classification_models = ["LR", "LDA", "KNN", "CART", "RF"]
-    # classification_models = model_names_classification        
-    classification_ensemble_models = ['Ensemble_Average']
+    regression_ensemble_models = ['KNN']
+    classification_models = ["LR", "LDA", "KNN", "CART", "RF", "StaticMom"]
+    classification_ensemble_models = ['LR']
 
     model_config = dict(
         level_1_models = regression_models if data_config['method'] == 'regression' else classification_models,

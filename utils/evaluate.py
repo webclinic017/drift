@@ -1,10 +1,9 @@
 from typing import Literal
-from sklearn.metrics import mean_absolute_error, accuracy_score, r2_score, f1_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from quantstats.stats import skew, sortino
-from utils.metrics import probabilistic_sharpe_ratio, sharpe_ratio, average_holding_period
+from utils.metrics import probabilistic_sharpe_ratio, sharpe_ratio
 from utils.helpers import get_first_valid_return_index
 import pandas as pd
-import numpy as np
 
 def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.00) -> pd.Series:
     delta_pos = signal.diff(1).abs().fillna(0.)

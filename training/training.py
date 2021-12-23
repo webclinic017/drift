@@ -26,7 +26,8 @@ def run_single_asset_trainig(
                     sliding_window_size: int,
                     retrain_every: int,
                     scaler: Literal['normalize', 'minmax', 'standardize', 'none'],
-                    no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
+                    no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
+                    level: int
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
@@ -56,7 +57,7 @@ def run_single_asset_trainig(
             method = method,
             no_of_classes=no_of_classes
         )
-        column_name = ticker_to_predict + "_" + model_name
+        column_name = ticker_to_predict + "_" + model_name + "_" + str(level)
         results[column_name] = result
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions["model_" + column_name] = preds
