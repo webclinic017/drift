@@ -35,9 +35,10 @@ def load_data(path: str,
         - Series `forward_returns` with the target asset returns shifted by 1 day
     """
 
-    
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
-    files = [f for f in files if load_other_assets == True or (load_other_assets == False and f.startswith(target_asset))]
+    target_file = [f for f in files if f.startswith(target_asset)]
+    other_files = [f for f in files if load_other_assets == True and f.startswith(target_asset) == False]
+    files = target_file + other_files
     def is_target_asset(target_asset: str, file: str): return file.split('.')[0].startswith(target_asset)
     dfs = [__load_df(
         path=os.path.join(path,f),

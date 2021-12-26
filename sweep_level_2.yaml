@@ -45,5 +45,5 @@ parameters:
       values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]
       distribution: categorical
     other_features:
-      values: [[], ['level_1'], ['level_2']]
+      values: [[], ['level_1']]
       distribution: categorical

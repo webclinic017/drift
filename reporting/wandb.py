@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Optional
+from utils.helpers import weighted_average
 
 def launch_wandb(project_name:str, default_config:dict, sweep:bool=False):
     from wandb_setup import get_wandb
@@ -34,7 +35,7 @@ def send_report_to_wandb(results: pd.DataFrame, wandb:Optional[object], project_
     wandb.run.name = model_name+ "-" + wandb.run.id
     wandb.run.save()
 
-    mean_results = results.mean(axis = 1)
+    mean_results = weighted_average(results, 'no_of_samples')
     for key, value in mean_results.iteritems():
         run.log({"model_type": model_name, key: value })
 

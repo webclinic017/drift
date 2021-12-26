@@ -57,7 +57,7 @@ def run_single_asset_trainig(
             method = method,
             no_of_classes=no_of_classes
         )
-        column_name = ticker_to_predict + "_" + model_name + "_" + str(level)
+        column_name = ticker_to_predict + "_" + model_name + "_lvl" + str(level)
         results[column_name] = result
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions["model_" + column_name] = preds
