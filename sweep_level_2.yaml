@@ -38,8 +38,8 @@ parameters:
       value: 'int'
     level_1_models: 
       value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "StaticMom"]
-    level_2_models: 
-      values: [["LR"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"], ["Ensemble_Average"]]
+    level_2_model: 
+      values: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "Ensemble_Average"]
       distribution: categorical
     own_features:
       values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]

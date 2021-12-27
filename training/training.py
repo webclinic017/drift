@@ -17,6 +17,7 @@ def __get_scaler(type: Literal['normalize', 'minmax', 'standardize', 'none']):
 
 def run_single_asset_trainig(
                     ticker_to_predict: str,
+                    original_X: pd.DataFrame,
                     X: pd.DataFrame,
                     y: pd.Series,
                     target_returns: pd.Series,
@@ -40,7 +41,7 @@ def run_single_asset_trainig(
         model_over_time, preds = walk_forward_train_test(
             model_name=model_name,
             model = model,
-            X = X,
+            X = X if model.feature_selection == 'on' else original_X,
             y = y,
             target_returns = target_returns,
             expanding_window = expanding_window,

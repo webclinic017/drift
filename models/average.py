@@ -6,9 +6,10 @@ class StaticAverageModel(Model):
     Model that averages .
     '''
 
-    # data_format = 'dataframe'
     data_scaling = 'unscaled'
     only_column = 'model_'
+    feature_selection = 'off'
+    model_type = 'static'
 
     def fit(self, X, y, prev_model):
         # This is a static model, it can' learn anything

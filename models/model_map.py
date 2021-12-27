@@ -22,12 +22,12 @@ model_map = {
         KNN = SKLearnModel(KNeighborsRegressor(n_neighbors=25)),
         AB = SKLearnModel(AdaBoostRegressor(random_state=1)),
         MLP = SKLearnModel(MLPRegressor(hidden_layer_sizes=(100,20), max_iter=1000)),
-        RF = SKLearnModel(RandomForestRegressor(n_jobs=-1, random_state=1)),
+        RF = SKLearnModel(RandomForestRegressor(n_jobs=-1, max_depth=20, random_state=1)),
         SVR = SKLearnModel(SVR(kernel='rbf', C=1e3, gamma=0.1)),
         StaticNaive = StaticNaiveModel(),
     ),
     "classification_models": dict(
-        LR= SKLearnModel(LogisticRegression(C=10, random_state=1, max_iter=1000)),
+        LR= SKLearnModel(LogisticRegression(C=10, random_state=1, max_iter=1000, n_jobs=-1)),
         LDA= SKLearnModel(LinearDiscriminantAnalysis()),
         KNN= SKLearnModel(KNeighborsClassifier()),
         CART= SKLearnModel(DecisionTreeClassifier(max_depth=15, random_state=1)),
@@ -42,10 +42,12 @@ model_map = {
 model_names_classification = list(model_map["classification_models"].keys())
 model_names_regression = list(model_map["regression_models"].keys())
 
+default_feature_selector_regression = model_map['regression_models']['RF']
+default_feature_selector_classification = model_map['classification_models']['RF']
 
 def map_model_name_to_function(model_config:dict, method:str) -> dict:
-    for level in ['level_1_models', 'level_2_models']:
-        model_category = method + '_models'
-        model_config[level] = [(model_name, model_map[model_category][model_name]) for model_name in  model_config[level]]
+    model_config['level_1_models'] = [(model_name, model_map[method + '_models'][model_name]) for model_name in  model_config['level_1_models']]
+    if model_config['level_2_model'] is not None:
+        model_config['level_2_model'] = (model_config['level_2_model'], model_map[method + '_models'][model_config['level_2_model']])
 
     return model_config

@@ -15,6 +15,8 @@ def flatten(list_of_lists: list) -> list:
     return [item for sublist in list_of_lists for item in sublist]
 
 def weighted_average(df: pd.DataFrame, weights_source: str) -> pd.DataFrame:
+    if df.shape[0] == 0:
+        return df
     mean_df = df.iloc[:,0]
     weights = df.loc[weights_source]
 

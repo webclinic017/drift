@@ -6,9 +6,10 @@ class StaticMomentumModel(Model):
     Model that uses only one feature: momentum. It's positive if momentum is greater than 0, otherwise it's negative.
     '''
 
-    # data_format = 'dataframe'
     data_scaling = 'unscaled'
     only_column = 'mom'
+    feature_selection = 'off'
+    model_type = 'static'
 
     def __init__(self, allow_short: bool) -> None:
         super().__init__()

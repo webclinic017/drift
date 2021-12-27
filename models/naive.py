@@ -6,9 +6,10 @@ class StaticNaiveModel(Model):
     Model that carries the last observation (from returns) to the next one, naively.
     '''
 
-    # data_format = 'dataframe'
     data_scaling = 'unscaled'
     only_column = None
+    feature_selection = 'off'
+    model_type = 'static'
 
     def fit(self, X, y, prev_model):
         # This is a static model, it can' learn anything

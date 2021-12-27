@@ -30,6 +30,7 @@ presets = __presets | dict(
 )
 
 def preprocess_feature_extractors_config(data_dict: dict) -> dict:
+    data_dict = data_dict.copy()
     keys = ['own_features', 'other_features']
     for key in keys:
         preset_names = data_dict[key]

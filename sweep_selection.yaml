@@ -1,7 +1,7 @@
 program: run_sweep.py
 method: bayes
 project: price-forecasting
-name: Level-1 models
+name: Feature selection
 metric:
   goal: maximize
   name: sharpe
@@ -9,14 +9,17 @@ parameters:
     path : 
       value: 'data/'
     expanding_window:
+      value: True
+    sliding_window_size: 
+      value: 380
+    feature_selection:
       values: [True, False]
       distribution: categorical
-    sliding_window_size: 
-      values: [180, 280, 380, 480, 580]
+    dimensionality_reduction:
+      values: [True, False]
       distribution: categorical
     retrain_every: 
-      values: [10, 20, 30]
-      distribution: categorical
+      value: 20
     scaler:
       value: 'minmax'
     include_original_data_in_ensemble:
@@ -29,20 +32,16 @@ parameters:
     forecasting_horizon: 
       value: 1
     load_other_assets: 
-      values: [True, False]
-      distribution: categorical
+      value: True
     log_returns: 
       value: True
     index_column: 
       value: 'int'
     level_1_models: 
-      values: [["LR"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"]]
-      distribution: categorical
+      value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "StaticMom"]
     level_2_model: 
-      value: None
+      value: "Ensemble_Average"
     own_features:
-      values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]
-      distribution: categorical
+      value: ['date_days', 'level_2', 'lags_up_to_5']
     other_features:
-      values: [[], ['level_1'], ['level_2']]
-      distribution: categorical
+      value: ['level_2', 'lags_up_to_5']
