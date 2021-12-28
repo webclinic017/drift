@@ -18,7 +18,7 @@ class StaticAverageModel(Model):
     def predict(self, X):
         # Make sure there's data to average
         assert X.shape[1] > 0
-        prediction = np.average(X[0])
+        prediction = np.average(X[-1])
         return np.array([prediction])
 
     def clone(self):

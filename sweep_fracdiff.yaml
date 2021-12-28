@@ -1,23 +1,28 @@
 program: run_sweep.py
-method: bayes
+method: grid
 project: price-forecasting
-name: Feature selection
+name: Fractional differentiation / number of features
 metric:
   goal: maximize
   name: sharpe
 parameters:
     path : 
       value: 'data/'
-    expanding_window:
+    expanding_window_level1:
       value: True
-    sliding_window_size: 
+    expanding_window_level2:
+      value: False
+    sliding_window_size_level1: 
       value: 380
+    sliding_window_size_level2: 
+      value: 1
     feature_selection:
-      values: [True, False]
+      value: True
+    n_features_to_select:
+      values: [10, 20, 30]
       distribution: categorical
     dimensionality_reduction:
-      values: [True, False]
-      distribution: categorical
+      value: True
     retrain_every: 
       value: 20
     scaler:
@@ -27,8 +32,7 @@ parameters:
     method: 
       value: 'classification'
     no_of_classes:
-      values: ['two', 'three-balanced', 'three-imbalanced']
-      distribution: categorical
+      value: 'three-balanced'
     forecasting_horizon: 
       value: 1
     load_other_assets: 
@@ -42,6 +46,8 @@ parameters:
     level_2_model: 
       value: "Ensemble_Average"
     own_features:
-      value: ['date_days', 'level_2', 'lags_up_to_5']
+      values: [['date_days', 'level_2', 'lags_up_to_5'], ['date_days', 'level_2', 'fracdiff']]
+      distribution: categorical
     other_features:
-      value: ['level_2', 'lags_up_to_5']
+      values: [['level_2', 'lags_up_to_5'], ['level_2', 'fracdiff']]
+      distribution: categorical

@@ -1,11 +1,9 @@
-#%%
 import pandas as pd
 import os
 import numpy as np
 from utils.typing import FeatureExtractor
 from typing import Literal
-
-#%%
+import ray
 
 def get_crypto_assets(path: str) -> list[str]:
     return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')])
@@ -40,13 +38,14 @@ def load_data(path: str,
     other_files = [f for f in files if load_other_assets == True and f.startswith(target_asset) == False]
     files = target_file + other_files
     def is_target_asset(target_asset: str, file: str): return file.split('.')[0].startswith(target_asset)
-    dfs = [__load_df(
+    futures = [__load_df.remote(
         path=os.path.join(path,f),
         prefix=f.split('.')[0],
         returns='log_returns' if log_returns else 'returns',
         feature_extractors=own_features if is_target_asset(target_asset, f) else other_features,
         narrow_format=narrow_format,
     ) for f in files]
+    dfs = ray.get(futures)
     if narrow_format:
         dfs = pd.concat(dfs, axis=0).fillna(0.)
     else:
@@ -78,6 +77,7 @@ def load_data(path: str,
     return X, y, forward_returns
 
 
+@ray.remote
 def __load_df(path: str,
             prefix: str,
             returns: Literal['price', 'returns', 'log_returns'],
@@ -123,7 +123,6 @@ def __apply_feature_extractors(df: pd.DataFrame,
     return df
 
 
-# %%
 def __create_target_cum_forward_returns(df: pd.DataFrame, source_column: str, period: int) -> pd.Series:
     assert period > 0
     return df[source_column].shift(-period)

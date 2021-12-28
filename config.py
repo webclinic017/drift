@@ -7,10 +7,13 @@ from models.model_map import model_names_classification, model_names_regression
 def get_default_level_1_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
-        dimensionality_reduction = False,
+        dimensionality_reduction = True,
         feature_selection = True,
-        expanding_window = False,
-        sliding_window_size = 380,
+        n_features_to_select = 30,
+        expanding_window_level1 = False,
+        expanding_window_level2 = False,
+        sliding_window_size_level1 = 380,
+        sliding_window_size_level2 = 1,
         retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
         include_original_data_in_ensemble = False,
@@ -46,8 +49,11 @@ def get_default_level_2_config() -> tuple[dict, dict, dict]:
     training_config = dict(
         dimensionality_reduction = True,
         feature_selection = True,
-        expanding_window = True,
-        sliding_window_size = 380,
+        n_features_to_select = 30,
+        expanding_window_level1 = True,
+        expanding_window_level2 = False,
+        sliding_window_size_level1 = 380,
+        sliding_window_size_level2 = 1,
         retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
         include_original_data_in_ensemble = False,
@@ -59,8 +65,8 @@ def get_default_level_2_config() -> tuple[dict, dict, dict]:
         load_other_assets= True,
         log_returns= True,
         forecasting_horizon = 1,
-        own_features = ['level_2', 'date_days', 'lags_up_to_5'],
-        other_features = ['level_2', 'lags_up_to_5'],
+        own_features = ['level_2', 'date_days', 'fracdiff'],
+        other_features = ['level_2', 'fracdiff'],
         index_column= 'int',
         method= 'classification',
         no_of_classes= 'three-balanced'

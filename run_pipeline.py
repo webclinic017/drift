@@ -8,6 +8,8 @@ from utils.helpers import get_first_valid_return_index, weighted_average
 from config import get_default_level_1_config, get_default_level_2_config, validate_config, get_model_name
 from feature_selection.feature_selection import select_features
 from feature_selection.dim_reduction import reduce_dimensionality
+import ray
+ray.init()
 
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = get_default_level_2_config()
@@ -39,7 +41,7 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
         original_X = X.copy()
         first_valid_index = get_first_valid_return_index(X.iloc[:,0])
         samples_to_train = len(y) - first_valid_index
-        if samples_to_train < training_config['sliding_window_size'] * 3:
+        if samples_to_train < training_config['sliding_window_size_level1'] * 3:
             print("Not enough samples to train")
             continue
 
@@ -52,9 +54,8 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             print("Feature Selection started")
             # TODO: this needs to be done per model!
             backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
-            X = select_features(X, y, model_config['level_1_models'][0][1], min_features_to_select = 10, backup_model = backup_model)
+            X = select_features(X, y, model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model)
             print("Feature Selection ended")
-
 
         # 3. Train Level-1 models
         current_result, current_predictions = run_single_asset_trainig(
@@ -65,8 +66,8 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             target_returns = target_returns,
             models = model_config['level_1_models'],
             method = data_config['method'],
-            expanding_window = training_config['expanding_window'],
-            sliding_window_size = training_config['sliding_window_size'],
+            expanding_window = training_config['expanding_window_level1'],
+            sliding_window_size = training_config['sliding_window_size_level1'],
             retrain_every =  training_config['retrain_every'],
             scaler =  training_config['scaler'],
             no_of_classes = data_config['no_of_classes'],
@@ -90,8 +91,8 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
                 target_returns = target_returns,
                 models = [model_config['level_2_model']],
                 method = data_config['method'],
-                expanding_window = training_config['expanding_window'],
-                sliding_window_size = training_config['sliding_window_size'],
+                expanding_window = training_config['expanding_window_level2'],
+                sliding_window_size = training_config['sliding_window_size_level2'],
                 retrain_every = training_config['retrain_every'],
                 scaler = training_config['scaler'],
                 no_of_classes = data_config['no_of_classes'],

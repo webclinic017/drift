@@ -21,4 +21,8 @@ dependencies:
   - wandb
   - python-dotenv
   - tscv
+  - pip
+  - pip:
+    - fracdiff
+    - ray
 prefix: /usr/local/anaconda3/envs/quant

@@ -8,10 +8,23 @@ metric:
 parameters:
     path : 
       value: 'data/'
-    expanding_window:
+    expanding_window_level1:
       values: [True, False]
       distribution: categorical
-    sliding_window_size: 
+    expanding_window_level2:
+      values: [True, False]
+      distribution: categorical
+    feature_selection:
+      value: True
+    n_features_to_select:
+      values: [10, 20, 30]
+      distribution: categorical
+    dimensionality_reduction:
+      value: True
+    sliding_window_size_level1: 
+      values: [180, 280, 380]
+      distribution: categorical
+    sliding_window_size_level2: 
       values: [180, 280, 380]
       distribution: categorical
     retrain_every: 
