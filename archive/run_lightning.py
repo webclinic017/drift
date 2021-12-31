@@ -1,4 +1,4 @@
-from utils.load_data import load_files
+from data_loader.load_data import load_files
 import pandas as pd
 # from tensorflow import keras
 from utils.normalize import normalize

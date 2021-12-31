@@ -1,20 +1,17 @@
 import pandas as pd
-import os
 import numpy as np
-from utils.typing import FeatureExtractor
+from utils.types import DataSource, FeatureExtractor
+from utils.helpers import deduplicate_indexes
+from data_loader.collections import DataCollection
 from typing import Literal
 import ray
+import os
 
-def get_crypto_assets(path: str) -> list[str]:
-    return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')])
-
-def get_etf_assets(path: str) -> list[str]:
-    return sorted([f.split('.')[0] for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and '_' not in f and not f.startswith('.')])
-
-
-def load_data(path: str,
+def load_data(assets: DataCollection,
+            other_assets: DataCollection,
+            # exogenous_data: DataCollection,
             target_asset: str,
-            load_other_assets: bool,
+            load_non_target_asset: bool,
             log_returns: bool,
             forecasting_horizon: int,
             own_features: list[tuple[str, FeatureExtractor, list[int]]],
@@ -22,8 +19,7 @@ def load_data(path: str,
             index_column: Literal['date', 'int'],
             method: Literal['regression', 'classification'],
             no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
-            narrow_format: bool = False,
-            all_assets:list=[]
+            narrow_format: bool = False
         ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     Loads asset data from the specified path.
@@ -33,23 +29,25 @@ def load_data(path: str,
         - Series `forward_returns` with the target asset returns shifted by 1 day
     """
 
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
-    target_file = [f for f in files if f.startswith(target_asset)]
-    other_files = [f for f in files if load_other_assets == True and f.startswith(target_asset) == False]
-    files = target_file + other_files
+    target_file = [f for f in assets if f[1].startswith(target_asset)]
+    other_files = [f for f in assets if load_non_target_asset == True and f[1].startswith(target_asset) == False]
+    files = target_file + other_files + other_assets
     def is_target_asset(target_asset: str, file: str): return file.split('.')[0].startswith(target_asset)
     futures = [__load_df.remote(
-        path=os.path.join(path,f),
-        prefix=f.split('.')[0],
+        data_source=data_source,
+        prefix=data_source[1],
         returns='log_returns' if log_returns else 'returns',
-        feature_extractors=own_features if is_target_asset(target_asset, f) else other_features,
+        feature_extractors=own_features if is_target_asset(target_asset[1], data_source[1]) else other_features,
         narrow_format=narrow_format,
-    ) for f in files]
+    ) for data_source in files]
     dfs = ray.get(futures)
+
+    dfs = [deduplicate_indexes(df) for df in dfs]
+    longest_df = max(dfs, key=lambda df: df.shape[0])
     if narrow_format:
         dfs = pd.concat(dfs, axis=0).fillna(0.)
     else:
-        dfs = pd.concat(dfs, axis=1).fillna(0.)
+        dfs = pd.concat([df.reindex(longest_df.index) for df in dfs], axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
 
@@ -61,7 +59,7 @@ def load_data(path: str,
 
     ## Create target 
     target_col = 'target'
-    returns_col = target_asset + '_returns'
+    returns_col = target_asset[1] + '_returns'
     forward_returns = __create_target_cum_forward_returns(dfs, returns_col, forecasting_horizon)
     if method == 'regression':
         dfs[target_col] = forward_returns
@@ -78,12 +76,12 @@ def load_data(path: str,
 
 
 @ray.remote
-def __load_df(path: str,
+def __load_df(data_source: DataSource,
             prefix: str,
             returns: Literal['price', 'returns', 'log_returns'],
             feature_extractors: list[tuple[str, FeatureExtractor, list[int]]],
             narrow_format: bool = False) -> pd.DataFrame:
-    df = pd.read_csv(path, header=0, index_col=0).fillna(0)
+    df = pd.read_csv(os.path.join(data_source[0], data_source[1] + '.csv'), header=0, index_col=0).fillna(0)
 
     if returns == 'log_returns':
         df['returns'] = np.log(df['close']).diff(1)
@@ -192,6 +190,8 @@ def __create_target_classes(df: pd.DataFrame, source_column: str, period: int, n
         return target_column.map(get_class_binary)
 
 
+def datasource_to_file(data_source: DataSource) -> str:
+    return data_source[0] + '/' + data_source[1] + '.csv'
 
 
 # These are needed for the portfolio feature, maybe we can do this in a more elegant way

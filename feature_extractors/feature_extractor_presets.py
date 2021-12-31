@@ -1,5 +1,5 @@
 from feature_extractors.feature_extractors import feature_lag, feature_mom, feature_ROC, feature_RSI, feature_STOD, feature_STOK, feature_vol, feature_day_of_month, feature_day_of_week, feature_month, feature_debug_future_lookahead
-from utils.typing import FeatureExtractorConfig
+from utils.types import FeatureExtractorConfig
 from utils.helpers import flatten
 from feature_extractors.fractional_differentiation import feature_fractional_differentiation
 
@@ -38,15 +38,3 @@ def preprocess_feature_extractors_config(data_dict: dict) -> dict:
         preset_names = data_dict[key]
         data_dict[key] = flatten([presets[preset_name] for preset_name in preset_names])
     return data_dict
-
-
-# Use this if ever we want to create an independent boolean for each featureextractor
-# def preprocess_feature_extractors_config(data_dict: dict) -> dict:
-#     prefixes = ['own_features', 'other_features']
-#     features_dict = dict()
-#     for prefix in prefixes:
-#         features_to_include = [key.replace(prefix + "_", "") for key, value in data_dict.items() if key.startswith(prefix) and value == True]
-#         features_dict[prefix] = flatten([presets[feature_name] for feature_name in features_to_include])
-
-#     data_dict = {k: v for k, v in data_dict.items() if not (k.startswith(prefixes[0]) or k.startswith(prefixes[1]))}
-#     return (data_dict | features_dict)

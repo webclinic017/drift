@@ -21,6 +21,7 @@ dependencies:
   - wandb
   - python-dotenv
   - tscv
+  - tqdm
   - pip
   - pip:
     - fracdiff

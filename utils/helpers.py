@@ -1,6 +1,9 @@
-from typing import Literal
 import pandas as pd
 import numpy as np
+import os
+
+def get_files_from_dir(path: str) -> list[str]:
+    return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
 
 def get_first_valid_return_index(series: pd.Series) -> int:
     double_nested_results = np.where(np.logical_and(series != 0, np.logical_not(np.isnan(series))))
@@ -26,3 +29,4 @@ def weighted_average(df: pd.DataFrame, weights_source: str) -> pd.DataFrame:
 
     return mean_df
 
+def deduplicate_indexes(df: pd.DataFrame) -> pd.DataFrame: return df[~df.index.duplicated(keep='last')]

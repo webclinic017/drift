@@ -1,26 +1,28 @@
-from utils.load_data import load_data
+from data_loader.collections import preprocess_data_collections_config
+from data_loader.load_data import load_data
 import pandas as pd
 from training.training import run_single_asset_trainig
 from reporting.wandb import launch_wandb, send_report_to_wandb, register_config_with_wandb
-from models.model_map import map_model_name_to_function, default_feature_selector_regression, default_feature_selector_classification
+from models.model_map import preprocess_model_config, default_feature_selector_regression, default_feature_selector_classification
 from feature_extractors.feature_extractor_presets import preprocess_feature_extractors_config
 from utils.helpers import get_first_valid_return_index, weighted_average
-from config import get_default_level_1_config, get_default_level_2_config, validate_config, get_model_name
+from config import get_default_level_1_daily_config, get_default_level_2_daily_config, get_default_level_2_hourly_config, validate_config, get_model_name
 from feature_selection.feature_selection import select_features
 from feature_selection.dim_reduction import reduce_dimensionality
 import ray
 ray.init()
 
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
-    model_config, training_config, data_config = get_default_level_2_config()
+    model_config, training_config, data_config = get_default_level_2_daily_config()
     
     wandb = None
     if with_wandb: 
         wandb = launch_wandb(project_name=project_name, default_config=dict(**model_config, **training_config, **data_config), sweep=sweep)
         register_config_with_wandb(wandb, model_config, training_config, data_config)
 
-    model_config = map_model_name_to_function(model_config, data_config['method'])
+    model_config = preprocess_model_config(model_config, data_config['method'])
     data_config = preprocess_feature_extractors_config(data_config)
+    data_config = preprocess_data_collections_config(data_config)
     pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
     
 
@@ -29,8 +31,8 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
     results = pd.DataFrame()
     validate_config(model_config, training_config, data_config)
 
-    for asset in data_config['all_assets']:
-        print('--------\nPredicting: ', asset)
+    for asset in data_config['assets']:
+        print('--------\nPredicting: ', asset[1])
         all_predictions = pd.DataFrame()
 
         # 1. Load data
@@ -59,7 +61,7 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
 
         # 3. Train Level-1 models
         current_result, current_predictions = run_single_asset_trainig(
-            ticker_to_predict = asset,
+            ticker_to_predict = asset[1],
             original_X = original_X,
             X = X,
             y = y,
@@ -84,7 +86,7 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
                 ensemble_X = pd.concat([ensemble_X, X], axis=1)
 
             ensemble_result, ensemble_preds = run_single_asset_trainig(
-                ticker_to_predict = asset,
+                ticker_to_predict = asset[1],
                 original_X = ensemble_X,
                 X = ensemble_X,
                 y = y,

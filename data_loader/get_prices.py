@@ -15,7 +15,6 @@ ada = get_crypto_price_crypto_compare('ADA', 'USD', 1500)
 ada
 
 
-# %%
 
 def get_crypto_price_av(symbol: str, exchange: str, start_date = None) -> pd.DataFrame:
     api_url = f'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol={symbol}&market={exchange}&apikey={AV_API_KEY}'

@@ -9,7 +9,7 @@ from pytorch_forecasting.metrics import QuantileLoss
 import sys
 sys.path.insert(0, '..')
 
-from utils.load_data import load_files
+from data_loader.load_data import load_files
 
 print("success")
 

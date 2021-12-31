@@ -2,6 +2,7 @@ import pandas as pd
 from models.base import Model
 import numpy as np
 from utils.helpers import get_first_valid_return_index
+from tqdm import tqdm
 
 from sklearn.base import clone
 
@@ -33,7 +34,7 @@ def walk_forward_train_test(
     if is_scaling_on:
         scaler = clone(scaler)
 
-    for index in range(train_from, train_till):
+    for index in tqdm(range(train_from, train_till)):
 
         if iterations_before_retrain <= 0 or pd.isna(models[index-1]):
             if expanding_window:

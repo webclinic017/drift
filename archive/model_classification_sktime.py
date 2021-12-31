@@ -1,5 +1,5 @@
 #%% Import all the stuff, load data, define constants
-from utils.load_data import load_files, create_target_classes
+from data_loader.load_data import load_files, create_target_classes
 import pandas as pd
 import numpy as np
 from utils.sktime import from_df_to_sktime_data
@@ -36,7 +36,7 @@ print('Predicting: ', ticket_to_predict)
 data = load_files(path='data/',
     own_asset=ticket_to_predict,
     own_asset_lags=[1,2,3,4,5,6,8,10,15],
-    load_other_assets=False,
+    load_non_target_asset=False,
     other_asset_lags=[1,2,3,4],
     log_returns=True,
     add_date_features=True,

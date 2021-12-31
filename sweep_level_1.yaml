@@ -39,7 +39,7 @@ parameters:
       distribution: categorical
     forecasting_horizon: 
       value: 1
-    load_other_assets: 
+    load_non_target_asset: 
       values: [True, False]
       distribution: categorical
     log_returns: 
