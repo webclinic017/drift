@@ -6,8 +6,12 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
-    path : 
-      value: 'data/'
+    assets:
+      value: ['daily_crypto']
+    other_assets:
+      value: ['daily_etf']
+    exogenous_data:
+      value: ['daily_glassnode']
     expanding_window_level1:
       values: [True, False]
       distribution: categorical

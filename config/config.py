@@ -1,5 +1,3 @@
-from models.model_map import model_names_classification, model_names_regression
-
 
 def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
   
@@ -19,12 +17,13 @@ def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
     data_config = dict(
         assets = ['hourly_crypto'],
         other_assets = [],
-        # exogenous_data = [],
+        exogenous_data = [],
         load_non_target_asset= True,
         log_returns= True,
         forecasting_horizon = 1,
         own_features = ['level_2', 'date_days'],
         other_features = ['single_mom'],
+        exogenous_features = ['fracdiff'],
         index_column= 'int',
         method= 'classification',
         no_of_classes= 'three-balanced'
@@ -59,12 +58,13 @@ def get_default_level_2_hourly_config() -> tuple[dict, dict, dict]:
     data_config = dict(
         assets = ['hourly_crypto'],
         other_assets = [],
-        # exogenous_data = [],
+        exogenous_data = [],
         load_non_target_asset= True,
         log_returns= True,
         forecasting_horizon = 1,
         own_features = ['level_2', 'date_days', 'lags_up_to_5'],
         other_features = ['level_2'],
+        exogenous_features = ['fracdiff'],
         index_column= 'int',
         method= 'classification',
         no_of_classes= 'three-balanced'
@@ -101,12 +101,13 @@ def get_default_level_2_daily_config() -> tuple[dict, dict, dict]:
     data_config = dict(
         assets = ['daily_crypto'],
         other_assets = ['daily_etf'],
-        # exogenous_data = [],
+        exogenous_data = ['daily_glassnode'],
         load_non_target_asset= True,
         log_returns= True,
         forecasting_horizon = 1,
         own_features = ['level_2', 'date_days', 'fracdiff'],
         other_features = ['level_2', 'fracdiff'],
+        exogenous_features = ['fracdiff'],
         index_column= 'int',
         method= 'classification',
         no_of_classes= 'three-balanced'
@@ -125,17 +126,3 @@ def get_default_level_2_daily_config() -> tuple[dict, dict, dict]:
     return model_config, training_config, data_config
 
 
-def validate_config(model_config:dict, training_config:dict, data_config:dict):
-    # We need to make sure there's only one output from the pipeline
-    # If level-2 model is there, we need more than one level-1 models to train
-    if model_config["level_2_model"] is not None: assert len(model_config["level_1_models"]) > 0
-    # If there's no level-2 model, we need to have only one level-1 model
-    if model_config["level_2_model"] is None: assert len(model_config["level_1_models"]) == 1
-
-def get_model_name(model_config:dict) -> str:
-    if model_config["level_2_model"] is not None:
-        return model_config["level_2_model"][0]
-    elif len(model_config["level_1_models"]) == 1:
-        return model_config["level_1_models"][0][0]
-    else:
-        raise Exception("No model name found")

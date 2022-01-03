@@ -1,15 +1,6 @@
 import pandas as pd
 import numpy as np
-
-## Utility functions
-
-def __get_close_low_high(df: pd.DataFrame) -> tuple[pd.Series, pd.Series, pd.Series]:
-    close = df['close']
-    low = df['low']
-    high = df['high']
-    return close, low, high
-
-## Feature extractors
+from feature_extractors.utils import get_close_low_high
 
 def feature_debug_future_lookahead(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
     return df['returns'].shift(-period)
@@ -37,7 +28,7 @@ def feature_mom(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series
         return df['close'].pct_change(period)
 
 def feature_STOK(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
-    close, low, high = __get_close_low_high(df)
+    close, low, high = get_close_low_high(df)
 
     STOK = ((close - low.rolling(period).min()) / (high.rolling(period).max() - low.rolling(period).min())) * 100
     return STOK

@@ -23,6 +23,7 @@ dependencies:
   - tscv
   - tqdm
   - pip
+  - pandas-ta
   - pip:
     - fracdiff
     - ray

@@ -1,12 +1,11 @@
-from data_loader.collections import preprocess_data_collections_config
 from data_loader.load_data import load_data
 import pandas as pd
 from training.training import run_single_asset_trainig
 from reporting.wandb import launch_wandb, send_report_to_wandb, register_config_with_wandb
-from models.model_map import preprocess_model_config, default_feature_selector_regression, default_feature_selector_classification
-from feature_extractors.feature_extractor_presets import preprocess_feature_extractors_config
+from models.model_map import default_feature_selector_regression, default_feature_selector_classification
 from utils.helpers import get_first_valid_return_index, weighted_average
-from config import get_default_level_1_daily_config, get_default_level_2_daily_config, get_default_level_2_hourly_config, validate_config, get_model_name
+from config.config import get_default_level_1_daily_config, get_default_level_2_daily_config, get_default_level_2_hourly_config
+from config.preprocess import validate_config, get_model_name, preprocess_config
 from feature_selection.feature_selection import select_features
 from feature_selection.dim_reduction import reduce_dimensionality
 import ray
@@ -14,21 +13,19 @@ ray.init()
 
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = get_default_level_2_daily_config()
-    
     wandb = None
     if with_wandb: 
         wandb = launch_wandb(project_name=project_name, default_config=dict(**model_config, **training_config, **data_config), sweep=sweep)
         register_config_with_wandb(wandb, model_config, training_config, data_config)
+    model_config, training_config, data_config = preprocess_config(model_config, training_config, data_config)
 
-    model_config = preprocess_model_config(model_config, data_config['method'])
-    data_config = preprocess_feature_extractors_config(data_config)
-    data_config = preprocess_data_collections_config(data_config)
     pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
     
 
 
 def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict):
     results = pd.DataFrame()
+    all_predictions = pd.DataFrame()
     validate_config(model_config, training_config, data_config)
 
     for asset in data_config['assets']:
@@ -109,10 +106,15 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
 
     level1_columns = results[[column for column in results.columns if 'lvl1' in column]]
     level2_columns = results[[column for column in results.columns if 'lvl2' in column]]
-    
+
     # Only send the results of the final model to wandb
     results_to_send = level2_columns if level2_columns.shape[1] > 0 else level1_columns
     send_report_to_wandb(results_to_send, wandb, project_name, get_model_name(model_config))
+
+    level1_predictions = all_predictions[[column for column in all_predictions.columns if 'lvl1' in column]]
+    level2_predictions = all_predictions[[column for column in all_predictions.columns if 'lvl2' in column]]
+    predictions_to_save = level2_predictions if level2_predictions.shape[1] > 0 else level1_predictions
+    predictions_to_save.to_csv('predictions.csv')
 
     print("\n--------\n")
     print("Benchmark buy-and-hold sharpe: ", round(weighted_average(results, 'no_of_samples').loc['benchmark_sharpe'], 3))

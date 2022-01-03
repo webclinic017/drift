@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from utils.types import DataSource, FeatureExtractor
-from utils.helpers import deduplicate_indexes
+from utils.helpers import deduplicate_indexes, drop_columns_if_exist
 from data_loader.collections import DataCollection
 from typing import Literal
 import ray
@@ -9,13 +9,14 @@ import os
 
 def load_data(assets: DataCollection,
             other_assets: DataCollection,
-            # exogenous_data: DataCollection,
-            target_asset: str,
+            exogenous_data: DataCollection,
+            target_asset: DataSource,
             load_non_target_asset: bool,
             log_returns: bool,
             forecasting_horizon: int,
             own_features: list[tuple[str, FeatureExtractor, list[int]]],
             other_features: list[tuple[str, FeatureExtractor, list[int]]],
+            exogenous_features: list[tuple[str, FeatureExtractor, list[int]]],
             index_column: Literal['date', 'int'],
             method: Literal['regression', 'classification'],
             no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
@@ -29,25 +30,36 @@ def load_data(assets: DataCollection,
         - Series `forward_returns` with the target asset returns shifted by 1 day
     """
 
-    target_file = [f for f in assets if f[1].startswith(target_asset)]
-    other_files = [f for f in assets if load_non_target_asset == True and f[1].startswith(target_asset) == False]
+    target_file = [f for f in assets if f[1].startswith(target_asset[1])]
+    assert len(target_file) == 1, "There should be exactly one target file"
+    other_files = [f for f in assets if load_non_target_asset == True and f[1].startswith(target_asset[1]) == False]
     files = target_file + other_files + other_assets
     def is_target_asset(target_asset: str, file: str): return file.split('.')[0].startswith(target_asset)
-    futures = [__load_df.remote(
+    asset_futures = [__load_df.remote(
         data_source=data_source,
         prefix=data_source[1],
         returns='log_returns' if log_returns else 'returns',
         feature_extractors=own_features if is_target_asset(target_asset[1], data_source[1]) else other_features,
         narrow_format=narrow_format,
     ) for data_source in files]
-    dfs = ray.get(futures)
+    asset_dfs = ray.get(asset_futures)
 
+    exogenous_futures = [__load_df.remote(
+        data_source=data_source,
+        prefix=data_source[1],
+        returns='returns',
+        feature_extractors=exogenous_features,
+        narrow_format=narrow_format,
+    ) for data_source in exogenous_data]
+    exogenous_dfs = ray.get(exogenous_futures)
+
+    dfs = asset_dfs + exogenous_dfs
     dfs = [deduplicate_indexes(df) for df in dfs]
     longest_df = max(dfs, key=lambda df: df.shape[0])
     if narrow_format:
-        dfs = pd.concat(dfs, axis=0).fillna(0.)
+        dfs = pd.concat([df.sort_index().reindex(longest_df.index) for df in dfs], axis=0).fillna(0.)
     else:
-        dfs = pd.concat([df.reindex(longest_df.index) for df in dfs], axis=1).fillna(0.)
+        dfs = pd.concat([df.sort_index().reindex(longest_df.index) for df in dfs], axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
 
@@ -93,10 +105,7 @@ def __load_df(data_source: DataSource,
     df = __apply_feature_extractors(df, log_returns=True if returns == 'log_returns' else False, feature_extractors = feature_extractors)
 
     df = df.replace([np.inf, -np.inf], 0.)
-    df = df.drop(columns=['open', 'high', 'low', 'close'])
-    # we're not ready for this just yet
-    if 'volume' in df.columns:
-        df = df.drop(columns=['volume'])
+    df = drop_columns_if_exist(df, ['open', 'high', 'low', 'close', 'volume'])
     
     if narrow_format:
         df["ticker"] = np.repeat(prefix, df.shape[0])

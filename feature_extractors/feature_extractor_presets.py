@@ -31,10 +31,3 @@ presets = __presets | dict(
     level_2 = __presets["mom"] + __presets["vol"] + __presets["roc"] + __presets["rsi"] + __presets["stod"] + __presets["stok"],
 )
 
-def preprocess_feature_extractors_config(data_dict: dict) -> dict:
-    data_dict = data_dict.copy()
-    keys = ['own_features', 'other_features']
-    for key in keys:
-        preset_names = data_dict[key]
-        data_dict[key] = flatten([presets[preset_name] for preset_name in preset_names])
-    return data_dict

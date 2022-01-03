@@ -6,8 +6,13 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
-    path : 
-      value: 'data/'
+    assets:
+      value: ['daily_crypto']
+    other_assets:
+      value: ['daily_etf']
+    exogenous_data:
+      values: [['daily_glassnode'], []]
+      distribution: categorical
     expanding_window_level1:
       value: True
     expanding_window_level2:
@@ -19,7 +24,7 @@ parameters:
     feature_selection:
       value: True
     n_features_to_select:
-      values: [10, 20, 30]
+      values: [30, 40]
       distribution: categorical
     dimensionality_reduction:
       value: True
@@ -50,4 +55,7 @@ parameters:
       distribution: categorical
     other_features:
       values: [['level_2', 'lags_up_to_5'], ['level_2', 'fracdiff']]
+      distribution: categorical
+    exogenous_features:
+      values: [[], ['fracdiff']]
       distribution: categorical

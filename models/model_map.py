@@ -45,9 +45,3 @@ model_names_regression = list(model_map["regression_models"].keys())
 default_feature_selector_regression = model_map['regression_models']['RF']
 default_feature_selector_classification = model_map['classification_models']['RF']
 
-def preprocess_model_config(model_config:dict, method:str) -> dict:
-    model_config['level_1_models'] = [(model_name, model_map[method + '_models'][model_name]) for model_name in  model_config['level_1_models']]
-    if model_config['level_2_model'] is not None:
-        model_config['level_2_model'] = (model_config['level_2_model'], model_map[method + '_models'][model_config['level_2_model']])
-
-    return model_config

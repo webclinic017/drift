@@ -30,3 +30,9 @@ def weighted_average(df: pd.DataFrame, weights_source: str) -> pd.DataFrame:
     return mean_df
 
 def deduplicate_indexes(df: pd.DataFrame) -> pd.DataFrame: return df[~df.index.duplicated(keep='last')]
+
+def drop_columns_if_exist(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+    for column in columns:
+        if column in df.columns:
+            df = df.drop(column, axis=1)
+    return df
