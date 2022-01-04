@@ -16,9 +16,10 @@ def walk_forward_train_test(
                             window_size: int,
                             retrain_every: int,
                             scaler,
-                        ) -> tuple[pd.Series, pd.Series]:
+                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame]:
     assert len(X) == len(y)
     predictions = pd.Series(index=y.index).rename(model_name)
+    probabilities = pd.DataFrame(index=y.index)
     models = pd.Series(index=y.index).rename(model_name)
 
     first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(X.iloc[:,0]))
@@ -45,8 +46,8 @@ def walk_forward_train_test(
             train_window_end = index - 1
             
             if is_scaling_on:
-                # First we need to fit on the expanding window data slice
-                # This is our only way to avoid lookahead bia
+                # We need to fit on the expanding window data slice
+                # This is our only way to avoid lookahead bias
                 X_expanding_window = X[first_nonzero_return:train_window_end]
                 scaler.fit(X_expanding_window.values)
 
@@ -59,7 +60,7 @@ def walk_forward_train_test(
                 X_slice = X_slice.to_numpy()
 
             current_model = model.clone()
-            current_model.fit(X_slice, y_slice.to_numpy(), models[index-1])
+            current_model.fit(X_slice, y_slice.to_numpy())
             iterations_before_retrain = retrain_every
         else:
             current_model = models[index-1]
@@ -70,8 +71,12 @@ def walk_forward_train_test(
         if is_scaling_on:
             next_timestep = scaler.transform(next_timestep)
 
-        prediction = current_model.predict(next_timestep).item()
+        prediction, probs = current_model.predict(next_timestep)
         predictions[index] = prediction
+        if len(probabilities.columns) != len(probs):
+            probabilities = probabilities.reindex(columns = ["prob_" + str(num) for num in range(0, len(probs.T))])
+        probabilities.iloc[index] = probs
+
         iterations_before_retrain -= 1
 
-    return models, predictions
+    return models, predictions, probabilities

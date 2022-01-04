@@ -24,7 +24,9 @@ dependencies:
   - tqdm
   - pip
   - pandas-ta
+  - xgboost
   - pip:
     - fracdiff
     - ray
+    - diskcache
 prefix: /usr/local/anaconda3/envs/quant

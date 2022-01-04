@@ -1,7 +1,7 @@
-from feature_extractors.feature_extractors import feature_lag, feature_mom, feature_ROC, feature_RSI, feature_STOD, feature_STOK, feature_vol, feature_day_of_month, feature_day_of_week, feature_month, feature_debug_future_lookahead
+from feature_extractors.feature_extractors import feature_lag, feature_mom, feature_ROC, feature_RSI, feature_STOD, feature_STOK, feature_standard_scaling, feature_vol, feature_day_of_month, feature_day_of_week, feature_month, feature_debug_future_lookahead
 from utils.types import FeatureExtractorConfig
 from utils.helpers import flatten
-from feature_extractors.fractional_differentiation import feature_fractional_differentiation
+from feature_extractors.fractional_differentiation import feature_fractional_differentiation, feature_fractional_differentiation_log
 
 __presets = dict(
     debug_future_lookahead = [('debug_future', feature_debug_future_lookahead, [1])],
@@ -24,6 +24,8 @@ __presets = dict(
     stod = [('stod', feature_STOD, [10, 30, 200])],
     stok = [('stok', feature_STOK, [10, 30, 200])],
     fracdiff = [('fracdiff', feature_fractional_differentiation, [10, 30])],
+    fracdiff_log = [('fracdiff_log', feature_fractional_differentiation_log, [10, 30])],
+    standard_scaling = [('standard_scaling', feature_standard_scaling, [0])],
 )
 
 presets = __presets | dict(

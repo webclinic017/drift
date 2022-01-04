@@ -1,3 +1,4 @@
+from config.hashing import hash_data_config
 from data_loader.load_data import load_data
 import pandas as pd
 from training.training import run_single_asset_trainig
@@ -26,11 +27,11 @@ def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
 def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict):
     results = pd.DataFrame()
     all_predictions = pd.DataFrame()
+    all_probabilities = pd.DataFrame()
     validate_config(model_config, training_config, data_config)
 
     for asset in data_config['assets']:
         print('--------\nPredicting: ', asset[1])
-        all_predictions = pd.DataFrame()
 
         # 1. Load data
         data_params = data_config.copy()
@@ -53,11 +54,11 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             print("Feature Selection started")
             # TODO: this needs to be done per model!
             backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
-            X = select_features(X, y, model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model)
+            X = select_features(X = X, y = y, model = model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'], data_config_hash = hash_data_config(data_params))
             print("Feature Selection ended")
 
         # 3. Train Level-1 models
-        current_result, current_predictions = run_single_asset_trainig(
+        current_result, current_predictions, current_probabilities = run_single_asset_trainig(
             ticker_to_predict = asset[1],
             original_X = original_X,
             X = X,
@@ -75,14 +76,15 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
         results = pd.concat([results, current_result], axis=1)
         # With static models, because of the lag in the indicator, the first prediction is NA, so we fill it with zero.
         all_predictions = pd.concat([all_predictions, current_predictions], axis=1).fillna(0.)
+        all_probabilities = pd.concat([all_probabilities, current_probabilities], axis=1).fillna(0.)
 
         # 3. Train Level-2 (Ensemble) model (Optional)
         if model_config['level_2_model'] is not None: 
-            ensemble_X = all_predictions
+            ensemble_X = pd.concat([all_predictions, all_probabilities], axis = 1)
             if training_config['include_original_data_in_ensemble']:
                 ensemble_X = pd.concat([ensemble_X, X], axis=1)
 
-            ensemble_result, ensemble_preds = run_single_asset_trainig(
+            ensemble_result, ensemble_preds, ensemble_probabilities = run_single_asset_trainig(
                 ticker_to_predict = asset[1],
                 original_X = ensemble_X,
                 X = ensemble_X,
@@ -100,6 +102,7 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
 
             results = pd.concat([results, ensemble_result], axis=1)
             all_predictions = pd.concat([all_predictions, ensemble_preds], axis=1)
+            all_probabilities = pd.concat([all_probabilities, ensemble_probabilities], axis=1).fillna(0.)
         
 
     results.to_csv('results.csv')

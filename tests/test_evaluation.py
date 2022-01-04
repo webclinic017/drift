@@ -42,13 +42,13 @@ class EvenOddStubModel(Model):
         super().__init__()
         self.window_length = window_length
 
-    def fit(self, X, y, prev_model):
+    def fit(self, X, y):
         assert len(X) == self.window_length
         for i in range(len(X)):
             assert y[i] == -1 if X[i][0] == 1 else 1
 
     def predict(self, X):
-        return np.array([-1 if X[0][0] == 1 else 1])
+        return (-1 if X[0][0] == 1 else 1, np.array([]))
 
     def clone(self):
         return self
@@ -62,7 +62,7 @@ def test_evaluation():
     model = EvenOddStubModel(window_length = window_length)
     scaler = None
     
-    models, predictions = walk_forward_train_test(
+    models, predictions, probs = walk_forward_train_test(
         model_name='test',
         model=model,
         X=X,

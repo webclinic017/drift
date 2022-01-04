@@ -1,7 +1,7 @@
 program: run_sweep.py
 method: grid
 project: price-forecasting
-name: Fractional differentiation / number of features
+name: Exogenous data / data transformation
 metric:
   goal: maximize
   name: sharpe
@@ -24,8 +24,7 @@ parameters:
     feature_selection:
       value: True
     n_features_to_select:
-      values: [30, 40]
-      distribution: categorical
+      value: 30
     dimensionality_reduction:
       value: True
     retrain_every: 
@@ -57,5 +56,5 @@ parameters:
       values: [['level_2', 'lags_up_to_5'], ['level_2', 'fracdiff']]
       distribution: categorical
     exogenous_features:
-      values: [[], ['fracdiff']]
+      values: [[], ['fracdiff'], ['standard_scaling']]
       distribution: categorical

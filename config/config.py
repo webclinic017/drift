@@ -15,7 +15,7 @@ def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
     )
 
     data_config = dict(
-        assets = ['hourly_crypto'],
+        assets = ['daily_crypto'],
         other_assets = [],
         exogenous_data = [],
         load_non_target_asset= True,
@@ -23,10 +23,11 @@ def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
         forecasting_horizon = 1,
         own_features = ['level_2', 'date_days'],
         other_features = ['single_mom'],
-        exogenous_features = ['fracdiff'],
+        exogenous_features = ['standard_scaling'],
         index_column= 'int',
         method= 'classification',
-        no_of_classes= 'three-balanced'
+        no_of_classes= 'three-balanced',
+        narrow_format = False,
     )
 
     regression_models = ["Lasso"]
@@ -64,10 +65,11 @@ def get_default_level_2_hourly_config() -> tuple[dict, dict, dict]:
         forecasting_horizon = 1,
         own_features = ['level_2', 'date_days', 'lags_up_to_5'],
         other_features = ['level_2'],
-        exogenous_features = ['fracdiff'],
+        exogenous_features = ['standard_scaling'],
         index_column= 'int',
         method= 'classification',
-        no_of_classes= 'three-balanced'
+        no_of_classes= 'three-balanced',
+        narrow_format = False,
     )
 
     regression_models = ["Lasso", "KNN", "RF"]
@@ -105,17 +107,18 @@ def get_default_level_2_daily_config() -> tuple[dict, dict, dict]:
         load_non_target_asset= True,
         log_returns= True,
         forecasting_horizon = 1,
-        own_features = ['level_2', 'date_days', 'fracdiff'],
-        other_features = ['level_2', 'fracdiff'],
-        exogenous_features = ['fracdiff'],
+        own_features = ['level_2', 'date_days', 'lags_up_to_5'],
+        other_features = ['level_2', 'lags_up_to_5'],
+        exogenous_features = ['standard_scaling'],
         index_column= 'int',
         method= 'classification',
-        no_of_classes= 'three-balanced'
+        no_of_classes= 'three-balanced',
+        narrow_format = False,
     )
 
     regression_models = ["Lasso", "KNN", "RF"]
     regression_ensemble_model = 'KNN'
-    classification_models = ["LDA", "KNN", "CART", "RF", "StaticMom"]
+    classification_models = ['LR', 'LDA', 'KNN', 'CART', 'NB', 'AB', 'RF', 'XGB', 'StaticMom']
     classification_ensemble_model = 'Ensemble_Average'
 
     model_config = dict(

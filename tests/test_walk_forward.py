@@ -40,13 +40,13 @@ class IncrementingStubModel(Model):
         super().__init__()
         self.window_length = window_length
 
-    def fit(self, X, y, prev_model):
+    def fit(self, X, y):
         assert len(X) == self.window_length
         for i in range(len(X)):
             assert X[i][0] + 1 == y[i]
 
     def predict(self, X):
-        return np.array([X[0][0] + 1])
+        return (X[0][0] + 1, np.array([]))
 
     def clone(self):
         return self
@@ -59,7 +59,7 @@ def test_walk_forward_train_test():
     model = IncrementingStubModel(window_length = window_length)
     scaler = None
 
-    models, predictions = walk_forward_train_test(
+    models, predictions, probs = walk_forward_train_test(
         model_name='test',
         model=model,
         X=X,

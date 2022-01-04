@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Literal
 import pandas as pd
 
 Period = int
@@ -10,3 +10,5 @@ Path = str
 FileName = str
 DataSource = list[tuple[Path, FileName]]
 DataCollection = list[DataSource]
+
+ScalerTypes = Literal['normalize', 'minmax', 'standardize', 'none']

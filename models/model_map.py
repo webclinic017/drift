@@ -11,6 +11,7 @@ from models.base import SKLearnModel
 from models.momentum import StaticMomentumModel
 from models.average import StaticAverageModel
 from models.naive import StaticNaiveModel
+from xgboost import XGBClassifier
 
 
 model_map = {
@@ -34,6 +35,7 @@ model_map = {
         NB= SKLearnModel(GaussianNB()),
         AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
         RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20, random_state=1)),
+        XGB= SKLearnModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, use_label_encoder=True, objective='multi:softprob', eval_metric='mlogloss')),
         StaticMom= StaticMomentumModel(allow_short=True),
         Ensemble_Average = StaticAverageModel(),
     ),

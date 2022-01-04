@@ -6,8 +6,20 @@ from data_loader.collections import DataCollection
 from typing import Literal
 import ray
 import os
+from config.hashing import hash_data_config
+from diskcache import Cache
+cache = Cache(".cachedir/data")
 
-def load_data(assets: DataCollection,
+def load_data(**kwargs):
+    hashed = hash_data_config(kwargs)
+    if hashed in cache:
+        return cache.get(hashed)
+    else:
+        return_value = __load_data(**kwargs)
+        cache[hashed] = return_value
+        return return_value
+
+def __load_data(assets: DataCollection,
             other_assets: DataCollection,
             exogenous_data: DataCollection,
             target_asset: DataSource,
@@ -33,13 +45,22 @@ def load_data(assets: DataCollection,
     target_file = [f for f in assets if f[1].startswith(target_asset[1])]
     assert len(target_file) == 1, "There should be exactly one target file"
     other_files = [f for f in assets if load_non_target_asset == True and f[1].startswith(target_asset[1]) == False]
-    files = target_file + other_files + other_assets
-    def is_target_asset(target_asset: str, file: str): return file.split('.')[0].startswith(target_asset)
+    files = other_files + other_assets
+    
+    target_asset_future = [__load_df.remote(
+        data_source=data_source,
+        prefix=data_source[1],
+        returns='log_returns' if log_returns else 'returns',
+        feature_extractors=own_features,
+        narrow_format=narrow_format,
+    ) for data_source in target_file]
+    target_asset_df = ray.get(target_asset_future)
+
     asset_futures = [__load_df.remote(
         data_source=data_source,
         prefix=data_source[1],
         returns='log_returns' if log_returns else 'returns',
-        feature_extractors=own_features if is_target_asset(target_asset[1], data_source[1]) else other_features,
+        feature_extractors=other_features,
         narrow_format=narrow_format,
     ) for data_source in files]
     asset_dfs = ray.get(asset_futures)
@@ -47,19 +68,19 @@ def load_data(assets: DataCollection,
     exogenous_futures = [__load_df.remote(
         data_source=data_source,
         prefix=data_source[1],
-        returns='returns',
+        returns='none',
         feature_extractors=exogenous_features,
         narrow_format=narrow_format,
     ) for data_source in exogenous_data]
     exogenous_dfs = ray.get(exogenous_futures)
 
-    dfs = asset_dfs + exogenous_dfs
+    dfs = target_asset_df + asset_dfs + exogenous_dfs
     dfs = [deduplicate_indexes(df) for df in dfs]
-    longest_df = max(dfs, key=lambda df: df.shape[0])
+    target_df = dfs[0]
     if narrow_format:
-        dfs = pd.concat([df.sort_index().reindex(longest_df.index) for df in dfs], axis=0).fillna(0.)
+        dfs = pd.concat([df.sort_index().reindex(target_df.index) for df in dfs], axis=0).fillna(0.)
     else:
-        dfs = pd.concat([df.sort_index().reindex(longest_df.index) for df in dfs], axis=1).fillna(0.)
+        dfs = pd.concat([df.sort_index().reindex(target_df.index) for df in dfs], axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
 
@@ -90,7 +111,7 @@ def load_data(assets: DataCollection,
 @ray.remote
 def __load_df(data_source: DataSource,
             prefix: str,
-            returns: Literal['price', 'returns', 'log_returns'],
+            returns: Literal['none', 'price', 'returns', 'log_returns'],
             feature_extractors: list[tuple[str, FeatureExtractor, list[int]]],
             narrow_format: bool = False) -> pd.DataFrame:
     df = pd.read_csv(os.path.join(data_source[0], data_source[1] + '.csv'), header=0, index_col=0).fillna(0)
@@ -99,7 +120,7 @@ def __load_df(data_source: DataSource,
         df['returns'] = np.log(df['close']).diff(1)
     elif returns == 'price':
         df['returns'] = df['close']
-    else:
+    elif returns == 'returns':
         df['returns'] = df['close'].pct_change()
 
     df = __apply_feature_extractors(df, log_returns=True if returns == 'log_returns' else False, feature_extractors = feature_extractors)
@@ -124,7 +145,7 @@ def __apply_feature_extractors(df: pd.DataFrame,
             if type(features) == pd.DataFrame:
                 df = pd.concat([df, features], axis=1)
             elif type(features) == pd.Series:
-                df[name + '_' + str(period)] = extractor(df, period, log_returns)
+                df[name + '_' + str(period)] = features
             else:
                 assert False, "Feature extractor must return a pd.DataFrame or pd.Series"
     return df
