@@ -12,6 +12,13 @@ from feature_selection.dim_reduction import reduce_dimensionality
 import ray
 ray.init()
 
+
+def run_pipeline(project_name:str, with_wandb: bool, sweep: bool):
+    wandb, model_config, training_config, data_config = setup_pipeline(project_name, with_wandb, sweep)
+    results, all_predictions, all_probabilities = run_training(project_name, wandb, sweep, model_config, training_config, data_config)  
+    reporting(results, all_predictions, all_probabilities, model_config, wandb, sweep, project_name)
+    
+
 def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = get_default_level_2_daily_config()
     wandb = None
@@ -20,9 +27,15 @@ def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
         register_config_with_wandb(wandb, model_config, training_config, data_config)
     model_config, training_config, data_config = preprocess_config(model_config, training_config, data_config)
 
-    pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
 
-def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict):
+    return wandb, model_config, training_config, data_config
+    
+
+
+
+
+
+def run_training(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict):
     results = pd.DataFrame()
     all_predictions = pd.DataFrame()
     all_probabilities = pd.DataFrame()
@@ -102,7 +115,10 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             all_predictions = pd.concat([all_predictions, ensemble_preds], axis=1)
             all_probabilities = pd.concat([all_probabilities, ensemble_probabilities], axis=1).fillna(0.)
         
-
+    return results, all_predictions, all_probabilities
+    
+    
+def reporting(results:pd.DataFrame, all_predictions:pd.DataFrame, all_probabilities:pd.DataFrame, model_config:dict, wandb, sweep: bool, project_name:str):
     results.to_csv('results.csv')
 
     level1_columns = results[[column for column in results.columns if 'lvl1' in column]]
@@ -134,4 +150,4 @@ def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_co
             wandb.finish()
     
 if __name__ == '__main__':
-    setup_pipeline(project_name='price-prediction', with_wandb = False, sweep = False)
+    run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False)

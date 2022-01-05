@@ -37,6 +37,7 @@ class EvenOddStubModel(Model):
 
     data_scaling = "unscaled"
     only_column = None
+    predict_window_size = 'single_timestamp'
 
     def __init__(self, window_length) -> None:
         super().__init__()

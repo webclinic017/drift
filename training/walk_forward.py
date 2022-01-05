@@ -38,12 +38,12 @@ def walk_forward_train_test(
         scaler = clone(scaler)
 
     for index in tqdm(range(train_from, train_till)):
+        if expanding_window:
+            train_window_start = first_nonzero_return
+        else:
+            train_window_start = index - window_size - 1
 
         if iterations_before_retrain <= 0 or pd.isna(models[index-1]):
-            if expanding_window:
-                train_window_start = first_nonzero_return
-            else:
-                train_window_start = index - window_size - 1
 
             train_window_end = index - 1
             
@@ -73,7 +73,11 @@ def walk_forward_train_test(
 
         models[index] = current_model
 
-        next_timestep = X.iloc[index].to_numpy().reshape(1, -1)
+        if model.predict_window_size == 'window_size': 
+            next_timestep = X.iloc[train_window_start:index].to_numpy()#.reshape(1, -1)
+        else: 
+            next_timestep = X.iloc[index].to_numpy().reshape(1, -1)
+        
         if is_scaling_on:
             next_timestep = scaler.transform(next_timestep)
 
