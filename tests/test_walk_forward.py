@@ -51,6 +51,12 @@ class IncrementingStubModel(Model):
     def clone(self):
         return self
 
+    def get_name(self) -> str:
+        return 'test'
+    
+    def initialize_network(self, input_dim: int, output_dim: int):
+        pass
+    
 def test_walk_forward_train_test():
     X, y = __generate_incremental_test_data(no_of_rows)
 

@@ -132,5 +132,5 @@ lightning/lightning_logs/
 results.csv
 predictions.csv
 wandb/
-
+lightning_logs/
 .cachedir/**

@@ -28,3 +28,6 @@ class StaticAverageModel(Model):
 
     def get_name(self) -> str:
         return 'static_average'
+
+    def initialize_network(self, input_dim:int, output_dim:int):
+        pass

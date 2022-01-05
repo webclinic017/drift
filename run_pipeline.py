@@ -21,8 +21,6 @@ def setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     model_config, training_config, data_config = preprocess_config(model_config, training_config, data_config)
 
     pipeline(project_name, wandb, sweep, model_config, training_config, data_config)  
-    
-
 
 def pipeline(project_name:str, wandb, sweep:bool, model_config:dict, training_config:dict, data_config:dict):
     results = pd.DataFrame()

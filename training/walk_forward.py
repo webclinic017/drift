@@ -30,6 +30,8 @@ def walk_forward_train_test(
     if model.only_column is not None:
         X = X[[column for column in X.columns if model.only_column in column]]
 
+        
+        
     is_scaling_on = scaler is not None and model.data_scaling == 'scaled'
 
     if is_scaling_on:
@@ -58,9 +60,13 @@ def walk_forward_train_test(
                 X_slice = scaler.transform(X_slice.values)
             else:
                 X_slice = X_slice.to_numpy()
-
+            
+            
             current_model = model.clone()
+
+            current_model.initialize_network(input_dim = len(X_slice[0]), output_dim=1) 
             current_model.fit(X_slice, y_slice.to_numpy())
+
             iterations_before_retrain = retrain_every
         else:
             current_model = models[index-1]
