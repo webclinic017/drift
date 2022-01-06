@@ -1,4 +1,5 @@
-from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, LogisticRegression, Ridge
+from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, Ridge
+from sklearnex.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearnex.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis

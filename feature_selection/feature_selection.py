@@ -33,7 +33,7 @@ def __select_features(X: pd.DataFrame, y: pd.Series, model: Model, n_features_to
         feat_selector_model = backup_model.model
 
 #     selector = RFECV(feat_selector_model, cv = cv, step=5, min_features_to_select=min_features_to_select)
-    selector = RFE(feat_selector_model, n_features_to_select= n_features_to_select)
+    selector = RFE(feat_selector_model, n_features_to_select= n_features_to_select, step=5)
     selector = selector.fit(X_scaled, y)
     print("Kept %d features out of %d" % (selector.n_features_, X_scaled.shape[1]))
 
