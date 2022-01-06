@@ -1,28 +1,28 @@
 program: run_sweep.py
 method: grid
 project: price-forecasting
-name: Exogenous data / data transformation
+name: Meta labelling
 metric:
   goal: maximize
   name: sharpe
 parameters:
     meta_labeling_lvl_1:
-      value: True
+      values: [True, False]
+      distribution: categorical
     assets:
       value: ['daily_crypto']
     other_assets:
       value: ['daily_etf']
     exogenous_data:
-      values: [['daily_glassnode'], []]
-      distribution: categorical
+      value: ['daily_glassnode']
     expanding_window_level1:
-      value: True
-    expanding_window_level2:
       value: False
+    expanding_window_level2:
+      value: True
     sliding_window_size_level1: 
       value: 380
     sliding_window_size_level2: 
-      value: 1
+      value: 380
     n_features_to_select:
       value: 30
     dimensionality_reduction:
@@ -34,7 +34,7 @@ parameters:
     method: 
       value: 'classification'
     no_of_classes:
-      value: 'three-balanced'
+      value: 'two'
     forecasting_horizon: 
       value: 1
     load_non_target_asset: 
@@ -44,15 +44,13 @@ parameters:
     index_column: 
       value: 'int'
     level_1_models: 
-      value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "StaticMom"]
+      value: ["LDA", "KNN", "SVC", "CART", "NB", "AB", "RF", "StaticMom"]
     level_2_model: 
-      value: "Ensemble_Average"
+      values: ["LDA", "KNN", "NB", "AB", "RF", "XGB_two_class"]
+      distribution: categorical
     own_features:
-      values: [['date_days', 'level_2', 'lags_up_to_5'], ['date_days', 'level_2', 'fracdiff']]
-      distribution: categorical
+      value: ['date_days', 'level_2', 'lags_up_to_5']
     other_features:
-      values: [['level_2', 'lags_up_to_5'], ['level_2', 'fracdiff']]
-      distribution: categorical
+      value: ['level_2', 'lags_up_to_5']
     exogenous_features:
-      values: [[], ['fracdiff'], ['standard_scaling']]
-      distribution: categorical
+      value: ['standard_scaling']

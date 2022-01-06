@@ -1,3 +1,3 @@
-from run_pipeline import setup_pipeline
+from run_pipeline import run_pipeline
 
-setup_pipeline(project_name='price-prediction', with_wandb = True, sweep = True)
+run_pipeline(project_name='price-prediction', with_wandb = True, sweep = True)

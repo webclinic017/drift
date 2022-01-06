@@ -6,6 +6,8 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
+    meta_labeling_lvl_1:
+      value: True
     assets:
       value: ['daily_crypto']
     other_assets:
@@ -17,8 +19,6 @@ parameters:
       distribution: categorical
     expanding_window_level2:
       value: False
-    feature_selection:
-      value: True
     n_features_to_select:
       values: [10, 20, 30]
       distribution: categorical
@@ -34,8 +34,6 @@ parameters:
       distribution: categorical
     scaler:
       value: 'minmax'
-    include_original_data_in_ensemble:
-      value: False
     method: 
       value: 'classification'
     no_of_classes:

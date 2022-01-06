@@ -1,9 +1,10 @@
-from typing import Literal
+from typing import Literal, Callable
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from quantstats.stats import skew, sortino
 from utils.metrics import probabilistic_sharpe_ratio, sharpe_ratio
 from utils.helpers import get_first_valid_return_index
 import pandas as pd
+import numpy as np
 
 def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.00) -> pd.Series:
     delta_pos = signal.diff(1).abs().fillna(0.)
@@ -11,20 +12,18 @@ def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.00) -> 
     return (signal * returns) - costs
 
 
-def __preprocess(target_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, method: Literal['classification', 'regression'], no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']) -> pd.DataFrame:
+def __preprocess(target_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, method: Literal['classification', 'regression'], no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
     y_pred.name = 'y_pred'
     target_returns.name = 'target_returns'
     df = pd.concat([y_pred, target_returns],axis=1).dropna()
 
-    def categorize_binary(x): return 1 if x > 0 else -1
-    def categorize_threeway(x): return 0 if x == 0 else 1 if x > 0 else -1
-    categorize = categorize_binary if no_of_classes == 'two' else categorize_threeway
+    discretize_func = get_discretize_function(no_of_classes)
     # make sure that we evaluate binary/three-way predictions even if the model is a regression
     if method == 'regression':
-        df['sign_pred'] = df.y_pred.apply(categorize)
-        df['sign_true'] = df.target_returns.apply(categorize)
+        df['sign_pred'] = df.y_pred.apply(discretize_func) if discretize else df.y_pred
+        df['sign_true'] = df.target_returns.apply(discretize_func)
     else:
-        df['sign_pred'] = df.y_pred.apply(categorize)
+        df['sign_pred'] = df.y_pred.apply(discretize_func) if discretize else df.y_pred
         df['sign_true'] = y_true
 
     df['result'] = backtest(df.target_returns, df.sign_pred)
@@ -38,6 +37,7 @@ def evaluate_predictions(
                         y_true: pd.Series,
                         method: Literal['classification', 'regression'],
                         no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
+                        discretize: bool = False,
                         ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
     first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(y_pred))
@@ -51,7 +51,7 @@ def evaluate_predictions(
 
     y_pred = pd.Series(y_pred[evaluate_from:])
 
-    df = __preprocess(target_returns, y_pred, y_true, method, no_of_classes)
+    df = __preprocess(target_returns, y_pred, y_true, method, no_of_classes, discretize)
     
     scorecard = pd.Series()
     # we probably will not need regression models at all
@@ -78,19 +78,21 @@ def evaluate_predictions(
     labels = [1, -1] if no_of_classes == 'two' else [1, -1, 0]
     avg_type = 'weighted' if no_of_classes == 'two' else 'macro'
 
-    scorecard.loc['accuracy'] = accuracy_score(df.sign_true, df.sign_pred) * 100
-    scorecard.loc['recall'] = recall_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
-    scorecard.loc['precision'] = precision_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
-    scorecard.loc['f1_score'] = f1_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+    if discretize == True:
+        scorecard.loc['accuracy'] = accuracy_score(df.sign_true, df.sign_pred) * 100
+        scorecard.loc['recall'] = recall_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+        scorecard.loc['precision'] = precision_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+        scorecard.loc['f1_score'] = f1_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
     scorecard.loc['edge'] = df.result.mean()
     scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
     scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
     
-    for index, row in df.sign_true.value_counts().iteritems():
-        scorecard.loc['sign_true_ratio_' + str(index)] = row / len(df.sign_true)
-    
-    for index, row in df.sign_pred.value_counts().iteritems():
-        scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
+    if discretize == True:
+        for index, row in df.sign_true.value_counts().iteritems():
+            scorecard.loc['sign_true_ratio_' + str(index)] = row / len(df.sign_true)
+        
+        for index, row in df.sign_pred.value_counts().iteritems():
+            scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
 
     # if method == 'regression':
     #     scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
@@ -101,4 +103,25 @@ def evaluate_predictions(
     print("Model name: ", model_name)
     print(scorecard)
     return scorecard  
+
+
+def __discretize_binary(x): return 1 if x > 0 else -1
+def __discretize_threeway(x): return 0 if x == 0 else 1 if x > 0 else -1
+def discretize_threeway_threshold(threshold: float) -> Callable:
+    def discretize(current_value):
+        lower_threshold = -threshold
+        upper_threshold = threshold
+        if np.isnan(current_value):
+            return np.nan 
+        elif current_value <= lower_threshold:
+            return -1
+        elif current_value > lower_threshold and current_value < upper_threshold:
+            return 0
+        else:
+            return 1
+    return discretize
+
+def get_discretize_function(no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']) -> Callable:
+    return __discretize_binary if no_of_classes == 'two' else __discretize_threeway
+
 

@@ -94,7 +94,8 @@ def test_evaluation():
         y_pred=processed_predictions_to_match_returns,
         y_true=y,
         method='classification',
-        no_of_classes='two'
+        no_of_classes='two',
+        discretize=True
     )
 
     assert result['accuracy'] == 100.0

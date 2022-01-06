@@ -10,7 +10,7 @@ from config.hashing import hash_data_config
 from diskcache import Cache
 cache = Cache(".cachedir/data")
 
-def load_data(**kwargs):
+def load_data(**kwargs) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     hashed = hash_data_config(kwargs)
     if hashed in cache:
         return cache.get(hashed)

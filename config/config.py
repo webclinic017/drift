@@ -2,8 +2,8 @@
 def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
+        meta_labeling_lvl_1 = True,
         dimensionality_reduction = True,
-        feature_selection = True,
         n_features_to_select = 30,
         expanding_window_level1 = False,
         expanding_window_level2 = False,
@@ -11,7 +11,6 @@ def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
         sliding_window_size_level2 = 1,
         retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
-        include_original_data_in_ensemble = False,
     )
 
     data_config = dict(
@@ -44,8 +43,8 @@ def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
 def get_default_level_2_hourly_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
+        meta_labeling_lvl_1 = True,
         dimensionality_reduction = True,
-        feature_selection = True,
         n_features_to_select = 30,
         expanding_window_level1 = True,
         expanding_window_level2 = False,
@@ -53,7 +52,6 @@ def get_default_level_2_hourly_config() -> tuple[dict, dict, dict]:
         sliding_window_size_level2 = 1,
         retrain_every = 100,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
-        include_original_data_in_ensemble = False,
     )
 
     data_config = dict(
@@ -88,16 +86,15 @@ def get_default_level_2_hourly_config() -> tuple[dict, dict, dict]:
 def get_default_level_2_daily_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
+        meta_labeling_lvl_1 = True,
         dimensionality_reduction = True,
-        feature_selection = True,
         n_features_to_select = 30,
-        expanding_window_level1 = True,
-        expanding_window_level2 = False,
+        expanding_window_level1 = False,
+        expanding_window_level2 = True,
         sliding_window_size_level1 = 380,
-        sliding_window_size_level2 = 1,
+        sliding_window_size_level2 = 240,
         retrain_every = 20,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
-        include_original_data_in_ensemble = False,
     )
 
     data_config = dict(
@@ -112,14 +109,14 @@ def get_default_level_2_daily_config() -> tuple[dict, dict, dict]:
         exogenous_features = ['standard_scaling'],
         index_column= 'int',
         method= 'classification',
-        no_of_classes= 'three-balanced',
+        no_of_classes= 'two',
         narrow_format = False,
     )
 
     regression_models = ["Lasso", "KNN", "RF"]
     regression_ensemble_model = 'KNN'
-    classification_models = ['LR', 'LDA', 'KNN', 'CART', 'NB', 'AB', 'RF', 'XGB', 'StaticMom']
-    classification_ensemble_model = 'Ensemble_Average'
+    classification_models = ['SVC', 'LDA', 'KNN', 'CART', 'NB', 'AB', 'RF', 'StaticMom']
+    classification_ensemble_model = 'LDA'
 
     model_config = dict(
         level_1_models = regression_models if data_config['method'] == 'regression' else classification_models,

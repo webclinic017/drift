@@ -2,7 +2,7 @@ from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, Logisti
 from sklearn.tree import DecisionTreeClassifier
 from sklearnex.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearnex.svm import SVR
+from sklearnex.svm import SVR, SVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, ExtraTreesClassifier
@@ -44,7 +44,9 @@ model_map = {
         NB= SKLearnModel(GaussianNB()),
         AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
         RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20, random_state=1)),
-        XGB= SKLearnModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, use_label_encoder=True, objective='multi:softprob', eval_metric='mlogloss')),
+        SVC = SKLearnModel(SVC(kernel='rbf', C=1e3, probability=True)),
+        XGB_three_class= SKLearnModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, use_label_encoder=True, objective='multi:softprob', eval_metric='mlogloss')),
+        XGB_two_class= SKLearnModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, objective='binary:logistic', eval_metric='mlogloss')),
         StaticMom= StaticMomentumModel(allow_short=True),
         Ensemble_Average= StaticAverageModel(),
     ),

@@ -8,7 +8,7 @@ from utils.hashing import hash_df, hash_series
 from diskcache import Cache
 cache = Cache(".cachedir/feature_selection")
 
-def select_features(**kwargs):
+def select_features(**kwargs) -> pd.DataFrame:
     hashed = kwargs['data_config_hash'] + kwargs['model'].get_name() + str(kwargs['n_features_to_select']) + kwargs['backup_model'].get_name() + kwargs['scaling']
     if hashed in cache:
         return cache.get(hashed)

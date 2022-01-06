@@ -17,8 +17,6 @@ jobs:
       - uses: iterative/setup-cml@v1
       - name: Run pytest
         shell: bash -l {0}
-#         env: 
-#           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
           pytest --junit-xml pytest.xml
       - name: Run pipeline
@@ -37,10 +35,9 @@ jobs:
         with:
           files: pytest.xml
 
-#       - name: Write CML report
-#         env:
-#           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         run: |
-#           # Post reports as comments in GitHub PRs
-#           # cat results.txt >> report.md
-#           # cml-send-comment report.md
+      - name: Write CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat results_level2.csv >> report.md
+          cml-send-comment report.md

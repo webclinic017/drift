@@ -130,6 +130,7 @@ dmypy.json
 lightning/lightning_logs/
 
 results.csv
+results_level2.csv
 predictions.csv
 wandb/
 

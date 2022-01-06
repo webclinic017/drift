@@ -48,7 +48,8 @@ def run_single_asset_trainig(
             y_pred = preds,
             y_true = y,
             method = method,
-            no_of_classes=no_of_classes
+            no_of_classes=no_of_classes,
+            discretize=True
         )
         column_name = "model_" + ticker_to_predict + "_" + model_name + "_lvl" + str(level)
         results[column_name] = result

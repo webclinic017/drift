@@ -22,7 +22,7 @@ def walk_forward_train_test(
     probabilities = pd.DataFrame(index=y.index)
     models = pd.Series(index=y.index).rename(model_name)
 
-    first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(X.iloc[:,0]))
+    first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
     train_from = first_nonzero_return + window_size + 1
     train_till = len(y)
     iterations_before_retrain = 0
