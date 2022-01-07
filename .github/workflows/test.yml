@@ -39,5 +39,5 @@ jobs:
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat results_level2.csv >> report.md
+          cat output/results_level2.csv >> report.md
           cml-send-comment report.md
