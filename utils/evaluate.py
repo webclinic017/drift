@@ -6,7 +6,7 @@ from utils.helpers import get_first_valid_return_index
 import pandas as pd
 import numpy as np
 
-def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.00) -> pd.Series:
+def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.002) -> pd.Series:
     delta_pos = signal.diff(1).abs().fillna(0.)
     costs = transaction_cost * delta_pos
     return (signal * returns) - costs
