@@ -24,7 +24,7 @@ def run_meta_labeling_training(
     print("Feature Selection started")
     backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
     meta_feature_selection_input_X, meta_feature_selection_input_y = drop_until_first_valid_index(X_pca, meta_y)
-    feature_selection_output = select_features(X = meta_feature_selection_input_X, y = meta_feature_selection_input_y, model = model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'], data_config_hash = random_string(10))
+    feature_selection_output = select_features(X = meta_feature_selection_input_X, y = meta_feature_selection_input_y, model = model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'], dynamic_feature_selection = training_config['dynamic_feature_selection'], data_config_hash = random_string(10))
     meta_selected_features_X = X_pca[feature_selection_output.columns]
 
     meta_X = pd.concat([meta_selected_features_X, input_predictions, discretized_predictions], axis = 1)

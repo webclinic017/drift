@@ -12,6 +12,7 @@ from feature_selection.dim_reduction import reduce_dimensionality
 from training.meta_labeling import run_meta_labeling_training
 from training.averaged import average_and_evaluate_predictions
 from reporting.reporting import report_results
+from typing import Callable, Optional
 import ray
 ray.init()
 
@@ -22,7 +23,7 @@ def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config:obj
     report_results(results, all_predictions, model_config, wandb, sweep, project_name)
     
 
-def __setup_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config:object):
+def __setup_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Optional[object], dict, dict, dict]:
     model_config, training_config, data_config = get_config() 
     wandb = None
     if with_wandb: 
@@ -66,7 +67,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         print("Feature Selection started")
         # TODO: this needs to be done per model!
         backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
-        X = select_features(X = X, y = y, model = model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'], data_config_hash = hash_data_config(data_params))
+        X = select_features(X = X, y = y, model = model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'], dynamic_feature_selection = training_config['dynamic_feature_selection'], data_config_hash = hash_data_config(data_params))
 
         # 3. Train Level-1 models
         current_result, current_predictions, current_probabilities, all_models_for_single_asset = run_single_asset_trainig(
