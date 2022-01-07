@@ -3,6 +3,7 @@ channels:
   - johnsnowlabs
   - conda-forge
   - defaults
+  - ml4t
 dependencies:
   - python=3.9
   - seaborn
@@ -25,6 +26,8 @@ dependencies:
   - pip
   - pandas-ta
   - xgboost
+  - alphalens-reloaded
+  - pyfolio-reloaded
   - pip:
     - fracdiff
     - ray

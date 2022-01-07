@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 from data_loader.load_data import load_only_returns
 from data_loader.collections import data_collections
-import vectorbt as vbt
-from vectorbt.portfolio.enums import SizeType, CallSeqType
+
 from utils.helpers import get_first_valid_return_index
 from alphalens.tears import (create_returns_tear_sheet,
                       create_information_tear_sheet,
@@ -13,6 +12,8 @@ from alphalens.tears import (create_returns_tear_sheet,
                       create_full_tear_sheet,
                       create_event_returns_tear_sheet,
                       create_event_study_tear_sheet)
+import alphalens
+import pyfolio
 
 from alphalens.utils import get_clean_factor_and_forward_returns
 
@@ -35,7 +36,7 @@ def fixed_weight(row: pd.Series, availability_row: pd.Series, allow_short: bool)
 def limit_weight(row: pd.Series) -> pd.Series:
     if row.sum() > 1:
         row = row / row.sum()
-    elif row.sum() < 1:
+    elif row.sum() < -1:
         row = row * (1. / abs(row.sum()))
     return row
 
@@ -81,7 +82,7 @@ def create_naive_portfolio_weights(predictions: pd.DataFrame, availability: pd.D
         # row = row / row.sum()
         # row = only_top_bottom_2(row)
         # row = equal_weight(row, availability.iloc[index])
-        row = limit_weight(row)
+        # row = limit_weight(row)
         weights.iloc[index] = row
     return weights
 
@@ -96,51 +97,67 @@ close = load_only_returns(data_collections['daily_crypto'], 'date', 'price')
 close = close.iloc[first_index:-1]
 close.columns = [col.replace("_returns", "") for col in close.columns]
 close = close[predictions.columns]
-close.reset_index(drop=True, inplace=True)
 
-# returns = load_only_returns(data_collections['daily_crypto'], 'date', 'returns')
-# returns = returns.iloc[first_index:-1]
-# returns.columns = [col.replace("_returns", "") for col in returns.columns]
-# returns = returns[predictions.columns]
-# returns.reset_index(drop=True, inplace=True)
-
-# predictions = predictions.reindex(close.index, method='ffill')
 availability = close.applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
 
 weights = create_naive_portfolio_weights(predictions, availability, allow_short=True)
-# weights_long = pd.melt(weights,id_vars=['index'])
+weights.index = close.index
+
+weights_long = pd.melt(weights.reset_index(), id_vars=['time'], value_vars=weights.columns).set_index(['time', 'variable'])
+close_long = pd.melt(close.reset_index(), id_vars=['time'], value_vars=close.columns).set_index(['time', 'variable'])
+#%%
+factor_data = get_clean_factor_and_forward_returns(
+    weights_long,
+    close,
+    # groupby=weights.columns.to_list(),
+    quantiles=4,
+    periods=(1, 2, 3, 4, 5, 6, 10), 
+    filter_zscore=None)
+
+#%%
+factor_data.head(10)
+
+#%%
+create_full_tear_sheet(factor_data, long_short=True)
+
+from matplotlib.backends.backend_pdf import PdfPages
+
+mean_return_by_q_daily, std_err = alphalens.performance.mean_return_by_quantile(factor_data, by_date=True)
+mean_return_by_q, std_err_by_q = alphalens.performance.mean_return_by_quantile(factor_data, by_group=False)
+plot1 = alphalens.plotting.plot_quantile_returns_bar(mean_return_by_q)
+plot2 = alphalens.plotting.plot_quantile_returns_violin(mean_return_by_q_daily)
+plot3 = alphalens.plotting.plot_cumulative_returns_by_quantile(mean_return_by_q_daily, period='D')
+full_tear = create_full_tear_sheet(factor_data, long_short=True)
+avg_returns = create_event_returns_tear_sheet(factor_data, close, avgretplot=(1, 3, 5), long_short=True)
 
 
 
-# factor_data = get_clean_factor_and_forward_returns(
-#     weights,
-#     close,
-#     groupby=factor_groups,
-#     quantiles=4,
-#     periods=(1, 3), 
-#     filter_zscore=None)
+with PdfPages('output/factors.pdf') as pdf:
+    pdf.savefig(plot1.figure)
+    pdf.savefig(plot2.figure)
+    pdf.savefig(plot3.figure)
 
+# create_event_returns_tear_sheet(factor_data, close, avgretplot=(1, 3, 5), long_short=True)
 
+#%%
+
+pf_returns, pf_positions, pf_benchmark = alphalens.performance.create_pyfolio_input(factor_data,
+                                               period='1D',
+                                               capital=100000,
+                                               long_short=True,
+                                               equal_weight=True,
+                                               quantiles=[1,4],
+                                               groups=None,
+                                               benchmark_period='1D')
+
+pyfolio.tears.create_full_tear_sheet(pf_returns,
+                                     positions=pf_positions,
+                                     benchmark_rets=pf_benchmark)
 # rebalance every n days
 # weights.iloc[np.arange(len(weights)) % 7 != 0] = np.nan
 
 
 
-# portfolio = vbt.Portfolio.from_orders(
-#     close=close,
-#     size=weights,
-#     size_type=SizeType.TargetPercent,
-#     cash_sharing=True,
-#     call_seq=CallSeqType.Auto,
-#     group_by=True,
-#     freq='1D',
-#     raise_reject=True,
-#     fees=0.01,
-#     seed=1,
-#     init_cash=1e5,
-# )
-
-# print(portfolio.stats())
 
 # from pypfopt import risk_models
 # from pypfopt import expected_returns
@@ -153,4 +170,3 @@ weights = create_naive_portfolio_weights(predictions, availability, allow_short=
 # cleaned_weights = ef.clean_weights()
 # print(ef.portfolio_performance(verbose=True))
 
-# %%

@@ -224,25 +224,24 @@ def datasource_to_file(data_source: DataSource) -> str:
     return data_source[0] + '/' + data_source[1] + '.csv'
 
 
-# These are needed for the portfolio feature, maybe we can do this in a more elegant way
-# def load_crypto_only_returns(path: str, index_column: Literal['date', 'int'], returns: Literal['price', 'returns']) -> pd.DataFrame:
-#     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and 'USD' in f and not f.startswith('.')]
-#     dfs = [__load_df(
-#         path=os.path.join(path,f),
-#         prefix=f.split('.')[0],
-#         returns=returns,
-#         feature_extractors=[],
-#         narrow_format=False,
-#     ) for f in files]
-#     dfs = pd.concat(dfs, axis=1)
-#     dfs = dfs.applymap(lambda x: np.nan if x == 0 else x)
-#     dfs.index = pd.DatetimeIndex(dfs.index)
-#     dfs.columns = [column.split('_')[0] for column in dfs.columns]
-#     if index_column == 'int':
-#         dfs.reset_index(drop=True, inplace=True)
 
-#     return dfs
+def load_only_returns(assets: DataCollection, index_column: Literal['date', 'int'], returns: Literal['price', 'returns']) -> pd.DataFrame:
 
-# def load_crypto_assets_availability(path: str, index_column: Literal['date', 'int']) -> pd.DataFrame:
-#     return load_crypto_only_returns(path, index_column, 'returns').applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
+    assets_future = [__load_df.remote(
+        data_source=data_source,
+        prefix=data_source[1],
+        returns=returns,
+        feature_extractors=[],
+        narrow_format=False,
+    ) for data_source in assets]
+    target_asset_df = ray.get(assets_future)
 
+    dfs = [deduplicate_indexes(df) for df in target_asset_df]
+    dfs = pd.concat(dfs, axis=1)
+    # dfs = dfs.applymap(lambda x: np.nan if x == 0 else x)
+    dfs.index = pd.DatetimeIndex(dfs.index)
+
+    if index_column == 'int':
+        dfs.reset_index(drop=True, inplace=True)
+
+    return dfs

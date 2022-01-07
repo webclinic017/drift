@@ -129,9 +129,7 @@ dmypy.json
 .pyre/
 lightning/lightning_logs/
 
-output/results.csv
-output/results_level2.csv
-output/predictions.csv
+output/**
 wandb/
 
 .cachedir/**
