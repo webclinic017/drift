@@ -6,9 +6,11 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
-    meta_labeling_lvl_1:
+    dynamic_feature_selection:
       values: [True, False]
-      distribution: categorical
+      distribution: 'categorical'
+    meta_labeling_lvl_1:
+      value: True
     assets:
       value: ['daily_crypto']
     other_assets:
@@ -16,7 +18,8 @@ parameters:
     exogenous_data:
       value: ['daily_glassnode']
     expanding_window_level1:
-      value: False
+      values: [False, True]
+      distribution: 'categorical'
     expanding_window_level2:
       value: True
     sliding_window_size_level1: 
@@ -24,7 +27,8 @@ parameters:
     sliding_window_size_level2: 
       value: 380
     n_features_to_select:
-      value: 30
+      values: [30, 50, 70, 80]
+      distribution: 'categorical'
     dimensionality_reduction:
       value: True
     retrain_every: 
@@ -44,9 +48,9 @@ parameters:
     index_column: 
       value: 'int'
     level_1_models: 
-      value: ["LDA", "KNN", "SVC", "CART", "NB", "AB", "RF", "StaticMom"]
+      value: ["LDA", "KNN", "SVC", "CART", "NB", "AB", "RF", "XGB_two_class", "StaticMom"]
     level_2_model: 
-      values: ["LDA", "KNN", "NB", "AB", "RF", "XGB_two_class"]
+      values: ["LDA", "XGB_two_class"]
       distribution: categorical
     own_features:
       value: ['date_days', 'level_2', 'lags_up_to_5']
