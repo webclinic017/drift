@@ -15,7 +15,7 @@ def run_meta_labeling_training(
                             data_config: dict,
                             model_config: dict,
                             training_config: dict
-                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame]:
+                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame, dict]:
 
     discretize = discretize_threeway_threshold(0.33)
     discretized_predictions = input_predictions.apply(discretize)
@@ -29,7 +29,7 @@ def run_meta_labeling_training(
 
     meta_X = pd.concat([meta_selected_features_X, input_predictions, discretized_predictions], axis = 1)
 
-    _, meta_preds, meta_probabilities = run_single_asset_trainig(
+    _, meta_preds, meta_probabilities, all_models_single_asset = run_single_asset_trainig(
         ticker_to_predict = "prediction_correct",
         original_X = meta_X,
         X = meta_X,
@@ -59,4 +59,4 @@ def run_meta_labeling_training(
     )
     meta_result.rename("model_" + target_asset + "_meta_lvl" + str(2), inplace=True)
 
-    return meta_result, avg_predictions_with_sizing, meta_probabilities
+    return meta_result, avg_predictions_with_sizing, meta_probabilities, all_models_single_asset

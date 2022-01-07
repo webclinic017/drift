@@ -20,12 +20,13 @@ def run_single_asset_trainig(
                     scaler: ScalerTypes,
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                     level: int
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
 
 
     scaler = get_scaler(scaler)
 
     results = pd.DataFrame()
+    all_models_single_asset = dict()
     predictions = pd.DataFrame(index=y.index)
     probabilities = pd.DataFrame(index=y.index)
     
@@ -41,6 +42,7 @@ def run_single_asset_trainig(
             retrain_every = retrain_every,
             scaler = scaler
         )
+        
         assert len(preds) == len(y)
         result = evaluate_predictions(
             model_name = model_name,
@@ -53,6 +55,7 @@ def run_single_asset_trainig(
         )
         column_name = "model_" + ticker_to_predict + "_" + model_name + "_lvl" + str(level)
         results[column_name] = result
+        all_models_single_asset[model_name] = model_over_time
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions[column_name] = preds
         probs_column_name = "probs_" + ticker_to_predict + "_" + model_name + "_lvl" + str(level)
@@ -60,4 +63,4 @@ def run_single_asset_trainig(
         probabilities = pd.concat([probabilities, probs], axis=1)
         
 
-    return results, predictions, probabilities
+    return results, predictions, probabilities, all_models_single_asset

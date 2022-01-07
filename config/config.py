@@ -2,7 +2,7 @@
 def get_default_level_1_daily_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
-        meta_labeling_lvl_1 = True,
+        meta_labeling_lvl_1 = False,
         dimensionality_reduction = True,
         n_features_to_select = 30,
         expanding_window_level1 = False,
