@@ -5,9 +5,9 @@ from utils.helpers import weighted_average
 def launch_wandb(project_name:str, default_config:dict, sweep:bool=False):
     from wandb_setup import get_wandb
     wandb = get_wandb()   
-    
-    if wandb is None: 
-        return None
+    if wandb is None:
+        raise Exception("Wandb can not be initalized, the environment variable WANDB_API_KEY is missing (can also use .env file)")  
+
     elif sweep:
         wandb.init(project=project_name,  config = default_config)             
         return wandb
