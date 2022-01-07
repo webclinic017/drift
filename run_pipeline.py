@@ -27,7 +27,7 @@ def __setup_pipeline(project_name:str, with_wandb: bool, sweep: bool):
     wandb = None
     if with_wandb: 
         wandb = launch_wandb(project_name=project_name, default_config=dict(**model_config, **training_config, **data_config), sweep=sweep)
-        register_config_with_wandb(wandb, model_config, training_config, data_config)
+        model_config, training_config, data_config = register_config_with_wandb(wandb, model_config, training_config, data_config)
     model_config, training_config, data_config = preprocess_config(model_config, training_config, data_config)
 
     return wandb, model_config, training_config, data_config

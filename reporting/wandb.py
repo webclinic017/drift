@@ -17,7 +17,7 @@ def launch_wandb(project_name:str, default_config:dict, sweep:bool=False):
     
     
 def register_config_with_wandb(wandb: Optional[object], model_config:dict, training_config:dict, data_config:dict):
-    if wandb is None: return
+    if wandb is None: return model_config, training_config, data_config
 
     config: dict = wandb.config
     
@@ -28,6 +28,7 @@ def register_config_with_wandb(wandb: Optional[object], model_config:dict, train
     for k in data_config:
         data_config[k] = config[k]
 
+    return model_config, training_config, data_config
 
 def send_report_to_wandb(results: pd.DataFrame, wandb:Optional[object], project_name: str, model_name: str):
     if wandb is None: return
