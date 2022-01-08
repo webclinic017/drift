@@ -88,7 +88,8 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         
         all_models_for_all_assets[asset[1]] = dict(
             name=asset[1], 
-            models=all_models_for_single_asset)
+            models=all_models_for_single_asset
+        )
         
         # 4. Train a Meta-Labeling model for each Level-1 model and replace its predictions with the meta-labeling predictions
         if training_config['meta_labeling_lvl_1'] == True:

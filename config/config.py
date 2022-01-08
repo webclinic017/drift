@@ -118,7 +118,7 @@ def get_default_level_2_daily_config() -> tuple[dict, dict, dict]:
 
     regression_models = ["Lasso", "KNN", "RF"]
     regression_ensemble_model = 'KNN'
-    classification_models = ['SVC', 'LDA', 'KNN', 'CART', 'NB', 'AB', 'RF', 'StaticMom']
+    classification_models = ['SVC', 'LDA', 'KNN', 'CART', 'NB', 'AB', 'RF', 'XGB_two_class', 'LGBM', 'StaticMom']
     classification_ensemble_model = 'LDA'
 
     model_config = dict(

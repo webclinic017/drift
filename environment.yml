@@ -26,6 +26,7 @@ dependencies:
   - pip
   - pandas-ta
   - xgboost
+  - lightgbm
   - alphalens-reloaded
   - pyfolio-reloaded
   - pip:

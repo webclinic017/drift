@@ -8,13 +8,19 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, ExtraTreesClassifier
 from sklearnex.ensemble import RandomForestClassifier
-from models.base import SKLearnModel, LightningNeuralNetModel
+from models.sklearn import SKLearnModel
+from models.neural import LightningNeuralNetModel
 from models.momentum import StaticMomentumModel
 from models.average import StaticAverageModel
 from models.naive import StaticNaiveModel
 from models.pytorch.neural_nets import MultiLayerPerceptron
+from models.xgboost import XGBoostModel
+from models.statsmodels import StatsModel
 from xgboost import XGBClassifier
 import torch.nn.functional as F
+from lightgbm import LGBMClassifier
+from statsmodels.tsa.api import ExponentialSmoothing
+
 
 
 model_map = {
@@ -46,10 +52,11 @@ model_map = {
         AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
         RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20, random_state=1)),
         SVC = SKLearnModel(SVC(kernel='rbf', C=1e3, probability=True)),
-        XGB_three_class= SKLearnModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, use_label_encoder=True, objective='multi:softprob', eval_metric='mlogloss')),
-        XGB_two_class= SKLearnModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, objective='binary:logistic', eval_metric='mlogloss')),
+        XGB_two_class= XGBoostModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, objective='binary:logistic', use_label_encoder= False, eval_metric='mlogloss')),
+        LGBM = SKLearnModel(LGBMClassifier(n_jobs=-1, max_depth=20, random_state=1)),
         StaticMom= StaticMomentumModel(allow_short=True),
         Ensemble_Average= StaticAverageModel(),
+        # ExpSmoothing = SKLearnModel(ExponentialSmoothing(trend='add', seasonal='add', seasonal_periods=30)),
     ),
 }
 

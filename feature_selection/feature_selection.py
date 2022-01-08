@@ -1,7 +1,8 @@
 from sklearn.feature_selection import RFE
 from sklearn.model_selection import TimeSeriesSplit
 import pandas as pd
-from models.base import Model, SKLearnModel
+from models.base import Model
+from models.sklearn import SKLearnModel
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
 from utils.hashing import hash_df, hash_series
