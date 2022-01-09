@@ -17,6 +17,11 @@ def get_first_valid_return_index(series: pd.Series) -> int:
         return 0
     return nested_result[0]
 
+def has_enough_samples_to_train(X: pd.DataFrame, y: pd.Series, training_config: dict) -> bool:
+    first_valid_index = get_first_valid_return_index(X.iloc[:,0])
+    samples_to_train = len(y) - first_valid_index
+    return samples_to_train > training_config['sliding_window_size_primary'] + training_config['sliding_window_size_meta_labeling'] + 100
+
 def flatten(list_of_lists: list) -> list:
     return [item for sublist in list_of_lists for item in sublist]
 

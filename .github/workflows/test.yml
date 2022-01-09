@@ -23,6 +23,10 @@ jobs:
         shell: bash -l {0}
         run: |
           python run_pipeline.py
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: output
       - name: Upload Unit Test Results
         if: always()
         uses: actions/upload-artifact@v2

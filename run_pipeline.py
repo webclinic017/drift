@@ -4,7 +4,7 @@ import pandas as pd
 from training.primary_model import train_primary_model
 from reporting.wandb import launch_wandb, register_config_with_wandb
 from models.model_map import default_feature_selector_regression, default_feature_selector_classification
-from utils.helpers import get_first_valid_return_index
+from utils.helpers import has_enough_samples_to_train
 from config.config import get_default_ensemble_config
 from config.preprocess import validate_config, preprocess_config
 from feature_selection.feature_selection import select_features
@@ -16,13 +16,14 @@ import ray
 ray.init()
 
 
-def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config:object):
-    wandb, model_config, training_config, data_config = __setup_pipeline(project_name, with_wandb, sweep, get_config)
+def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    wandb, model_config, training_config, data_config = __setup_config(project_name, with_wandb, sweep, get_config)
     results, all_predictions, all_probabilities = __run_training(model_config, training_config, data_config)  
     report_results(results, all_predictions, model_config, wandb, sweep, project_name)
+    return results, all_predictions, all_probabilities
     
 
-def __setup_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Optional[object], dict, dict, dict]:
+def __setup_config(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Optional[object], dict, dict, dict]:
     model_config, training_config, data_config = get_config() 
     wandb = None
     if with_wandb: 
@@ -49,9 +50,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
 
         X, y, target_returns = load_data(**data_params)
         original_X = X.copy()
-        first_valid_index = get_first_valid_return_index(X.iloc[:,0])
-        samples_to_train = len(y) - first_valid_index
-        if samples_to_train < training_config['sliding_window_size_primary'] * 3:
+        if has_enough_samples_to_train(X, y, training_config) == False:
             print("Not enough samples to train")
             continue
 

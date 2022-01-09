@@ -53,7 +53,7 @@ model_map = {
         NB= SKLearnModel(GaussianNB()),
         AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
         RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20, random_state=1)),
-        SVC = SKLearnModel(SVC(kernel='rbf', C=1e3, probability=True)),
+        SVC = SKLearnModel(SVC(kernel='rbf', C=1e3, probability=True, random_state=1)),
         XGB_two_class= XGBoostModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, objective='binary:logistic', use_label_encoder= False, eval_metric='mlogloss')),
         LGBM = SKLearnModel(LGBMClassifier(n_jobs=-1, max_depth=20, random_state=1)),
         StaticMom= StaticMomentumModel(allow_short=True),
