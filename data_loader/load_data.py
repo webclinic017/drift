@@ -55,6 +55,15 @@ def __load_data(assets: DataCollection,
         narrow_format=narrow_format,
     ) for data_source in target_file]
     target_asset_df = ray.get(target_asset_future)
+    
+    target_asset_only_returns_future = __load_df.remote(
+        data_source=target_file[0],
+        prefix=target_file[0][1],
+        returns='returns',
+        feature_extractors=[],
+        narrow_format=narrow_format,
+    )
+    df_target_asset_only_returns = ray.get(target_asset_only_returns_future)
 
     asset_futures = [__load_df.remote(
         data_source=data_source,
@@ -86,14 +95,16 @@ def __load_data(assets: DataCollection,
 
     if index_column == 'int':
         dfs.reset_index(drop=True, inplace=True)
+        df_target_asset_only_returns.reset_index(drop=True, inplace=True)
 
     if narrow_format:
         dfs = dfs.drop(index=dfs.index[0], axis=0)
+        df_target_asset_only_returns = df_target_asset_only_returns.drop(index=dfs.index[0], axis=0)
 
     ## Create target 
     target_col = 'target'
     returns_col = target_asset[1] + '_returns'
-    forward_returns = __create_target_cum_forward_returns(dfs, returns_col, forecasting_horizon)
+    forward_returns = __create_target_cum_forward_returns(df_target_asset_only_returns, returns_col, forecasting_horizon)
     if method == 'regression':
         dfs[target_col] = forward_returns
     elif method == 'classification':
