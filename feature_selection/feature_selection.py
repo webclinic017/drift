@@ -5,20 +5,20 @@ from models.base import Model
 from models.sklearn import SKLearnModel
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
-from utils.hashing import hash_df, hash_series
-from diskcache import Cache
-cache = Cache(".cachedir/feature_selection")
+# from utils.hashing import hash_df, hash_series
+# from diskcache import Cache
+# cache = Cache(".cachedir/feature_selection")
 
-def select_features(**kwargs) -> pd.DataFrame:
-    hashed = kwargs['data_config_hash'] + kwargs['model'].get_name() + str(kwargs['n_features_to_select']) + kwargs['backup_model'].get_name() + kwargs['scaling'] + str(kwargs['dynamic_feature_selection'])
-    if hashed in cache:
-        return cache.get(hashed)
-    else:
-        return_value = __select_features(**kwargs)
-        cache[hashed] = return_value
-        return return_value
+# def select_features(**kwargs) -> pd.DataFrame:
+#     hashed = kwargs['data_config_hash'] + kwargs['model'].get_name() + str(kwargs['n_features_to_select']) + kwargs['backup_model'].get_name() + kwargs['scaling']
+#     if hashed in cache:
+#         return cache.get(hashed)
+#     else:
+#         return_value = __select_features(**kwargs)
+#         cache[hashed] = return_value
+#         return return_value
 
-def __select_features(X: pd.DataFrame, y: pd.Series, model: Model, n_features_to_select: int, backup_model: SKLearnModel, scaling: ScalerTypes, dynamic_feature_selection: bool, data_config_hash: str) -> pd.DataFrame:
+def select_features(X: pd.DataFrame, y: pd.Series, model: Model, n_features_to_select: int, backup_model: SKLearnModel, scaling: ScalerTypes) -> pd.DataFrame:
     ''' Select features using RFECV, returns a pd.DataFrame (X) with only the selected features.'''
     if model.model_type != 'ml': return X
 
@@ -34,7 +34,7 @@ def __select_features(X: pd.DataFrame, y: pd.Series, model: Model, n_features_to
         feat_selector_model = backup_model.model
 
 #     selector = RFECV(feat_selector_model, cv = cv, step=5, min_features_to_select=min_features_to_select)
-    step = 0.05 if dynamic_feature_selection else 5
+    step = 0.05
     selector = RFE(feat_selector_model, n_features_to_select= n_features_to_select, step=step)
     selector = selector.fit(X_scaled, y)
     print("Kept %d features out of %d" % (selector.n_features_, X_scaled.shape[1]))

@@ -6,10 +6,7 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
-    dynamic_feature_selection:
-      values: [True, False]
-      distribution: 'categorical'
-    meta_labeling_lvl_1:
+    primary_models_meta_labeling:
       value: True
     assets:
       value: ['daily_crypto']
@@ -17,18 +14,16 @@ parameters:
       value: ['daily_etf']
     exogenous_data:
       value: ['daily_glassnode']
-    expanding_window_level1:
-      values: [False, True]
-      distribution: 'categorical'
-    expanding_window_level2:
+    expanding_window_primary:
       value: True
-    sliding_window_size_level1: 
+    expanding_window_meta_labeling:
+      value: True
+    sliding_window_size_primary: 
       value: 380
-    sliding_window_size_level2: 
+    sliding_window_size_meta_labeling: 
       value: 380
     n_features_to_select:
-      values: [30, 50, 70, 80]
-      distribution: 'categorical'
+      value: 50
     dimensionality_reduction:
       value: True
     retrain_every: 
@@ -47,10 +42,10 @@ parameters:
       value: True
     index_column: 
       value: 'int'
-    level_1_models: 
-      value: ["LDA", "KNN", "SVC", "CART", "NB", "AB", "RF", "XGB_two_class", "StaticMom"]
-    level_2_model: 
-      values: ["LDA", "XGB_two_class"]
+    primary_models: 
+      value: ["LDA", "KNN", "SVC", "CART", "NB", "AB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
+    meta_labeling_models: 
+      values: [["LDA"], ["XGB_two_class"], ["LR_two_class"], ["LGBM"], ["LGBM", "LR_two_class"], ["XGB_two_class", "LDA"], ["XGB_two_class", "LR_two_class"]]
       distribution: categorical
     own_features:
       value: ['date_days', 'level_2', 'lags_up_to_5']

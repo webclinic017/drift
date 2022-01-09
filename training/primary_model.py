@@ -6,7 +6,7 @@ from models.base import Model
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
 
-def run_single_asset_trainig(
+def train_primary_model(
                     ticker_to_predict: str,
                     original_X: pd.DataFrame,
                     X: pd.DataFrame,
@@ -19,9 +19,9 @@ def run_single_asset_trainig(
                     retrain_every: int,
                     scaler: ScalerTypes,
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
-                    level: int
+                    level: str,
+                    print_results: bool
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
-
 
     scaler = get_scaler(scaler)
 
@@ -51,14 +51,15 @@ def run_single_asset_trainig(
             y_true = y,
             method = method,
             no_of_classes=no_of_classes,
+            print_results = print_results,
             discretize=True
         )
-        column_name = "model_" + ticker_to_predict + "_" + model_name + "_lvl" + str(level)
+        column_name = "model_" + ticker_to_predict + "_" + model_name + "_" + level
         results[column_name] = result
         all_models_single_asset[model_name] = model_over_time
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions[column_name] = preds
-        probs_column_name = "probs_" + ticker_to_predict + "_" + model_name + "_lvl" + str(level)
+        probs_column_name = "probs_" + ticker_to_predict + "_" + model_name + "_" + level
         probs.columns = [probs_column_name + "_" + c for c in probs.columns]
         probabilities = pd.concat([probabilities, probs], axis=1)
         

@@ -1,12 +1,12 @@
 program: run_sweep.py
 method: bayes
 project: price-forecasting
-name: Level-2 models
+name: Level-1 models
 metric:
   goal: maximize
   name: sharpe
 parameters:
-    meta_labeling_lvl_1:
+    primary_models_meta_labeling:
       value: True
     assets:
       value: ['daily_crypto']
@@ -14,23 +14,21 @@ parameters:
       value: ['daily_etf']
     exogenous_data:
       value: ['daily_glassnode']
-    expanding_window_level1:
+    expanding_window_primary:
       values: [True, False]
       distribution: categorical
-    expanding_window_level2:
-      values: [True, False]
-      distribution: categorical
+    expanding_window_meta_labeling:
+      value: False
     n_features_to_select:
       values: [10, 20, 30]
       distribution: categorical
     dimensionality_reduction:
       value: True
-    sliding_window_size_level1: 
-      values: [180, 280, 380]
+    sliding_window_size_primary: 
+      values: [180, 280, 380, 480, 580]
       distribution: categorical
-    sliding_window_size_level2: 
-      values: [180, 280, 380]
-      distribution: categorical
+    sliding_window_size_meta_labeling: 
+      value: 1
     retrain_every: 
       values: [10, 20, 30]
       distribution: categorical
@@ -50,14 +48,14 @@ parameters:
       value: True
     index_column: 
       value: 'int'
-    level_1_models: 
-      value: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "StaticMom"]
-    level_2_model: 
-      values: ["LR", "LDA", "KNN", "CART", "NB", "AB", "RF", "Ensemble_Average"]
+    primary_models: 
+      values: [["LR_two_class"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"]]
       distribution: categorical
+    meta_labeling_models: 
+      value: []
     own_features:
       values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]
       distribution: categorical
     other_features:
-      values: [[], ['level_1']]
+      values: [[], ['level_1'], ['level_2']]
       distribution: categorical

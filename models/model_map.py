@@ -1,5 +1,6 @@
 from sklearn.linear_model import LinearRegression, Lasso, BayesianRidge, Ridge
-from sklearnex.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression
+from sklearnex.linear_model import LogisticRegression as LogisticRegression_EX
 from sklearn.tree import DecisionTreeClassifier
 from sklearnex.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -44,7 +45,8 @@ model_map = {
         ) 
     ),
     "classification_models": dict(
-        LR= SKLearnModel(LogisticRegression(C=10, random_state=1, max_iter=1000, n_jobs=-1)),
+        LR_two_class= SKLearnModel(LogisticRegression(C=10, random_state=1, solver='liblinear', max_iter=1000)),
+        LR_three_class= SKLearnModel(LogisticRegression_EX(C=10, random_state=1, max_iter=1000, n_jobs=-1)),
         LDA= SKLearnModel(LinearDiscriminantAnalysis()),
         KNN= SKLearnModel(KNeighborsClassifier()),
         CART= SKLearnModel(DecisionTreeClassifier(max_depth=15, random_state=1)),
@@ -55,9 +57,11 @@ model_map = {
         XGB_two_class= XGBoostModel(XGBClassifier(n_jobs=-1, max_depth = 20, random_state=1, objective='binary:logistic', use_label_encoder= False, eval_metric='mlogloss')),
         LGBM = SKLearnModel(LGBMClassifier(n_jobs=-1, max_depth=20, random_state=1)),
         StaticMom= StaticMomentumModel(allow_short=True),
-        Ensemble_Average= StaticAverageModel(),
         # ExpSmoothing = SKLearnModel(ExponentialSmoothing(trend='add', seasonal='add', seasonal_periods=30)),
     ),
+    "ensemble_models": dict(
+        Average= StaticAverageModel(),
+    )
 }
 
 model_names_classification = list(model_map["classification_models"].keys())

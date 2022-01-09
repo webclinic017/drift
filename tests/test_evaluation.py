@@ -95,6 +95,7 @@ def test_evaluation():
         y_true=y,
         method='classification',
         no_of_classes='two',
+        print_results = False,
         discretize=True
     )
 

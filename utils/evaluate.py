@@ -37,6 +37,7 @@ def evaluate_predictions(
                         y_true: pd.Series,
                         method: Literal['classification', 'regression'],
                         no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
+                        print_results: bool,
                         discretize: bool = False,
                         ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
@@ -100,8 +101,9 @@ def evaluate_predictions(
     #     scorecard.loc['edge_to_mae'] = 0.
 
     scorecard = scorecard.round(3)
-    print("Model name: ", model_name)
-    print(scorecard)
+    if print_results:        
+        print("Model name: ", model_name)
+        print(scorecard)
     return scorecard  
 
 

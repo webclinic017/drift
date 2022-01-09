@@ -1,16 +1,15 @@
 from config.hashing import hash_data_config
 from data_loader.load_data import load_data
 import pandas as pd
-from training.training import run_single_asset_trainig
-from reporting.wandb import launch_wandb, send_report_to_wandb, register_config_with_wandb
+from training.primary_model import train_primary_model
+from reporting.wandb import launch_wandb, register_config_with_wandb
 from models.model_map import default_feature_selector_regression, default_feature_selector_classification
 from utils.helpers import get_first_valid_return_index
-from config.config import get_default_level_1_daily_config, get_default_level_2_daily_config, get_default_level_2_hourly_config
+from config.config import get_default_ensemble_config
 from config.preprocess import validate_config, preprocess_config
 from feature_selection.feature_selection import select_features
 from feature_selection.dim_reduction import reduce_dimensionality
-from training.meta_labeling import run_meta_labeling_training
-from training.averaged import average_and_evaluate_predictions
+from training.meta_labeling import train_meta_labeling_model
 from reporting.reporting import report_results
 from typing import Callable, Optional
 import ray
@@ -52,7 +51,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         original_X = X.copy()
         first_valid_index = get_first_valid_return_index(X.iloc[:,0])
         samples_to_train = len(y) - first_valid_index
-        if samples_to_train < training_config['sliding_window_size_level1'] * 3:
+        if samples_to_train < training_config['sliding_window_size_primary'] * 3:
             print("Not enough samples to train")
             continue
 
@@ -67,23 +66,24 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         print("Feature Selection started")
         # TODO: this needs to be done per model!
         backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
-        X = select_features(X = X, y = y, model = model_config['level_1_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'], dynamic_feature_selection = training_config['dynamic_feature_selection'], data_config_hash = hash_data_config(data_params))
+        X = select_features(X = X, y = y, model = model_config['primary_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'])
 
-        # 3. Train Level-1 models
-        current_result, current_predictions, current_probabilities, all_models_for_single_asset = run_single_asset_trainig(
+        # 3. Train Primary models
+        current_result, current_predictions, current_probabilities, all_models_for_single_asset = train_primary_model(
             ticker_to_predict = asset[1],
             original_X = original_X,
             X = X,
             y = y,
             target_returns = target_returns,
-            models = model_config['level_1_models'],
+            models = model_config['primary_models'],
             method = data_config['method'],
-            expanding_window = training_config['expanding_window_level1'],
-            sliding_window_size = training_config['sliding_window_size_level1'],
+            expanding_window = training_config['expanding_window_primary'],
+            sliding_window_size = training_config['sliding_window_size_primary'],
             retrain_every =  training_config['retrain_every'],
             scaler =  training_config['scaler'],
             no_of_classes = data_config['no_of_classes'],
-            level = 1
+            level = 'primary',
+            print_results= True
         )
         
         all_models_for_all_assets[asset[1]] = dict(
@@ -91,25 +91,24 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
             models=all_models_for_single_asset
         )
         
-        # 4. Train a Meta-Labeling model for each Level-1 model and replace its predictions with the meta-labeling predictions
-        if training_config['meta_labeling_lvl_1'] == True:
+        # 4. Train a Meta-Labeling model for each Primary model and replace their predictions with the meta-labeling predictions
+        if training_config['primary_models_meta_labeling'] == True:
             for model_name in current_result.columns:
-                lvl1_model_predictions = current_predictions[model_name]
-                prev_sharpe = current_result[model_name]['sharpe']
-                lvl1_meta_result, lvl1_meta_preds, lvl1_meta_probabilities, meta_labeling_models = run_meta_labeling_training(
+                primary_model_predictions = current_predictions[model_name]
+                primary_meta_result, primary_meta_preds, primary_meta_probabilities, meta_labeling_models = train_meta_labeling_model(
                     target_asset=asset[1],
                     X_pca = X_pca,
-                    input_predictions= lvl1_model_predictions,
+                    input_predictions= primary_model_predictions,
                     y = y,
                     target_returns = target_returns,
+                    models = model_config['meta_labeling_models'],
                     data_config= data_config,
                     model_config= model_config,
-                    training_config= training_config
+                    training_config= training_config,
+                    model_suffix = 'meta'
                 )
-                new_sharpe = lvl1_meta_result['sharpe']
-                print("Improvement in sharpe for the meta model: ", ((new_sharpe / prev_sharpe) - 1) * 100, "%")
-                current_result[model_name] = lvl1_meta_result
-                current_predictions[model_name] = lvl1_meta_preds
+                current_result[model_name] = primary_meta_result
+                current_predictions[model_name] = primary_meta_preds
 
                 all_models_for_all_assets[asset[1]][model_name] = meta_labeling_models
         
@@ -118,26 +117,46 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         all_predictions = pd.concat([all_predictions, current_predictions], axis=1).fillna(0.)
         all_probabilities = pd.concat([all_probabilities, current_probabilities], axis=1).fillna(0.)
 
-        if model_config['level_2_model'] is not None: 
+        # 5. Ensemble primary model predictions (If Ensemble model is present)
+        if model_config['ensemble_model'] is not None:
 
-            # 3. Average the Level-1 model predictions
-            averaged_predictions, averaged_results = average_and_evaluate_predictions(current_predictions, y, target_returns, data_config)
-
-            # 3. Train a Meta-labeling model on the averaged level-1 model predictions
-            meta_result, avg_predictions_with_sizing, meta_probabilities, meta_labeling_models = run_meta_labeling_training(
-                target_asset=asset[1],
-                X_pca = X_pca,
-                input_predictions= averaged_predictions,
+            ensemble_result, ensemble_predictions, _, _ = train_primary_model(
+                ticker_to_predict = asset[1],
+                original_X = current_predictions,
+                X = current_predictions,
                 y = y,
                 target_returns = target_returns,
-                data_config= data_config,
-                model_config= model_config,
-                training_config= training_config
+                models = [model_config['ensemble_model']],
+                method = data_config['method'],
+                expanding_window = False,
+                sliding_window_size = 1,
+                retrain_every = training_config['retrain_every'],
+                scaler = training_config['scaler'],
+                no_of_classes = data_config['no_of_classes'],
+                level = 'ensemble',
+                print_results= True,
             )
+            ensemble_result, ensemble_predictions = ensemble_result.iloc[:,0], ensemble_predictions.iloc[:,0]
 
-            results = pd.concat([results, meta_result], axis=1)
-            all_predictions = pd.concat([all_predictions, avg_predictions_with_sizing], axis=1)
-            all_probabilities = pd.concat([all_probabilities, meta_probabilities], axis=1).fillna(0.)
+            if len(model_config['meta_labeling_models']) > 0: 
+
+                # 3. Train a Meta-labeling model on the averaged level-1 model predictions
+                ensemble_meta_result, ensemble_meta_predictions, ensemble_meta_probabilities, ensemble_meta_labeling_models = train_meta_labeling_model(
+                    target_asset=asset[1],
+                    X_pca = X_pca,
+                    input_predictions= ensemble_predictions,
+                    y = y,
+                    target_returns = target_returns,
+                    models = model_config['meta_labeling_models'],
+                    data_config= data_config,
+                    model_config= model_config,
+                    training_config= training_config,
+                    model_suffix = 'ensemble'
+                )
+
+                results = pd.concat([results, ensemble_meta_result], axis=1)
+                all_predictions = pd.concat([all_predictions, ensemble_meta_predictions], axis=1)
+                all_probabilities = pd.concat([all_probabilities, ensemble_meta_probabilities], axis=1).fillna(0.)
         
     return results, all_predictions, all_probabilities
     
@@ -145,4 +164,4 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
 
     
 if __name__ == '__main__':
-    run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, get_config=get_default_level_2_daily_config)
+    run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, get_config=get_default_ensemble_config)

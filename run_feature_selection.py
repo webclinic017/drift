@@ -1,12 +1,12 @@
 # #%%
 # import pandas as pd
 # import pandas_ta as ta
-# from config.config import get_default_level_2_daily_config
+# from config.config import get_default_ensemble_config
 # from config.preprocess import preprocess_config
 # from data_loader.load_data import load_data
 
 # # %%
-# model_config, training_config, data_config = get_default_level_2_daily_config()
+# model_config, training_config, data_config = get_default_ensemble_config()
 # model_config, training_config, data_config = preprocess_config(model_config, training_config, data_config)
 
 # data_config['target_asset'] = data_config['assets'][0]
