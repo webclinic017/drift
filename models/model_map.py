@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearnex.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearnex.svm import SVR, SVC
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, ExtraTreesRegressor, AdaBoostClassifier, GradientBoostingClassifier, ExtraTreesClassifier
 from sklearnex.ensemble import RandomForestClassifier
@@ -51,6 +51,7 @@ model_map = {
         KNN= SKLearnModel(KNeighborsClassifier()),
         CART= SKLearnModel(DecisionTreeClassifier(max_depth=15, random_state=1)),
         NB= SKLearnModel(GaussianNB()),
+        MNB = SKLearnModel(MultinomialNB()),
         AB= SKLearnModel(AdaBoostClassifier(n_estimators=15)),
         RF= SKLearnModel(RandomForestClassifier(n_jobs=-1, max_depth=20, random_state=1)),
         SVC = SKLearnModel(SVC(kernel='rbf', C=1e3, probability=True, random_state=1)),

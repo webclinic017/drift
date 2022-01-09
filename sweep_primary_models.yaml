@@ -1,5 +1,5 @@
 program: run_sweep.py
-method: bayes
+method: grid
 project: price-forecasting
 name: Level-1 models
 metric:
@@ -20,15 +20,13 @@ parameters:
     expanding_window_meta_labeling:
       value: False
     n_features_to_select:
-      values: [10, 20, 30]
-      distribution: categorical
+      value: 50
     dimensionality_reduction:
       value: True
     sliding_window_size_primary: 
-      values: [180, 280, 380, 480, 580]
-      distribution: categorical
+      value: 380
     sliding_window_size_meta_labeling: 
-      value: 1
+      value: 380
     retrain_every: 
       values: [10, 20, 30]
       distribution: categorical
@@ -37,25 +35,23 @@ parameters:
     method: 
       value: 'classification'
     no_of_classes:
-      values: ['two', 'three-balanced', 'three-imbalanced']
-      distribution: categorical
+      value: 'two'
     forecasting_horizon: 
       value: 1
     load_non_target_asset: 
-      values: [True, False]
-      distribution: categorical
+      value: True
     log_returns: 
       value: True
     index_column: 
       value: 'int'
     primary_models: 
-      values: [["LR_two_class"], ["LDA"], ["KNN"], ["CART"], ["NB"], ["AB"], ["RF"]]
+      values: [['LR_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RF'], ['XGB_two_class'], ['LGBM']]
       distribution: categorical
     meta_labeling_models: 
-      value: []
+      value: ["LGBM", "LR_two_class"]
     own_features:
-      values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]
-      distribution: categorical
+      value: ['date_days', 'level_2', 'lags_up_to_5']
     other_features:
-      values: [[], ['level_1'], ['level_2']]
-      distribution: categorical
+      value: ['level_2', 'lags_up_to_5']
+    exogenous_features:
+      value: ['standard_scaling']
