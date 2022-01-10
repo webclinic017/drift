@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from feature_extractors.utils import get_close_low_high
 from feature_extractors.utils import apply_log_if_necessary_series
-from sklearn.preprocessing import StandardScaler
 
 def feature_debug_future_lookahead(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
     return df['returns'].shift(-period)
@@ -11,9 +10,9 @@ def feature_lag(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series
     assert period > 0
     return df['returns'].shift(period)
 
-def feature_standard_scaling(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
-    scaler = StandardScaler()
-    return pd.Series(scaler.fit_transform(df['close'].to_numpy().reshape(-1, 1)).squeeze(), index = df.index)
+def feature_expanding_zscore(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.Series:
+    close = df['close']
+    return (close - close.expanding(period).mean()) / close.expanding(period).std()
 
 def feature_day_of_week(df: pd.DataFrame, period: int, is_log_return: bool) -> pd.DataFrame:
     return pd.get_dummies(pd.DatetimeIndex(df.index).dayofweek, drop_first=True, prefix="date_day_week").set_index(df.index)

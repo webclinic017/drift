@@ -54,4 +54,4 @@ parameters:
     other_features:
       value: ['level_2', 'lags_up_to_5']
     exogenous_features:
-      value: ['standard_scaling']
+      value: ['z_score']
