@@ -9,9 +9,9 @@ for index in range(6):
     all_results.append(results_1)
     all_predictions.append(predictions_1)
 
-correlations = pd.Series(index = all_predictions[0].columns)
+correlations = pd.Series()
 
-for asset_name in all_predictions[0].columns:
+for asset_name in [c for c in all_predictions[0].columns if 'ensemble' in c]:
 
     predictions_for_asset = pd.concat([preds[asset_name] for preds in all_predictions], axis=1)
     correlations[asset_name] = predictions_for_asset.corr().mean()[0]

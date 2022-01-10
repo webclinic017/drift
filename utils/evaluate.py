@@ -55,14 +55,6 @@ def evaluate_predictions(
     df = __preprocess(target_returns, y_pred, y_true, method, no_of_classes, discretize)
     
     scorecard = pd.Series()
-    # we probably will not need regression models at all
-    # if method == 'regression':
-    #     scorecard.loc['RSQ'] = r2_score(df.target_returns, df.y_pred)
-    #     scorecard.loc['MAE'] = mean_absolute_error(df.target_returns, df.y_pred)
-    # elif method == 'classification':
-    #     scorecard.loc['RSQ'] = 0.
-    #     scorecard.loc['MAE Matrix'] = 0.
-    
     
     def count_non_zero(series: pd.Series) -> int:
         return len(series[series != 0])
@@ -94,11 +86,6 @@ def evaluate_predictions(
         
         for index, row in df.sign_pred.value_counts().iteritems():
             scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
-
-    # if method == 'regression':
-    #     scorecard.loc['edge_to_mae'] = scorecard.loc['edge'] / scorecard.loc['MAE']
-    # elif method == 'classification':
-    #     scorecard.loc['edge_to_mae'] = 0.
 
     scorecard = scorecard.round(3)
     if print_results:        
