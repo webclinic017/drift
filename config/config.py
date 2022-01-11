@@ -3,7 +3,7 @@ def get_dev_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
         primary_models_meta_labeling = False,
-        dimensionality_reduction = True,
+        dimensionality_reduction = False,
         n_features_to_select = 30,
         expanding_window_primary = False,
         expanding_window_meta_labeling = False,
@@ -46,7 +46,7 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
   
     training_config = dict(
         primary_models_meta_labeling = True,
-        dimensionality_reduction = True,
+        dimensionality_reduction = False,
         n_features_to_select = 30,
         expanding_window_primary = False,
         expanding_window_meta_labeling = True,
