@@ -110,7 +110,7 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
         forecasting_horizon = 1,
         own_features = ['level_2' ],
         other_features = ['level_2'],
-        exogenous_features = ['standard_scaling'],
+        exogenous_features = ['z_score'],
         index_column= 'int',
         method= 'classification',
         no_of_classes= 'two',

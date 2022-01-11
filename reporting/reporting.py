@@ -5,7 +5,7 @@ from utils.helpers import weighted_average
 
 def report_results(results:pd.DataFrame, all_predictions:pd.DataFrame, model_config:dict, wandb, sweep: bool, project_name:str):
 
-    primary_results = results[[column for column in results.columns if 'primary' in column]]
+    primary_results = results[[column for column in results.columns if 'ensemble' not in column]]
     ensemble_results = results[[column for column in results.columns if 'ensemble' in column]]
 
     # Only send the results of the final model to wandb
@@ -13,7 +13,7 @@ def report_results(results:pd.DataFrame, all_predictions:pd.DataFrame, model_con
     send_report_to_wandb(results_to_send, wandb, project_name, get_model_name(model_config))
     results.to_csv('output/results.csv')
 
-    primary_weights = all_predictions[[column for column in all_predictions.columns if 'primary' in column]]
+    primary_weights = all_predictions[[column for column in all_predictions.columns if 'ensemble' not in column]]
     ensemble_weights = all_predictions[[column for column in all_predictions.columns if 'ensemble' in column]]
     predictions_to_save = ensemble_weights if ensemble_weights.shape[1] > 0 else primary_weights
     predictions_to_save.to_csv('output/predictions.csv')
