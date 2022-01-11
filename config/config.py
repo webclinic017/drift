@@ -73,7 +73,7 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
     )
 
     regression_models = ["Lasso", "KNN", "RF"]
-    classification_models = ['LR_two_class', 'SVC', 'KNN', 'CART', 'NB', 'AB', 'RF', 'XGB_two_class', 'LGBM', 'StaticMom']
+    classification_models = ["LR_two_class", "LDA", "NB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
     meta_labeling_models = ['LR_two_class', 'LGBM']
     ensemble_model = 'Average'
 

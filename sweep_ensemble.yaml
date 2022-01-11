@@ -21,9 +21,11 @@ parameters:
     sliding_window_size_primary: 
       value: 380
     sliding_window_size_meta_labeling: 
-      value: 380
+      values: [250, 300, 380]
+      distribution: categorical
     n_features_to_select:
-      value: 50
+      values: [40, 50, 60]
+      distribution: categorical
     dimensionality_reduction:
       value: True
     retrain_every: 
@@ -43,10 +45,13 @@ parameters:
     index_column: 
       value: 'int'
     primary_models: 
-      value: ["LDA", "KNN", "SVC", "CART", "NB", "AB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
-    meta_labeling_models: 
-      values: [["LDA"], ["XGB_two_class"], ["LR_two_class"], ["LGBM"], ["LGBM", "LR_two_class"], ["XGB_two_class", "LDA"], ["XGB_two_class", "LR_two_class"]]
       distribution: categorical
+      values:
+      - ["LDA", "LR_two_class", "KNN", "SVC", "CART", "NB", "AB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
+      - ["LR_two_class", "LDA", "NB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
+      - ["LR_two_class", "LDA", "LGBM", "RF", "XGB_two_class"]
+    meta_labeling_models: 
+      value: ["LGBM", "LR_two_class"]
     own_features:
       value: ['date_days', 'level_2', 'lags_up_to_5']
     other_features:
