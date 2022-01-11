@@ -4,33 +4,33 @@ channels:
   - conda-forge
   - defaults
   - ml4t
+  - ranaroussi
 dependencies:
   - python=3.9
-  - seaborn
   - scikit-learn-intelex=2021.4.0
-  - ipython
-  - ipykernel
-  - scipy
-  - scikit-learn
-  - numba
-  - pytorch
-  - matplotlib
-  - numpy
-  - quantstats
-  - pytorch-lightning
-  - pytest
-  - wandb
-  - python-dotenv
-  - tscv
-  - tqdm
-  - pip
-  - pandas-ta
-  - xgboost
-  - lightgbm
-  - alphalens-reloaded
-  - pyfolio-reloaded
   - pip:
+    - torch
+    - pytorch-lightning
     - fracdiff
     - ray
     - diskcache
+    - seaborn
+    - ipython
+    - ipykernel
+    - scipy
+    - scikit-learn
+    - numba
+    - matplotlib
+    - numpy
+    - quantstats
+    - pytest
+    - wandb
+    - python-dotenv
+    - tscv
+    - tqdm
+    - pandas-ta
+    - xgboost
+    - lightgbm
+    - alphalens-reloaded
+    - vectorbt
 prefix: /usr/local/anaconda3/envs/quant

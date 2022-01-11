@@ -5,15 +5,10 @@ from data_loader.load_data import load_only_returns
 from data_loader.collections import data_collections
 
 from utils.helpers import get_first_valid_return_index
-from alphalens.tears import (create_returns_tear_sheet,
-                      create_information_tear_sheet,
-                      create_turnover_tear_sheet,
-                      create_summary_tear_sheet,
-                      create_full_tear_sheet,
-                      create_event_returns_tear_sheet,
-                      create_event_study_tear_sheet)
 import alphalens
-import pyfolio
+import vectorbt as vbt
+from vectorbt.portfolio.enums import SizeType, CallSeqType, Direction
+import quantstats as qs
 
 from alphalens.utils import get_clean_factor_and_forward_returns
 
@@ -73,7 +68,6 @@ def equal_weight(row: pd.Series, availability: pd.Series) -> pd.Series:
     return row
 
 
-
 def create_naive_portfolio_weights(predictions: pd.DataFrame, availability: pd.DataFrame, allow_short: bool) -> pd.DataFrame:
     weights = predictions.copy()
     assert weights.shape[1] == availability.shape[1]
@@ -82,8 +76,29 @@ def create_naive_portfolio_weights(predictions: pd.DataFrame, availability: pd.D
         # row = row / row.sum()
         # row = only_top_bottom_2(row)
         # row = equal_weight(row, availability.iloc[index])
-        # row = limit_weight(row)
+        row = limit_weight(row)
         weights.iloc[index] = row
+    return weights
+
+def create_quantile_weights(predictions: pd.DataFrame, availability: pd.DataFrame, allow_short: bool) -> pd.DataFrame:
+    weights = predictions.copy()
+    assert weights.shape[1] == availability.shape[1]
+    quantiles = weights.copy()
+    for column in weights.columns:
+        quantiles[column] = pd.qcut(weights[column], q=4, labels=False, duplicates='drop')
+    
+    for index, row in quantiles.iterrows():
+        def only_select_bottom_top(x):
+            if x == 0:
+                return -1
+            elif x == 3:
+                return 1
+            else:
+                return 0
+        row = row.apply(only_select_bottom_top)
+        no_of_nonzero_predictions = row[row != 0].count()
+        units = min(1 / no_of_nonzero_predictions, 0.25)
+        weights.iloc[index] = row * units
     return weights
 
 
@@ -100,61 +115,68 @@ close = close[predictions.columns]
 
 availability = close.applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
 
-weights = create_naive_portfolio_weights(predictions, availability, allow_short=True)
-weights.index = close.index
+def report_alphalens():
+    alpha_factors = predictions.copy()
+    alpha_factors.index = close.index
 
-weights_long = pd.melt(weights.reset_index(), id_vars=['time'], value_vars=weights.columns).set_index(['time', 'variable'])
-close_long = pd.melt(close.reset_index(), id_vars=['time'], value_vars=close.columns).set_index(['time', 'variable'])
-#%%
-factor_data = get_clean_factor_and_forward_returns(
-    weights_long,
-    close,
-    # groupby=weights.columns.to_list(),
-    quantiles=4,
-    periods=(1, 2, 3, 4, 5, 6, 10), 
-    filter_zscore=None)
+    alpha_factors_long = pd.melt(alpha_factors.reset_index(), id_vars=['time'], value_vars=alpha_factors.columns).set_index(['time', 'variable'])
+    factor_data = get_clean_factor_and_forward_returns(
+        alpha_factors_long,
+        close,
+        quantiles=4,
+        periods=(1, 2, 3, 4, 5, 6, 10), 
+        filter_zscore=None)
+    # create_full_tear_sheet(factor_data, long_short=True)
 
-#%%
-factor_data.head(10)
+    from matplotlib.backends.backend_pdf import PdfPages
 
-#%%
-create_full_tear_sheet(factor_data, long_short=True)
+    mean_return_by_q_daily, std_err = alphalens.performance.mean_return_by_quantile(factor_data, by_date=True)
+    mean_return_by_q, std_err_by_q = alphalens.performance.mean_return_by_quantile(factor_data, by_group=False)
+    plot1 = alphalens.plotting.plot_quantile_returns_bar(mean_return_by_q)
+    plot2 = alphalens.plotting.plot_quantile_returns_violin(mean_return_by_q_daily)
+    plot3 = alphalens.plotting.plot_cumulative_returns_by_quantile(mean_return_by_q_daily, period='D')
 
-from matplotlib.backends.backend_pdf import PdfPages
 
-mean_return_by_q_daily, std_err = alphalens.performance.mean_return_by_quantile(factor_data, by_date=True)
-mean_return_by_q, std_err_by_q = alphalens.performance.mean_return_by_quantile(factor_data, by_group=False)
-plot1 = alphalens.plotting.plot_quantile_returns_bar(mean_return_by_q)
-plot2 = alphalens.plotting.plot_quantile_returns_violin(mean_return_by_q_daily)
-plot3 = alphalens.plotting.plot_cumulative_returns_by_quantile(mean_return_by_q_daily, period='D')
-full_tear = create_full_tear_sheet(factor_data, long_short=True)
-avg_returns = create_event_returns_tear_sheet(factor_data, close, avgretplot=(1, 3, 5), long_short=True)
+    with PdfPages('output/factors.pdf') as pdf:
+        pdf.savefig(plot1.figure)
+        pdf.savefig(plot2.figure)
+        pdf.savefig(plot3.figure)
 
 
 
-with PdfPages('output/factors.pdf') as pdf:
-    pdf.savefig(plot1.figure)
-    pdf.savefig(plot2.figure)
-    pdf.savefig(plot3.figure)
+def report_backtest() -> vbt.Portfolio:
+    weights = create_quantile_weights(predictions, availability, allow_short=True)
 
-# create_event_returns_tear_sheet(factor_data, close, avgretplot=(1, 3, 5), long_short=True)
+    weights.index = close.index
+    # rebalance every n days
+    # weights.iloc[np.arange(len(weights)) % 2 != 0] = np.nan
 
-#%%
+    weights.to_csv('output/weights.csv')
 
-pf_returns, pf_positions, pf_benchmark = alphalens.performance.create_pyfolio_input(factor_data,
-                                               period='1D',
-                                               capital=100000,
-                                               long_short=True,
-                                               equal_weight=True,
-                                               quantiles=[1,4],
-                                               groups=None,
-                                               benchmark_period='1D')
+    portfolio = vbt.Portfolio.from_orders(
+        close=close,
+        size=weights,
+        size_type=SizeType.TargetPercent,
+        direction=Direction.Both,
+        cash_sharing=True,
+        call_seq=CallSeqType.Auto,
+        group_by=True,
+        freq='1D',
+        raise_reject=True,
+        fees=0.001, # assuming 0.1% fees (1.5x of FTX)
+        slippage= 0.002, # assuming 0.2% slippage (5x of avg. spread on FTX)
+        seed=1,
+        init_cash=1e5,
+        log=True
+    )
 
-pyfolio.tears.create_full_tear_sheet(pf_returns,
-                                     positions=pf_positions,
-                                     benchmark_rets=pf_benchmark)
-# rebalance every n days
-# weights.iloc[np.arange(len(weights)) % 7 != 0] = np.nan
+    qs.reports.full(portfolio.returns(), portfolio.benchmark_returns()) 
+
+    qs.reports.html(portfolio.returns(), portfolio.benchmark_returns(), output='output/report.html') 
+    print(portfolio.stats())
+    return portfolio
+
+portfolio = report_backtest()
 
 
 
@@ -170,3 +192,5 @@ pyfolio.tears.create_full_tear_sheet(pf_returns,
 # cleaned_weights = ef.clean_weights()
 # print(ef.portfolio_performance(verbose=True))
 
+
+# %%

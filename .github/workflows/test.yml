@@ -23,6 +23,10 @@ jobs:
         shell: bash -l {0}
         run: |
           python run_pipeline.py
+      - name: Run portfolio reporting
+        shell: bash -l {0}
+        run: |
+          python run_portfolio_reporting.py
       - uses: actions/upload-artifact@v2
         with:
           name: artifacts
