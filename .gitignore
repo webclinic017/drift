@@ -135,3 +135,5 @@ wandb/
 .cachedir/**
 lightning_logs/
 
+results.csv
+models/saved/

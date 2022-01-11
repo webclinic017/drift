@@ -4,23 +4,27 @@ import pandas as pd
 from training.primary_model import train_primary_model
 from reporting.wandb import launch_wandb, register_config_with_wandb
 from models.model_map import default_feature_selector_regression, default_feature_selector_classification
+from models.saving import save_models
 from utils.helpers import has_enough_samples_to_train
 from config.config import get_default_ensemble_config
 from config.preprocess import validate_config, preprocess_config
 from feature_selection.feature_selection import select_features
 from feature_selection.dim_reduction import reduce_dimensionality
 from training.meta_labeling import train_meta_labeling_model
+
 from reporting.reporting import report_results
 from typing import Callable, Optional
 import ray
 ray.init()
 
 
-def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[dict, dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     wandb, model_config, training_config, data_config = __setup_config(project_name, with_wandb, sweep, get_config)
-    results, all_predictions, all_probabilities = __run_training(model_config, training_config, data_config)  
+    results, all_predictions, all_probabilities, all_models_all_assets = __run_training(model_config, training_config, data_config)  
     report_results(results, all_predictions, model_config, wandb, sweep, project_name)
-    return results, all_predictions, all_probabilities
+    save_models(all_models_all_assets, data_config, training_config)
+
+    return all_models_all_assets, data_config, training_config, results, all_predictions, all_probabilities
     
 
 def __setup_config(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Optional[object], dict, dict, dict]:
@@ -87,7 +91,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         
         all_models_for_all_assets[asset[1]] = dict(
             name=asset[1], 
-            models=all_models_for_single_asset
+            primary_models = all_models_for_single_asset
         )
         
         # 4. Train a Meta-Labeling model for each Primary model and replace their predictions with the meta-labeling predictions
@@ -109,7 +113,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
                 current_result[model_name] = primary_meta_result
                 current_predictions[model_name] = primary_meta_preds
 
-                all_models_for_all_assets[asset[1]][model_name] = meta_labeling_models
+                all_models_for_all_assets[asset[1]]['primary_models'][model_name]['meta_labeling'] = meta_labeling_models
         
         results = pd.concat([results, current_result], axis=1)
         # With static models, because of the lag in the indicator, the first prediction is NA, so we fill it with zero.
@@ -119,7 +123,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         # 5. Ensemble primary model predictions (If Ensemble model is present)
         if model_config['ensemble_model'] is not None:
 
-            ensemble_result, ensemble_predictions, _, _ = train_primary_model(
+            ensemble_result, ensemble_predictions, _, ensemble_models_one_asset = train_primary_model(
                 ticker_to_predict = asset[1],
                 original_X = current_predictions,
                 X = current_predictions,
@@ -136,7 +140,8 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
                 print_results= True,
             )
             ensemble_result, ensemble_predictions = ensemble_result.iloc[:,0], ensemble_predictions.iloc[:,0]
-
+            all_models_for_all_assets[asset[1]]['secondary_model'] = ensemble_models_one_asset
+            
             if len(model_config['meta_labeling_models']) > 0: 
 
                 # 3. Train a Meta-labeling model on the averaged level-1 model predictions
@@ -152,12 +157,13 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
                     training_config= training_config,
                     model_suffix = 'ensemble'
                 )
-
+                
+                all_models_for_all_assets[asset[1]]['secondary_model'][model_config['ensemble_model']] = dict(meta_labeling=ensemble_meta_labeling_models)
                 results = pd.concat([results, ensemble_meta_result], axis=1)
                 all_predictions = pd.concat([all_predictions, ensemble_meta_predictions], axis=1)
                 all_probabilities = pd.concat([all_probabilities, ensemble_meta_probabilities], axis=1).fillna(0.)
-        
-    return results, all_predictions, all_probabilities
+                
+    return results, all_predictions, all_probabilities, all_models_for_all_assets
     
     
 

@@ -54,9 +54,13 @@ def train_primary_model(
             print_results = print_results,
             discretize=True
         )
-        column_name = "model_" + ticker_to_predict + "_" + model_name + "_" + level
+        levelname=("_" + level) if level=='metalabeling' else ""
+        column_name = "model_" + model_name + "_" + ticker_to_predict + levelname 
         results[column_name] = result
-        all_models_single_asset[model_name] = model_over_time
+        all_models_single_asset[column_name]=dict()
+        all_models_single_asset[column_name][level] = model_over_time.tolist()
+        # all_models_single_asset[model_name]=dict()
+        # all_models_single_asset[model_name][level] = model_over_time.tolist()
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions[column_name] = preds
         probs_column_name = "probs_" + ticker_to_predict + "_" + model_name + "_" + level
