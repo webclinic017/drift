@@ -1,9 +1,10 @@
 
 import numpy as np
 import pandas as pd
-from training.walk_forward import walk_forward_train_test
+from training.walk_forward import walk_forward_train, walk_forward_inference
 from models.base import Model
 from utils.evaluate import evaluate_predictions
+from sklearn.preprocessing import MinMaxScaler
 
 no_of_rows = 100
 
@@ -67,9 +68,9 @@ def test_evaluation():
     window_length = 10
 
     model = EvenOddStubModel(window_length = window_length)
-    scaler = None
+    scaler = MinMaxScaler()
     
-    models, predictions, probs = walk_forward_train_test(
+    models, scalers = walk_forward_train(
         model_name='test',
         model=model,
         X=X,
@@ -78,7 +79,14 @@ def test_evaluation():
         expanding_window=False,
         window_size=window_length,
         retrain_every=10,
-        scaler=scaler
+        scaler=scaler)
+    predictions, probs = walk_forward_inference(
+        model_name='test',
+        models=models,
+        scalers=scalers,
+        X=X,
+        expanding_window=False,
+        window_size=window_length
     )
     
     # verify if predictions are the same as y

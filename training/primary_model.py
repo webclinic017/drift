@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Literal
-from training.walk_forward import walk_forward_train_test
+from training.walk_forward import walk_forward_train, walk_forward_inference
 from utils.evaluate import evaluate_predictions
 from models.base import Model
 from utils.scaler import get_scaler
@@ -31,7 +31,7 @@ def train_primary_model(
     probabilities = pd.DataFrame(index=y.index)
     
     for model_name, model in models:
-        model_over_time, preds, probs = walk_forward_train_test(
+        model_over_time, scaler_over_time = walk_forward_train(
             model_name=model_name,
             model = model,
             X = X if model.feature_selection == 'on' else original_X,
@@ -41,6 +41,14 @@ def train_primary_model(
             window_size = sliding_window_size,
             retrain_every = retrain_every,
             scaler = scaler
+        )
+        preds, probs = walk_forward_inference(
+            model_name = model_name,
+            models = model_over_time,
+            X = X if model.feature_selection == 'on' else original_X,
+            expanding_window = expanding_window,
+            window_size = sliding_window_size,
+            scalers = scaler_over_time
         )
         
         assert len(preds) == len(y)

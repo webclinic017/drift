@@ -10,7 +10,7 @@ def get_dev_config() -> tuple[dict, dict, dict]:
         sliding_window_size_primary = 380,
         sliding_window_size_meta_labeling = 1,
         retrain_every = 20,
-        scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
+        scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
     )
 
     data_config = dict(
@@ -53,7 +53,7 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
         sliding_window_size_primary = 380,
         sliding_window_size_meta_labeling = 240,
         retrain_every = 20,
-        scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
+        scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
     )
 
     data_config = dict(
@@ -98,7 +98,7 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
         sliding_window_size_primary = 380,
         sliding_window_size_meta_labeling = 240,
         retrain_every = 20,
-        scaler = 'minmax', # 'normalize' 'minmax' 'standardize' 'none'
+        scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
     )
 
     data_config = dict(

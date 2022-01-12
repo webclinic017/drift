@@ -25,9 +25,7 @@ def select_features(X: pd.DataFrame, y: pd.Series, model: Model, n_features_to_s
     # 2. Recursive feature selection
     cv = TimeSeriesSplit(n_splits=5)
     scaler = get_scaler(scaling)
-    X_scaled = X.copy()
-    if scaler is not None:
-        X_scaled = scaler.fit_transform(X_scaled)
+    X_scaled = scaler.fit_transform(X)
 
     feat_selector_model = model.model
     if hasattr(feat_selector_model, 'feature_importances_') == False and hasattr(feat_selector_model, 'coef_') == False:
