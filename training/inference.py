@@ -4,46 +4,51 @@ from data_loader.load_data import load_data
 from typing import Optional, Union
 import warnings
 
+from utils.encapsulation import Asset, Single_Model, Training_Step 
 
-def run_inference_pipeline(data_config:dict, training_config:dict, all_models_all_assets:dict):
+def run_inference_pipeline(data_config:dict, training_config:dict, all_models_all_assets:list[Asset]):
     data_params = data_config.copy()
     data_params['target_asset'] = data_params['assets'][0]
     
     X, y, _ = load_data(**data_params)
     input_features = __select_data(X, training_config)
     
-    primary_models, secondary_models = __select_models(data_params, all_models_all_assets) 
+    primary_step, secondary_step = __select_models(data_params, all_models_all_assets) 
     
-    result = __inference(input_features, primary_models, secondary_models)
+    result = __inference(input_features, primary_step, secondary_step)
     
     return result
 
 
-def __inference(data:pd.DataFrame, primary_models:Union[dict,None], secondary_models:Union[dict,None]) -> pd.DataFrame:
-    assert primary_models is not None, "No primary models found. Cancelling Inference."
+def __inference(data:pd.DataFrame, primary_step:Union[Training_Step,None], secondary_step:Union[Training_Step,None]) -> pd.DataFrame:
+    assert primary_step is not None, "No primary models found. Cancelling Inference."
     
-    data = __primary_models(data, primary_models)
+    data = __primary_models(data, primary_step)
     
-    if secondary_models is not None:
+    if secondary_step is not None:
         warnings.warn("Secondary models are not specified.")
-        data = __secondary_models(data, secondary_models)
+        data = __secondary_models(data, secondary_step)
     
     return data
 
 
-def __select_models( data_params:dict, all_models_all_assets:dict)-> tuple[Optional[dict],Optional[dict]]:
+def __select_models( data_params:dict, all_models_all_assets:list[Asset])-> tuple[Union[Training_Step,None], Union[Training_Step, None]]:
     target_asset_name = data_params['target_asset'][1]
-    primary_models, secondary_models = None, None
+    primary_step, secondary_step, = None, None
+    target_asset_models = next((x for x in all_models_all_assets if x.name == target_asset_name), None)
 
-    if 'primary_models' in all_models_all_assets[target_asset_name]:
-        primary_models = all_models_all_assets[target_asset_name]['primary_models']
+    if target_asset_models is not None:
+        if len(target_asset_models.primary.base)>0:
+            primary_step = target_asset_models.primary
+        else: warnings.warn("No primary models found for {}.".format(target_asset_name))
+
+        if len(target_asset_models.secondary.base)>0:
+            secondary_step = target_asset_models.secondary
+        else: warnings.warn("No secondary models found for {}.".format(target_asset_name))
     else: 
-        assert("No primary models found for asset: " + target_asset_name)
+        assert("No models found for asset: " + target_asset_name)
     
-    if 'secondary_model' in all_models_all_assets[target_asset_name]:
-        secondary_models = all_models_all_assets[target_asset_name]['secondary_model']
-    
-    return primary_models, secondary_models
+    return primary_step, secondary_step
 
 
 def __select_data(X:pd.DataFrame, training_config:dict)-> pd.DataFrame:

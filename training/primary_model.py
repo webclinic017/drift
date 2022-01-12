@@ -5,6 +5,7 @@ from utils.evaluate import evaluate_predictions
 from models.base import Model
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
+from utils.encapsulation import Training_Step, Single_Model, Asset
 
 def train_primary_model(
                     ticker_to_predict: str,
@@ -20,15 +21,17 @@ def train_primary_model(
                     scaler: ScalerTypes,
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                     level: str,
-                    print_results: bool
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
+                    print_results: bool,
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[Single_Model]]:
 
     scaler = get_scaler(scaler)
 
     results = pd.DataFrame()
-    all_models_single_asset = dict()
     predictions = pd.DataFrame(index=y.index)
     probabilities = pd.DataFrame(index=y.index)
+    all_models_single_asset:list[Single_Model] = []
+    
+    
     
     for model_name, model in models:
         model_over_time, scaler_over_time = walk_forward_train(
@@ -65,15 +68,16 @@ def train_primary_model(
         levelname=("_" + level) if level=='metalabeling' else ""
         column_name = "model_" + model_name + "_" + ticker_to_predict + levelname 
         results[column_name] = result
-        all_models_single_asset[column_name]=dict()
-        all_models_single_asset[column_name][level] = model_over_time.tolist()
-        # all_models_single_asset[model_name]=dict()
-        # all_models_single_asset[model_name][level] = model_over_time.tolist()
+        
+
+        all_models_single_asset.append(Single_Model(model_name=column_name, model_over_time=model_over_time.tolist()))
+  
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions[column_name] = preds
         probs_column_name = "probs_" + ticker_to_predict + "_" + model_name + "_" + level
         probs.columns = [probs_column_name + "_" + c for c in probs.columns]
         probabilities = pd.concat([probabilities, probs], axis=1)
-        
+    
+
 
     return results, predictions, probabilities, all_models_single_asset

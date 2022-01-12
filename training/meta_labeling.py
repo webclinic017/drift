@@ -5,6 +5,7 @@ from feature_selection.feature_selection import select_features
 import pandas as pd
 from models.model_map import default_feature_selector_regression, default_feature_selector_classification
 from models.base import Model
+from utils.encapsulation import Single_Model
 
 
 def train_meta_labeling_model(
@@ -18,8 +19,9 @@ def train_meta_labeling_model(
                             model_config: dict,
                             training_config: dict,
                             model_suffix: str
-                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame, dict]:
+                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Single_Model]]:
 
+    
     discretize = discretize_threeway_threshold(0.33)
     discretized_predictions = input_predictions.apply(discretize)
     meta_y: pd.Series = pd.concat([discretized_predictions, y], axis=1).apply(equal_except_nan, axis = 1)
@@ -67,5 +69,6 @@ def train_meta_labeling_model(
         discretize=False
     )
     meta_result.rename("model_" + target_asset + "_" + model_suffix, inplace=True)
+    
 
     return meta_result, avg_predictions_with_sizing, meta_probabilities, all_models_single_asset
