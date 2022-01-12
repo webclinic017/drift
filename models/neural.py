@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 
 class LightningNeuralNetModel(Model):
 
-    data_scaling = 'scaled'
+    data_transformation = 'transformed'
     only_column = None
     feature_selection = 'off'
     model_type = 'ml'

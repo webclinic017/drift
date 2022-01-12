@@ -6,7 +6,7 @@ from sklearn.base import clone
 
 class XGBoostModel(Model):
 
-    data_scaling = 'scaled'
+    data_transformation = 'transformed'
     only_column = None
     feature_selection = 'on'
     model_type = 'ml'

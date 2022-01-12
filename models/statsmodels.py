@@ -8,7 +8,7 @@ from copy import deepcopy
 class StatsModel(Model):
 
     # This is work in progress
-    data_scaling = 'scaled'
+    data_transformation = 'transformed'
     only_column = None
     feature_selection = 'on'
     model_type = 'ml'

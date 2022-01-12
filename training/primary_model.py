@@ -6,6 +6,7 @@ from models.base import Model
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
 from utils.encapsulation import Training_Step, Single_Model, Asset
+from transformations.sklearn import SKLearnTransformation
 
 def train_primary_model(
                     ticker_to_predict: str,
@@ -24,8 +25,6 @@ def train_primary_model(
                     print_results: bool,
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[Single_Model]]:
 
-    scaler = get_scaler(scaler)
-
     results = pd.DataFrame()
     predictions = pd.DataFrame(index=y.index)
     probabilities = pd.DataFrame(index=y.index)
@@ -34,7 +33,7 @@ def train_primary_model(
     
     
     for model_name, model in models:
-        model_over_time, scaler_over_time = walk_forward_train(
+        model_over_time, transformations_over_time = walk_forward_train(
             model_name=model_name,
             model = model,
             X = X if model.feature_selection == 'on' else original_X,
@@ -43,15 +42,15 @@ def train_primary_model(
             expanding_window = expanding_window,
             window_size = sliding_window_size,
             retrain_every = retrain_every,
-            scaler = scaler
+            transformations= [get_scaler(scaler)],
         )
         preds, probs = walk_forward_inference(
             model_name = model_name,
-            models = model_over_time,
+            model_over_time= model_over_time,
+            transformations_over_time = transformations_over_time,
             X = X if model.feature_selection == 'on' else original_X,
             expanding_window = expanding_window,
-            window_size = sliding_window_size,
-            scalers = scaler_over_time
+            window_size = sliding_window_size
         )
         
         assert len(preds) == len(y)

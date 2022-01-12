@@ -7,7 +7,7 @@ import numpy as np
 
 class Model(ABC):
 
-    data_scaling: Literal["scaled", "unscaled"]
+    data_transformation: Literal["transformed", "original"]
     feature_selection: Literal["on", "off"]
     # data_format: Literal["wide", "narrow"]
     only_column: Optional[str]

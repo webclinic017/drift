@@ -7,7 +7,7 @@ class StaticAverageModel(Model):
     Model that averages .
     '''
 
-    data_scaling = 'unscaled'
+    data_transformation = 'original'
     only_column = 'model_'
     feature_selection = 'off'
     model_type = 'static'

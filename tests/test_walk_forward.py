@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from training.walk_forward import walk_forward_train, walk_forward_inference
 from models.base import Model
-from sklearn.preprocessing import MinMaxScaler
 
 no_of_rows = 100
 
@@ -34,7 +33,7 @@ class IncrementingStubModel(Model):
     It verifies that the X[n][any_column]+1 == y[n]
     '''
 
-    data_scaling = "unscaled"
+    data_transformation = "original"
     only_column = None
     predict_window_size = 'single_timestamp'
 
@@ -66,9 +65,8 @@ def test_walk_forward_train_test():
     window_length = 10
 
     model = IncrementingStubModel(window_length = window_length)
-    scaler = MinMaxScaler()
 
-    models, scalers = walk_forward_train(
+    model_over_time, transformations_over_time = walk_forward_train(
         model_name='test',
         model=model,
         X=X,
@@ -77,11 +75,11 @@ def test_walk_forward_train_test():
         expanding_window=False,
         window_size=window_length,
         retrain_every=10,
-        scaler=scaler)
-    predictions, probs = walk_forward_inference(
+        transformations=[])
+    predictions, _ = walk_forward_inference(
         model_name='test',
-        models=models,
-        scalers=scalers,
+        model_over_time=model_over_time,
+        transformations_over_time=transformations_over_time,
         X=X,
         expanding_window=False,
         window_size=window_length

@@ -7,7 +7,7 @@ class StaticMomentumModel(Model):
     Model that uses only one feature: momentum. It's positive if momentum is greater than 0, otherwise it's negative.
     '''
 
-    data_scaling = 'unscaled'
+    data_transformation = 'original'
     only_column = 'mom'
     feature_selection = 'off'
     model_type = 'static'

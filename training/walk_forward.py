@@ -6,6 +6,7 @@ from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
 from typing import Union
 from sklearn.base import clone
+from transformations.base import Transformation
 
 def walk_forward_train(
                         model_name: str,
@@ -16,11 +17,11 @@ def walk_forward_train(
                         expanding_window: bool,
                         window_size: int,
                         retrain_every: int,
-                        scaler: Union[MinMaxScaler, Normalizer, StandardScaler],
-                    ) -> tuple[pd.Series, pd.Series]:
+                        transformations: list[Transformation],
+                    ) -> tuple[pd.Series, list[pd.Series]]:
     assert len(X) == len(y)
-    models = pd.Series(index=y.index).rename(model_name)
-    scalers = pd.Series(index=y.index).rename("scaler_" + model_name)
+    models_over_time = pd.Series(index=y.index).rename(model_name)
+    transformations_over_time = [pd.Series(index=y.index).rename(t.get_name()) for t in transformations]
 
     first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
     train_from = first_nonzero_return + window_size + 1
@@ -29,36 +30,32 @@ def walk_forward_train(
 
     if model.only_column is not None:
         X = X[[column for column in X.columns if model.only_column in column]]
-        
-    is_scaling_on = model.data_scaling == 'scaled'
-
-    if is_scaling_on:
-        scaler = clone(scaler)
-
+    
+    if model.data_transformation == 'original':
+        transformations = []
+    
     for index in tqdm(range(train_from, train_till)):
-        if expanding_window:
-            train_window_start = first_nonzero_return
-        else:
-            train_window_start = index - window_size - 1
+        train_window_start = first_nonzero_return if expanding_window else index - window_size - 1
 
-        if iterations_before_retrain <= 0 or pd.isna(models[index-1]):
+        if iterations_before_retrain <= 0 or pd.isna(models_over_time[index-1]):
 
             train_window_end = index - 1
             
-            current_scaler = None
-            if is_scaling_on:
-                # We need to fit on the expanding window data slice
-                # This is our only way to avoid lookahead bias
-                current_scaler = clone(scaler)
-                X_expanding_window = X[first_nonzero_return:train_window_end]
-                current_scaler.fit(X_expanding_window.values)
+            X_expanding_window = X[first_nonzero_return:train_window_end]
+            y_expanding_window = y[first_nonzero_return:train_window_end]
 
-            X_slice = X[train_window_start:train_window_end].to_numpy()
+            current_transformations = [t.clone() for t in transformations]
+            for transformation_index, transformation in enumerate(current_transformations):
+                transformation.fit_transform(X_expanding_window, y_expanding_window)
+
+            X_slice = X[train_window_start:train_window_end]
+
+            for transformation in current_transformations:
+                X_slice = transformation.transform(X_slice)
+            
+            X_slice = X_slice.to_numpy()
             y_slice = y[train_window_start:train_window_end].to_numpy()
 
-            if is_scaling_on:
-                X_slice = current_scaler.transform(X_slice)
-            
             current_model = model.clone()
 
             current_model.initialize_network(input_dim = len(X_slice[0]), output_dim=1) 
@@ -66,17 +63,18 @@ def walk_forward_train(
 
             iterations_before_retrain = retrain_every
 
-        models[index] = current_model
-        scalers[index] = current_scaler
+        models_over_time[index] = current_model
+        for transformation_index, transformation in enumerate(current_transformations):
+            transformations_over_time[transformation_index][index] = transformation
 
         iterations_before_retrain -= 1
 
-    return models, scalers
+    return models_over_time, transformations_over_time
 
 def walk_forward_inference(
                     model_name: str,
-                    models: pd.Series,
-                    scalers: pd.Series,
+                    model_over_time: pd.Series,
+                    transformations_over_time: list[pd.Series],
                     X: pd.DataFrame,
                     expanding_window: bool,
                     window_size: int,
@@ -84,32 +82,33 @@ def walk_forward_inference(
     predictions = pd.Series(index=X.index).rename(model_name)
     probabilities = pd.DataFrame(index=X.index)
 
-    first_nonzero_return = get_first_valid_return_index(models)
-    train_from = first_nonzero_return
-    train_till = X.shape[0]
-    first_model = models[first_nonzero_return]
+    inference_from = get_first_valid_return_index(model_over_time)
+    inference_till = X.shape[0]
+    first_model = model_over_time[inference_from]
 
     if first_model.only_column is not None:
         X = X[[column for column in X.columns if first_model.only_column in column]]
+    
+    if first_model.data_transformation == 'original':
+        transformations_over_time = []
 
-    is_scaling_on = first_model.data_scaling == 'scaled'
+    for index in tqdm(range(inference_from, inference_till)):
+        
+        train_window_start = inference_from if expanding_window else index - window_size - 1
 
-    for index in tqdm(range(train_from, train_till)):
-        if expanding_window:
-            train_window_start = first_nonzero_return
-        else:
-            train_window_start = index - window_size - 1
-
-        current_model = models[index]
-        curren_scaler = scalers[index]
+        current_model = model_over_time[index]
+        current_transformations = [transformation_over_time[index] for transformation_over_time in transformations_over_time]
 
         if current_model.predict_window_size == 'window_size': 
-            next_timestep = X.iloc[train_window_start:index].to_numpy()#.reshape(1, -1)
+            next_timestep = X.iloc[train_window_start:index]
         else: 
-            next_timestep = X.iloc[index].to_numpy().reshape(1, -1)
+            # we need to get a Dataframe out of it, since the transformation step always expects a 2D array, but it's equivalent to X.iloc[index]
+            next_timestep = X.iloc[index:index+1]
         
-        if is_scaling_on:
-            next_timestep = curren_scaler.transform(next_timestep)
+        for transformation in current_transformations:
+            next_timestep = transformation.transform(next_timestep)
+
+        next_timestep = next_timestep.to_numpy()
 
         prediction, probs = current_model.predict(next_timestep)
         predictions[index] = prediction

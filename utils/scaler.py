@@ -1,13 +1,13 @@
 from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
-from typing import Union
+from transformations.sklearn import SKLearnTransformation
 from utils.types import ScalerTypes
 
-def get_scaler(type: ScalerTypes) -> Union[MinMaxScaler, Normalizer, StandardScaler]:
+def get_scaler(type: ScalerTypes) -> SKLearnTransformation:
     if type == 'normalize':
-        return Normalizer()
+        return SKLearnTransformation(Normalizer())
     elif type == 'minmax':
-        return MinMaxScaler(feature_range= (-1, 1))
+        return SKLearnTransformation(MinMaxScaler(feature_range= (-1, 1)))
     elif type == 'standardize':
-        return StandardScaler()
+        return SKLearnTransformation(StandardScaler())
     else:
         raise Exception("Scaler type not supported")

@@ -7,7 +7,7 @@ class StaticNaiveModel(Model):
     Model that carries the last observation (from returns) to the next one, naively.
     '''
 
-    data_scaling = 'unscaled'
+    data_transformation = 'original'
     only_column = None
     feature_selection = 'off'
     model_type = 'static'
