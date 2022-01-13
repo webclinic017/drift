@@ -56,13 +56,13 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         # 1. Load data, check for validity and process data (feature selection, dimensionality reduction, etc.)
         X, y, target_returns = load_data(**configs['data_config'])
         if check_data(X, y, training_config) is False: continue
-        X, original_X, X_pca = process_data(X, y, configs)
+        X, original_X = process_data(X, y, configs)
 
         # 2. Train a Primary model with optional metalabeling for each asset
-        training_step_primary, current_predictions = primary_step(X, y, original_X, X_pca, asset, target_returns, configs, reporting)
+        training_step_primary, current_predictions = primary_step(X, y, original_X, asset, target_returns, configs, reporting)
         
         # 3. Train an Ensemble model with optional metalabeling for each asset
-        training_step_secondary = secondary_step(X, y, original_X, X_pca, current_predictions, asset, target_returns, configs, reporting)
+        training_step_secondary = secondary_step(X, y, original_X, current_predictions, asset, target_returns, configs, reporting)
         
         # 4. Save the models
         reporting.all_assets.append(Reporting.Asset(ticker=asset[1], primary=training_step_primary, secondary=training_step_secondary))

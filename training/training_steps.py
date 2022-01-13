@@ -11,7 +11,6 @@ def primary_step(
                 X: pd.DataFrame,
                 y:pd.Series,
                 original_X:pd.DataFrame,
-                X_pca:pd.DataFrame,
                 asset:list,
                 target_returns:pd.Series,
                 configs: dict,
@@ -46,7 +45,7 @@ def primary_step(
             primary_model_predictions = current_predictions[model_name]
             primary_meta_result, primary_meta_preds, primary_meta_probabilities, meta_labeling_models = train_meta_labeling_model(
                 target_asset=asset[1],
-                X_pca = X_pca,
+                X = original_X,
                 input_predictions= primary_model_predictions,
                 y = y,
                 target_returns = target_returns,
@@ -73,7 +72,6 @@ def secondary_step(
                 X:pd.DataFrame,
                 y:pd.Series,
                 original_X:pd.DataFrame,
-                X_pca:pd.DataFrame,
                 current_predictions:pd.DataFrame,
                 asset:list,
                 target_returns:pd.Series,
@@ -114,7 +112,7 @@ def secondary_step(
             # 3. Train a Meta-labeling model on the averaged level-1 model predictions
             ensemble_meta_result, ensemble_meta_predictions, ensemble_meta_probabilities, ensemble_meta_labeling_models = train_meta_labeling_model(
                 target_asset=asset[1],
-                X_pca = X_pca,
+                X = original_X,
                 input_predictions= ensemble_predictions,
                 y = y,
                 target_returns = target_returns,

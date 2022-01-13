@@ -10,7 +10,7 @@ from reporting.types import Reporting
 
 def train_meta_labeling_model(
                             target_asset: str,
-                            X_pca: pd.DataFrame,
+                            X: pd.DataFrame,
                             input_predictions: pd.Series,
                             y: pd.Series,
                             target_returns: pd.Series,
@@ -28,9 +28,9 @@ def train_meta_labeling_model(
 
     print("Feature Selection started")
     backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
-    meta_feature_selection_input_X, meta_feature_selection_input_y = drop_until_first_valid_index(X_pca, meta_y)
+    meta_feature_selection_input_X, meta_feature_selection_input_y = drop_until_first_valid_index(X, meta_y)
     feature_selection_output = select_features(X = meta_feature_selection_input_X, y = meta_feature_selection_input_y, model = models[0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'])
-    meta_selected_features_X = X_pca[feature_selection_output.columns]
+    meta_selected_features_X = X[feature_selection_output.columns]
 
     meta_X = pd.concat([meta_selected_features_X, input_predictions, discretized_predictions], axis = 1)
 

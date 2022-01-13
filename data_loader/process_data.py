@@ -10,18 +10,11 @@ import warnings
 
 
 
-def process_data(X:pd.DataFrame, y:pd.Series, configs: dict) -> tuple[pd.DataFrame,pd.DataFrame,pd.DataFrame]:
+def process_data(X:pd.DataFrame, y:pd.Series, configs: dict) -> tuple[pd.DataFrame,pd.DataFrame]:
     
     model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
     
     original_X = X.copy()
-
-    # 2a. Dimensionality Reduction (optional)
-    if training_config['dimensionality_reduction']:
-        X_pca = reduce_dimensionality(X, int(len(X.columns) / 2))
-        X = X_pca.copy()
-    else:
-        X_pca = X.copy()
     
     # 2b. Feature Selection
     print("Feature Selection started")
@@ -29,7 +22,7 @@ def process_data(X:pd.DataFrame, y:pd.Series, configs: dict) -> tuple[pd.DataFra
     backup_model = default_feature_selector_regression if data_config['method'] == 'regression' else default_feature_selector_classification
     X = select_features(X = X, y = y, model = model_config['primary_models'][0][1], n_features_to_select = training_config['n_features_to_select'], backup_model = backup_model, scaling = training_config['scaler'])
     
-    return X, original_X, X_pca
+    return X, original_X
 
 def check_data(X:pd.DataFrame, y:pd.Series, training_config:dict):
     """ Returns True if data is valid, else returns False."""
