@@ -4,11 +4,20 @@ from operator import itemgetter
 from training.primary_model import train_primary_model
 from training.meta_labeling import train_meta_labeling_model
 
-from utils.encapsulation import Reporting, Asset, Single_Model, Training_Step
+from reporting.types import Reporting
 
 
-def primary_step(X: pd.DataFrame, y:pd.Series, original_X:pd.DataFrame, X_pca:pd.DataFrame, asset:list, target_returns:pd.Series, configs: dict, reporting: Reporting) -> tuple[Training_Step, pd.DataFrame]:
-    training_step = Training_Step(level='primary')
+def primary_step(
+                X: pd.DataFrame,
+                y:pd.Series,
+                original_X:pd.DataFrame,
+                X_pca:pd.DataFrame,
+                asset:list,
+                target_returns:pd.Series,
+                configs: dict,
+                reporting: Reporting
+                ) -> tuple[Reporting.Training_Step, pd.DataFrame]:
+    training_step = Reporting.Training_Step(level='primary')
     model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
 
     # 3. Train Primary models
@@ -60,8 +69,18 @@ def primary_step(X: pd.DataFrame, y:pd.Series, original_X:pd.DataFrame, X_pca:pd
     return training_step, current_predictions
 
 
-def secondary_step(X:pd.DataFrame, y:pd.Series, original_X:pd.DataFrame, X_pca:pd.DataFrame, current_predictions:pd.DataFrame, asset:list, target_returns:pd.Series, configs: dict, reporting: Reporting) -> Training_Step:
-    training_step = Training_Step(level='secondary')
+def secondary_step(
+                X:pd.DataFrame,
+                y:pd.Series,
+                original_X:pd.DataFrame,
+                X_pca:pd.DataFrame,
+                current_predictions:pd.DataFrame,
+                asset:list,
+                target_returns:pd.Series,
+                configs: dict,
+                reporting: Reporting
+                ) -> Reporting.Training_Step:
+    training_step = Reporting.Training_Step(level='secondary')
     model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
     
     # 5. Ensemble primary model predictions (If Ensemble model is present)
@@ -89,7 +108,6 @@ def secondary_step(X:pd.DataFrame, y:pd.Series, original_X:pd.DataFrame, X_pca:p
         reporting.results = pd.concat([reporting.results, ensemble_result], axis=1)
         reporting.all_predictions = pd.concat([reporting.all_predictions, ensemble_predictions], axis=1)
     
-        
         
         if len(model_config['meta_labeling_models']) > 0: 
 

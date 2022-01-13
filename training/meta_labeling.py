@@ -5,7 +5,7 @@ from feature_selection.feature_selection import select_features
 import pandas as pd
 from models.model_map import default_feature_selector_regression, default_feature_selector_classification
 from models.base import Model
-from utils.encapsulation import Single_Model
+from reporting.types import Reporting
 
 
 def train_meta_labeling_model(
@@ -19,7 +19,7 @@ def train_meta_labeling_model(
                             model_config: dict,
                             training_config: dict,
                             model_suffix: str
-                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Single_Model]]:
+                        ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Reporting.Single_Model]]:
 
     
     discretize = discretize_threeway_threshold(0.33)

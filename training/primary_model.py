@@ -5,8 +5,7 @@ from utils.evaluate import evaluate_predictions
 from models.base import Model
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
-from utils.encapsulation import Training_Step, Single_Model, Asset
-from transformations.sklearn import SKLearnTransformation
+from reporting.types import Reporting
 
 def train_primary_model(
                     ticker_to_predict: str,
@@ -23,12 +22,12 @@ def train_primary_model(
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                     level: str,
                     print_results: bool,
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[Single_Model]]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[Reporting.Single_Model]]:
 
     results = pd.DataFrame()
     predictions = pd.DataFrame(index=y.index)
     probabilities = pd.DataFrame(index=y.index)
-    all_models_single_asset:list[Single_Model] = []
+    all_models_single_asset: list[Reporting.Single_Model] = []
     
     
     
@@ -69,7 +68,7 @@ def train_primary_model(
         results[column_name] = result
         
 
-        all_models_single_asset.append(Single_Model(model_name=column_name, model_over_time=model_over_time.tolist()))
+        all_models_single_asset.append(Reporting.Single_Model(model_name=column_name, model_over_time=model_over_time.tolist()))
   
         # column names for model outputs should be different, so we can differentiate between original data and model predictions later, where necessary
         predictions[column_name] = preds

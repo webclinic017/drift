@@ -4,9 +4,9 @@ from data_loader.load_data import load_data
 from typing import Optional, Union
 import warnings
 
-from utils.encapsulation import Asset, Single_Model, Training_Step 
+from reporting.types import Reporting 
 
-def run_inference_pipeline(data_config:dict, training_config:dict, all_models_all_assets:list[Asset]):
+def run_inference_pipeline(data_config:dict, training_config:dict, all_models_all_assets:list[Reporting.Asset]):
     data_params = data_config.copy()
     data_params['target_asset'] = data_params['assets'][0]
     
@@ -20,7 +20,7 @@ def run_inference_pipeline(data_config:dict, training_config:dict, all_models_al
     return result
 
 
-def __inference(data:pd.DataFrame, primary_step:Union[Training_Step,None], secondary_step:Union[Training_Step,None]) -> pd.DataFrame:
+def __inference(data:pd.DataFrame, primary_step:Union[Reporting.Training_Step,None], secondary_step:Union[Reporting.Training_Step,None]) -> pd.DataFrame:
     assert primary_step is not None, "No primary models found. Cancelling Inference."
     
     data = __primary_models(data, primary_step)
@@ -32,7 +32,7 @@ def __inference(data:pd.DataFrame, primary_step:Union[Training_Step,None], secon
     return data
 
 
-def __select_models( data_params:dict, all_models_all_assets:list[Asset])-> tuple[Union[Training_Step,None], Union[Training_Step, None]]:
+def __select_models( data_params:dict, all_models_all_assets:list[Reporting.Asset])-> tuple[Union[Reporting.Training_Step,None], Union[Reporting.Training_Step, None]]:
     target_asset_name = data_params['target_asset'][1]
     primary_step, secondary_step, = None, None
     target_asset_models = next((x for x in all_models_all_assets if x.name == target_asset_name), None)

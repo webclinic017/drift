@@ -1,6 +1,5 @@
 import pandas as pd
 from typing import Callable, Optional
-from operator import itemgetter
 
 from data_loader.load_data import load_data
 from data_loader.process_data import process_data, check_data
@@ -15,13 +14,13 @@ from config.preprocess import validate_config, preprocess_config
 
 from training.training_steps import primary_step, secondary_step
 
-from utils.encapsulation import Reporting, Asset, Training_Step
+from reporting.types import Reporting
 
 import ray
 ray.init()
 
 
-def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[list[Asset], dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[list[Reporting.Asset], dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     wandb, model_config, training_config, data_config = __setup_config(project_name, with_wandb, sweep, get_config)
     reporting = __run_training(model_config, training_config, data_config) 
     results, all_predictions, all_probabilities, all_models_all_assets = reporting.get_results()
@@ -66,7 +65,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         training_step_secondary = secondary_step(X, y, original_X, X_pca, current_predictions, asset, target_returns, configs, reporting)
         
         # 4. Save the models
-        reporting.all_assets.append(Asset(ticker=asset[1], primary=training_step_primary, secondary=training_step_secondary))
+        reporting.all_assets.append(Reporting.Asset(ticker=asset[1], primary=training_step_primary, secondary=training_step_secondary))
       
     return reporting
     

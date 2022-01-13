@@ -3,11 +3,11 @@ import datetime
 from typing import Optional, Union
 import os
 import warnings
-from utils.encapsulation import Asset
+from reporting.types import Reporting
 
 
 
-def save_models(all_models_for_all_assets: list[Asset], data_config:dict, training_config:dict) -> None:
+def save_models(all_models_for_all_assets: list[Reporting.Asset], data_config:dict, training_config:dict) -> None:
     dict_for_pickle = dict()
     dict_for_pickle['training_config'] = training_config
     dict_for_pickle['data_config'] = data_config
