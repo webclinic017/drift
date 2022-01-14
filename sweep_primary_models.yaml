@@ -45,7 +45,7 @@ parameters:
     index_column: 
       value: 'int'
     primary_models: 
-      values: [['LR_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RF'], ['XGB_two_class'], ['LGBM']]
+      values: [['LR_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RFC'], ['XGB_two_class'], ['LGBM']]
       distribution: categorical
     meta_labeling_models: 
       value: ["LGBM", "LR_two_class"]

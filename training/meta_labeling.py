@@ -3,7 +3,7 @@ from utils.helpers import random_string, equal_except_nan, drop_until_first_vali
 from training.primary_model import train_primary_model
 from feature_selection.feature_selection import select_features
 import pandas as pd
-from models.model_map import default_feature_selector_regression, default_feature_selector_classification
+from models.model_map import get_model_map
 from models.base import Model
 from reporting.types import Reporting
 from typing import Union
@@ -23,7 +23,7 @@ def train_meta_labeling_model(
                             preloaded_models: Union[list[Reporting.Single_Model], None] = None
                         ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Reporting.Single_Model]]:
 
-    
+    _, _, _, default_feature_selector_regression, default_feature_selector_classification = get_model_map(model_config)
     discretize = discretize_threeway_threshold(0.33)
     discretized_predictions = input_predictions.apply(discretize)
     meta_y: pd.Series = pd.concat([discretized_predictions, y], axis=1).apply(equal_except_nan, axis = 1)

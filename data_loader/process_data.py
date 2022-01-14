@@ -3,9 +3,10 @@ from operator import itemgetter
 
 from utils.helpers import has_enough_samples_to_train
 from feature_selection.dim_reduction import reduce_dimensionality
-from models.model_map import default_feature_selector_regression, default_feature_selector_classification
+from models.model_map import get_model_map
 from feature_selection.feature_selection import select_features
 import warnings
+
 
 
 
@@ -13,6 +14,7 @@ import warnings
 def process_data(X:pd.DataFrame, y:pd.Series, configs: dict) -> tuple[pd.DataFrame,pd.DataFrame]:
     
     model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
+    _, _, _, default_feature_selector_regression, default_feature_selector_classification = get_model_map(model_config)
     
     original_X = X.copy()
     

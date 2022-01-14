@@ -47,9 +47,9 @@ parameters:
     primary_models: 
       distribution: categorical
       values:
-      - ["LDA", "LR_two_class", "KNN", "SVC", "CART", "NB", "AB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
-      - ["LR_two_class", "LDA", "NB", "RF", "XGB_two_class", "LGBM", "StaticMom"]
-      - ["LR_two_class", "LDA", "LGBM", "RF", "XGB_two_class"]
+      - ["LDA", "LR_two_class", "KNN", "SVC", "CART", "NB", "AB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
+      - ["LR_two_class", "LDA", "NB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
+      - ["LR_two_class", "LDA", "LGBM", "RFC", "XGB_two_class"]
     meta_labeling_models: 
       value: ["LGBM", "LR_two_class"]
     own_features:
