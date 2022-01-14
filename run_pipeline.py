@@ -20,14 +20,14 @@ import ray
 ray.init()
 
 
-def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[list[Reporting.Asset], dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[list[Reporting.Asset], dict, dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     wandb, model_config, training_config, data_config = __setup_config(project_name, with_wandb, sweep, get_config)
     reporting = __run_training(model_config, training_config, data_config) 
     results, all_predictions, all_probabilities, all_models_all_assets = reporting.get_results()
     report_results(results, all_predictions, model_config, wandb, sweep, project_name)
-    save_models(all_models_all_assets, data_config, training_config)
+    save_models(all_models_all_assets, data_config, training_config, model_config)
 
-    return all_models_all_assets, data_config, training_config, results, all_predictions, all_probabilities
+    return all_models_all_assets, data_config, training_config, model_config, results, all_predictions, all_probabilities
     
 
 def __setup_config(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Optional[object], dict, dict, dict]:
@@ -55,7 +55,7 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
 
         # 1. Load data, check for validity and process data (feature selection, dimensionality reduction, etc.)
         X, y, target_returns = load_data(**configs['data_config'])
-        if check_data(X, y, training_config) is False: continue
+        if check_data(X, y, configs['training_config']) is False: continue
         X, original_X = process_data(X, y, configs)
 
         # 2. Train a Primary model with optional metalabeling for each asset

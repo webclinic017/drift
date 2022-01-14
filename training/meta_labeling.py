@@ -6,6 +6,7 @@ import pandas as pd
 from models.model_map import default_feature_selector_regression, default_feature_selector_classification
 from models.base import Model
 from reporting.types import Reporting
+from typing import Union
 
 
 def train_meta_labeling_model(
@@ -18,7 +19,8 @@ def train_meta_labeling_model(
                             data_config: dict,
                             model_config: dict,
                             training_config: dict,
-                            model_suffix: str
+                            model_suffix: str, 
+                            preloaded_models: Union[list[Reporting.Single_Model], None] = None
                         ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Reporting.Single_Model]]:
 
     
@@ -48,7 +50,8 @@ def train_meta_labeling_model(
         scaler = training_config['scaler'],
         no_of_classes = 'two',
         level = 'meta_labeling',
-        print_results = False
+        print_results = False,
+        preloaded_models = preloaded_models
     )
     if len(models) > 1:
         meta_preds = meta_preds.mean(axis = 1)

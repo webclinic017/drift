@@ -1,39 +1,51 @@
 
 import pandas as pd
-from data_loader.load_data import load_data
 from typing import Optional, Union
 import warnings
 
-from reporting.types import Reporting 
+from data_loader.load_data import load_data
+from data_loader.process_data import process_data, check_data
 
-def run_inference_pipeline(data_config:dict, training_config:dict, all_models_all_assets:list[Reporting.Asset]):
-    data_params = data_config.copy()
-    data_params['target_asset'] = data_params['assets'][0]
+from reporting.types import Reporting
+from training.training_steps import primary_step, secondary_step
+
+def run_inference_pipeline(data_config:dict, training_config:dict, model_config:dict, all_models_all_assets:list[Reporting.Asset]):
+    configs = dict(model_config=model_config, training_config=training_config, data_config=data_config)
+    configs['data_config']['target_asset'] = data_config['assets'][0]
     
-    X, y, _ = load_data(**data_params)
-    input_features = __select_data(X, training_config)
+    primary_models, secondary_models = __select_models(configs, all_models_all_assets) 
     
-    primary_step, secondary_step = __select_models(data_params, all_models_all_assets) 
-    
-    result = __inference(input_features, primary_step, secondary_step)
+    result = __inference(configs, primary_models, secondary_models)
     
     return result
 
 
-def __inference(data:pd.DataFrame, primary_step:Union[Reporting.Training_Step,None], secondary_step:Union[Reporting.Training_Step,None]) -> pd.DataFrame:
-    assert primary_step is not None, "No primary models found. Cancelling Inference."
+def __inference(configs:dict, primary_models:Union[Reporting.Training_Step,None], secondary_models:Union[Reporting.Training_Step, None]):
+    reporting = Reporting()
+    asset = configs['data_config']['target_asset']
     
-    data = __primary_models(data, primary_step)
-    
+    # 1. Load data, truncate it, check for validity and process data (feature selection, dimensionality reduction, etc.)
+    X, y, target_returns = load_data(**configs['data_config'])
+    X, y  = __select_data(X, y, configs['training_config'])
+    assert check_data(X, y, configs['training_config']) == False, "Data is not valid. Cancelling Inference." 
+    X, original_X = process_data(X, y, configs)
+
+    # 2. Train a Primary model with optional metalabeling for each asset
+    training_step_primary, current_predictions = primary_step(X, y, original_X, asset, target_returns, configs, reporting, primary_models)
+
+    # 3. Train an Ensemble model with optional metalabeling for each asset
     if secondary_step is not None:
         warnings.warn("Secondary models are not specified.")
-        data = __secondary_models(data, secondary_step)
-    
-    return data
+        training_step_secondary = secondary_step(X, y, original_X, current_predictions, asset, target_returns, configs, reporting, secondary_models)
+
+    # 4. Save the models
+    reporting.all_assets.append(Reporting.Asset(ticker=asset, primary=training_step_primary, secondary=training_step_secondary))
+
+    return reporting
 
 
-def __select_models( data_params:dict, all_models_all_assets:list[Reporting.Asset])-> tuple[Union[Reporting.Training_Step,None], Union[Reporting.Training_Step, None]]:
-    target_asset_name = data_params['target_asset'][1]
+def __select_models( configs:dict, all_models_all_assets:list[Reporting.Asset])-> tuple[Union[Reporting.Training_Step,None], Union[Reporting.Training_Step, None]]:
+    target_asset_name = configs['data_config']['target_asset'][1]
     primary_step, secondary_step, = None, None
     target_asset_models = next((x for x in all_models_all_assets if x.name == target_asset_name), None)
 
@@ -51,34 +63,13 @@ def __select_models( data_params:dict, all_models_all_assets:list[Reporting.Asse
     return primary_step, secondary_step
 
 
-def __select_data(X:pd.DataFrame, training_config:dict)-> pd.DataFrame:
+def __select_data(X:pd.DataFrame, y:pd.Series, training_config:dict)-> tuple[pd.DataFrame, pd.Series]:
     window_size = training_config['sliding_window_size_primary']
     num_rows = X.shape[0]
     
     if num_rows <= window_size: 
-        return X.copy() 
+        return X.copy(), y.copy() 
     else: 
-        return X.truncate(before=int(num_rows-window_size), after=num_rows, copy=True)
+        return X.truncate(before=int(num_rows-window_size), after=num_rows, copy=True), y.truncate(before=int(num_rows-window_size), after=num_rows, copy=True)
 
 
-def __primary_models(data:pd.DataFrame, models:dict)-> pd.DataFrame:
-    for k, model in models:
-        last_model = model[-1]
-        prediction = last_model.predict(data.to_numpy())
-        
-        # result = evaluate_predictions(
-        #     model_name = model_name,
-        #     target_returns = target_returns,
-        #     y_pred = preds,
-        #     y_true = y,
-        #     method = method,
-        #     no_of_classes=no_of_classes,
-        #     print_results = print_results,
-        #     discretize=True
-        # )
-        
-    return data
-
-def __secondary_models(data:pd.DataFrame, model:dict)-> pd.DataFrame:
-    
-    return data

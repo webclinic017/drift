@@ -25,6 +25,14 @@ class Reporting:
             self.level: str = level
             self.base: list[Reporting.Single_Model] = []
             self.metalabeling: list[list[Reporting.Single_Model]] = []
+            
+        def convert_step_to_tuple(self, step:str)->list[tuple[str, list[Model]]]:
+            if step == 'base':
+                return [(x.model_name, x.model_over_time) for x in self.base ]
+            elif step == 'metalabeling':
+                return [(x.model_name, x.model_over_time) for sub in self.metalabeling for x in sub]
+            else:
+                raise ValueError('Unknown step: {}'.format(step))
 
 
     class Asset():

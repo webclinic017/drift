@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Literal
+from typing import Literal, Union
 from training.walk_forward import walk_forward_train, walk_forward_inference
 from utils.evaluate import evaluate_predictions
 from models.base import Model
@@ -22,6 +22,7 @@ def train_primary_model(
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                     level: str,
                     print_results: bool,
+                    preloaded_models: Union[list[Reporting.Single_Model], None] = None
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[Reporting.Single_Model]]:
 
     results = pd.DataFrame()
@@ -29,23 +30,25 @@ def train_primary_model(
     probabilities = pd.DataFrame(index=y.index)
     all_models_single_asset: list[Reporting.Single_Model] = []
     
-    
+    if preloaded_models is not None:
+        models = preloaded_models
     
     for model_name, model in models:
-        model_over_time, transformations_over_time = walk_forward_train(
-            model_name=model_name,
-            model = model,
-            X = X if model.feature_selection == 'on' else original_X,
-            y = y,
-            target_returns = target_returns,
-            expanding_window = expanding_window,
-            window_size = sliding_window_size,
-            retrain_every = retrain_every,
-            transformations= [get_scaler(scaler)],
-        )
+        if preloaded_models is None:
+            model_over_time, transformations_over_time = walk_forward_train(
+                model_name=model_name,
+                model = model,
+                X = X if model.feature_selection == 'on' else original_X,
+                y = y,
+                target_returns = target_returns,
+                expanding_window = expanding_window,
+                window_size = sliding_window_size,
+                retrain_every = retrain_every,
+                transformations= [get_scaler(scaler)],
+            )
         preds, probs = walk_forward_inference(
             model_name = model_name,
-            model_over_time= model_over_time,
+            model_over_time= model_over_time if preloaded_models is None else pd.Series(model),
             transformations_over_time = transformations_over_time,
             X = X if model.feature_selection == 'on' else original_X,
             expanding_window = expanding_window,

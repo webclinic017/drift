@@ -5,6 +5,7 @@ from training.primary_model import train_primary_model
 from training.meta_labeling import train_meta_labeling_model
 
 from reporting.types import Reporting
+from typing import Union
 
 
 def primary_step(
@@ -14,7 +15,8 @@ def primary_step(
                 asset:list,
                 target_returns:pd.Series,
                 configs: dict,
-                reporting: Reporting
+                reporting: Reporting,
+                preloaded_training_step: Union[Reporting.Training_Step, None] = None
                 ) -> tuple[Reporting.Training_Step, pd.DataFrame]:
     training_step = Reporting.Training_Step(level='primary')
     model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
@@ -34,7 +36,8 @@ def primary_step(
         scaler =  training_config['scaler'],
         no_of_classes = data_config['no_of_classes'],
         level = 'primary',
-        print_results= True
+        print_results= True,
+        preloaded_models = preloaded_training_step.convert_step_to_tuple('base') if preloaded_training_step is not None else None
     )
     
     training_step.base = all_models_for_single_asset
@@ -53,7 +56,8 @@ def primary_step(
                 data_config= data_config,
                 model_config= model_config,
                 training_config= training_config,
-                model_suffix = 'meta'
+                model_suffix = 'meta',
+                preloaded_models =preloaded_training_step.convert_step_to_tuple('metalabeling') if preloaded_training_step is not None else None
             )
             current_result[model_name] = primary_meta_result
             current_predictions[model_name] = primary_meta_preds
