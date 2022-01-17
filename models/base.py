@@ -7,9 +7,8 @@ import numpy as np
 
 class Model(ABC):
 
+    method: Literal["regression", "classification"]
     data_transformation: Literal["transformed", "original"]
-    feature_selection: Literal["on", "off"]
-    # data_format: Literal["wide", "narrow"]
     only_column: Optional[str]
     model_type: Literal['ml', 'static']
     predict_window_size: Literal['single_timestamp', 'window_size']

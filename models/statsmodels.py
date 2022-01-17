@@ -10,7 +10,6 @@ class StatsModel(Model):
     # This is work in progress
     data_transformation = 'transformed'
     only_column = None
-    feature_selection = 'on'
     model_type = 'ml'
     predict_window_size = 'single_timestamp'
 

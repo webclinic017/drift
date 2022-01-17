@@ -11,7 +11,6 @@ from typing import Union
 def primary_step(
                 X: pd.DataFrame,
                 y:pd.Series,
-                original_X:pd.DataFrame,
                 asset:list,
                 target_returns:pd.Series,
                 configs: dict,
@@ -24,7 +23,6 @@ def primary_step(
     # 3. Train Primary models
     current_result, current_predictions, current_probabilities, all_models_for_single_asset = train_primary_model(
         ticker_to_predict = asset[1],
-        original_X = original_X,
         X = X,
         y = y,
         target_returns = target_returns,
@@ -48,7 +46,7 @@ def primary_step(
             primary_model_predictions = current_predictions[model_name]
             primary_meta_result, primary_meta_preds, primary_meta_probabilities, meta_labeling_models = train_meta_labeling_model(
                 target_asset=asset[1],
-                X = original_X,
+                X = X,
                 input_predictions= primary_model_predictions,
                 y = y,
                 target_returns = target_returns,
@@ -75,7 +73,6 @@ def primary_step(
 def secondary_step(
                 X:pd.DataFrame,
                 y:pd.Series,
-                original_X:pd.DataFrame,
                 current_predictions:pd.DataFrame,
                 asset:list,
                 target_returns:pd.Series,
@@ -89,7 +86,6 @@ def secondary_step(
     if model_config['ensemble_model'] is not None:
         ensemble_result, ensemble_predictions, _, ensemble_models_one_asset = train_primary_model(
             ticker_to_predict = asset[1],
-            original_X = current_predictions,
             X = current_predictions,
             y = y,
             target_returns = target_returns,
@@ -116,7 +112,7 @@ def secondary_step(
             # 3. Train a Meta-labeling model on the averaged level-1 model predictions
             ensemble_meta_result, ensemble_meta_predictions, ensemble_meta_probabilities, ensemble_meta_labeling_models = train_meta_labeling_model(
                 target_asset=asset[1],
-                X = original_X,
+                X = X,
                 input_predictions= ensemble_predictions,
                 y = y,
                 target_returns = target_returns,

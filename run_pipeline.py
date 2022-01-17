@@ -2,7 +2,7 @@ import pandas as pd
 from typing import Callable, Optional
 
 from data_loader.load_data import load_data
-from data_loader.process_data import process_data, check_data
+from data_loader.process_data import check_data
 
 from reporting.wandb import launch_wandb, register_config_with_wandb
 from reporting.reporting import report_results
@@ -56,13 +56,12 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
         # 1. Load data, check for validity and process data (feature selection, dimensionality reduction, etc.)
         X, y, target_returns = load_data(**configs['data_config'])
         if check_data(X, y, configs['training_config']) is False: continue
-        X, original_X = process_data(X, y, configs)
 
         # 2. Train a Primary model with optional metalabeling for each asset
-        training_step_primary, current_predictions = primary_step(X, y, original_X, asset, target_returns, configs, reporting)
+        training_step_primary, current_predictions = primary_step(X, y, asset, target_returns, configs, reporting)
         
         # 3. Train an Ensemble model with optional metalabeling for each asset
-        training_step_secondary = secondary_step(X, y, original_X, current_predictions, asset, target_returns, configs, reporting)
+        training_step_secondary = secondary_step(X, y, current_predictions, asset, target_returns, configs, reporting)
         
         # 4. Save the models
         reporting.all_assets.append(Reporting.Asset(ticker=asset[1], primary=training_step_primary, secondary=training_step_secondary))

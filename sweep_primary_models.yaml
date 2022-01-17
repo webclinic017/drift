@@ -45,10 +45,10 @@ parameters:
     index_column: 
       value: 'int'
     primary_models: 
-      values: [['LR_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RFC'], ['XGB_two_class'], ['LGBM']]
+      values: [['LogisticRegression_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RFC'], ['XGB_two_class'], ['LGBM']]
       distribution: categorical
     meta_labeling_models: 
-      value: ["LGBM", "LR_two_class"]
+      value: ["LGBM", "LogisticRegression_two_class"]
     own_features:
       value: ['date_days', 'level_2', 'lags_up_to_5']
     other_features:

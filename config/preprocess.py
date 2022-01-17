@@ -21,10 +21,10 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
     return data_dict
 
 def __preprocess_model_config(model_config:dict, method:str) -> dict:
-    model_map, _, _, _, _ = get_model_map(model_config)
-    model_config['primary_models'] = [(model_name, model_map[method + '_models'][model_name]) for model_name in  model_config['primary_models']]
+    model_map = get_model_map(model_config)
+    model_config['primary_models'] = [(model_name, model_map['primary_models'][model_name]) for model_name in model_config['primary_models']]
     if len(model_config['meta_labeling_models']) > 0:
-        model_config['meta_labeling_models'] = [(model_name, model_map[method + '_models'][model_name]) for model_name in  model_config['meta_labeling_models']]
+        model_config['meta_labeling_models'] = [(model_name, model_map['primary_models'][model_name]) for model_name in  model_config['meta_labeling_models']]
     if model_config['ensemble_model'] is not None:
         model_config['ensemble_model'] = (model_config['ensemble_model'], model_map['ensemble_models'][model_config['ensemble_model']])
 

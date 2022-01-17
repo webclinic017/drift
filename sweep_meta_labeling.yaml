@@ -51,9 +51,9 @@ parameters:
     index_column: 
       value: 'int'
     primary_models: 
-      value: ["LR_two_class", "LDA", "KNN", "CART", "NB", "AB", "RFC", "StaticMom"]
+      value: ["LogisticRegression_two_class", "LDA", "KNN", "CART", "NB", "AB", "RFC", "StaticMom"]
     meta_labeling_models: 
-      values: ["LR_two_class", "LDA", "KNN", "CART", "NB", "AB", "RFC"]
+      values: ["LogisticRegression_two_class", "LDA", "KNN", "CART", "NB", "AB", "RFC"]
       distribution: categorical
     own_features:
       values: [['single_mom', 'date_days'], [], ['level_1', 'date_days'], ['date_days', 'level_2']]

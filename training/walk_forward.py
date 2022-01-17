@@ -3,10 +3,8 @@ from models.base import Model
 import numpy as np
 from utils.helpers import get_first_valid_return_index
 from tqdm import tqdm
-from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
-from typing import Union
-from sklearn.base import clone
 from transformations.base import Transformation
+from typing import Optional
 
 def walk_forward_train(
                         model_name: str,
@@ -18,6 +16,7 @@ def walk_forward_train(
                         window_size: int,
                         retrain_every: int,
                         transformations: list[Transformation],
+                        preloaded_transformations: Optional[list[pd.Series]],
                     ) -> tuple[pd.Series, list[pd.Series]]:
     assert len(X) == len(y)
     models_over_time = pd.Series(index=y.index).rename(model_name)
@@ -44,9 +43,12 @@ def walk_forward_train(
             X_expanding_window = X[first_nonzero_return:train_window_end]
             y_expanding_window = y[first_nonzero_return:train_window_end]
 
-            current_transformations = [t.clone() for t in transformations]
-            for transformation_index, transformation in enumerate(current_transformations):
-                transformation.fit_transform(X_expanding_window, y_expanding_window)
+            if preloaded_transformations is not None and len(transformations) > 0:
+                current_transformations = [transformation_over_time[index] for transformation_over_time in preloaded_transformations]
+            else:
+                current_transformations = [t.clone() for t in transformations]
+                for transformation_index, transformation in enumerate(current_transformations):
+                    X_expanding_window = transformation.fit_transform(X_expanding_window, y_expanding_window)
 
             X_slice = X[train_window_start:train_window_end]
 

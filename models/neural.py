@@ -7,9 +7,9 @@ import pytorch_lightning as pl
 
 class LightningNeuralNetModel(Model):
 
+    method = 'regression'
     data_transformation = 'transformed'
     only_column = None
-    feature_selection = 'off'
     model_type = 'ml'
 
     ''' Standard lightning methods '''

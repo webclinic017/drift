@@ -6,10 +6,11 @@ from models.base import Model
 from utils.scaler import get_scaler
 from utils.types import ScalerTypes
 from reporting.types import Reporting
+from transformations.rfe import RFETransformation
+from transformations.pca import PCATransformation
 
 def train_primary_model(
                     ticker_to_predict: str,
-                    original_X: pd.DataFrame,
                     X: pd.DataFrame,
                     y: pd.Series,
                     target_returns: pd.Series,
@@ -29,28 +30,35 @@ def train_primary_model(
     predictions = pd.DataFrame(index=y.index)
     probabilities = pd.DataFrame(index=y.index)
     all_models_single_asset: list[Reporting.Single_Model] = []
-    
+
     if preloaded_models is not None:
         models = preloaded_models
+    
+    transformations_over_time = None
     
     for model_name, model in models:
         if preloaded_models is None:
             model_over_time, transformations_over_time = walk_forward_train(
                 model_name=model_name,
                 model = model,
-                X = X if model.feature_selection == 'on' else original_X,
+                X = X,
                 y = y,
                 target_returns = target_returns,
                 expanding_window = expanding_window,
                 window_size = sliding_window_size,
                 retrain_every = retrain_every,
-                transformations= [get_scaler(scaler)],
+                transformations= [
+                    get_scaler(scaler),
+                    PCATransformation(ratio_components_to_keep=0.5, sliding_window_size=sliding_window_size),
+                    RFETransformation(n_feature_to_select=40, model=model)
+                ],
+                preloaded_transformations=transformations_over_time,
             )
         preds, probs = walk_forward_inference(
             model_name = model_name,
             model_over_time= model_over_time if preloaded_models is None else pd.Series(model),
             transformations_over_time = transformations_over_time,
-            X = X if model.feature_selection == 'on' else original_X,
+            X = X,
             expanding_window = expanding_window,
             window_size = sliding_window_size
         )

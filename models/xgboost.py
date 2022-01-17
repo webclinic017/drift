@@ -6,9 +6,9 @@ from sklearn.base import clone
 
 class XGBoostModel(Model):
 
+    method = 'classification'
     data_transformation = 'transformed'
     only_column = None
-    feature_selection = 'on'
     model_type = 'ml'
     predict_window_size = 'single_timestamp'
 

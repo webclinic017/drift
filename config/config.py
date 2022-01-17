@@ -30,7 +30,7 @@ def get_dev_config() -> tuple[dict, dict, dict]:
     )
 
     regression_models = ["Lasso"]
-    classification_models = ["LR_two_class"]
+    classification_models = ["LogisticRegression_two_class"]
 
     model_config = dict(
         primary_models = regression_models if data_config['method'] == 'regression' else classification_models,
@@ -52,7 +52,7 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
         expanding_window_meta_labeling = True,
         sliding_window_size_primary = 380,
         sliding_window_size_meta_labeling = 240,
-        retrain_every = 20,
+        retrain_every = 40,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
     )
 
@@ -73,8 +73,8 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
     )
 
     regression_models = ["Lasso", "KNN", "RFR"]
-    classification_models = ["LR_two_class", "LDA", "NB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
-    meta_labeling_models = ['LR_two_class', 'LGBM']
+    classification_models = ["LogisticRegression_two_class", "LDA", "NB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
+    meta_labeling_models = ['LogisticRegression_two_class', 'LGBM']
     ensemble_model = 'Average'
 
     model_config = dict(
@@ -97,7 +97,7 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
         expanding_window_meta_labeling = True,
         sliding_window_size_primary = 380,
         sliding_window_size_meta_labeling = 240,
-        retrain_every = 20,
+        retrain_every = 40,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
     )
 
@@ -118,8 +118,8 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
     )
 
     regression_models = ["Lasso", "KNN"]
-    classification_models = ['LR_two_class', 'SVC']
-    meta_labeling_models = ['LR_two_class', 'LGBM']
+    classification_models = ['LogisticRegression_two_class', 'SVC']
+    meta_labeling_models = ['LogisticRegression_two_class', 'LGBM']
     ensemble_model = 'Average'
 
     model_config = dict(

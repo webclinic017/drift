@@ -9,7 +9,6 @@ class StaticAverageModel(Model):
 
     data_transformation = 'original'
     only_column = 'model_'
-    feature_selection = 'off'
     model_type = 'static'
     predict_window_size = 'single_timestamp'
 

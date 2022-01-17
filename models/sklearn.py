@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Literal
 from models.base import Model
 import numpy as np
 from sklearn.base import clone
@@ -6,14 +7,15 @@ from sklearn.base import clone
 
 class SKLearnModel(Model):
 
+    method: Literal["regression", "classification"]
     data_transformation = 'transformed'
     only_column = None
-    feature_selection = 'on'
     model_type = 'ml'
     predict_window_size = 'single_timestamp'
 
-    def __init__(self, model):
+    def __init__(self, model, method: Literal['regression', 'classification']):
         self.model = model
+        self.method = method
     
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
         self.model.fit(X, y)
@@ -24,7 +26,7 @@ class SKLearnModel(Model):
         return (pred, probability)
     
     def clone(self) -> SKLearnModel:
-        return SKLearnModel(clone(self.model))
+        return SKLearnModel(clone(self.model), self.method)
 
     def get_name(self) -> str:
         return self.model.__class__.__name__

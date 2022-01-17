@@ -75,7 +75,9 @@ def test_walk_forward_train_test():
         expanding_window=False,
         window_size=window_length,
         retrain_every=10,
-        transformations=[])
+        transformations=[],
+        preloaded_transformations=None
+    )
     predictions, _ = walk_forward_inference(
         model_name='test',
         model_over_time=model_over_time,
