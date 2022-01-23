@@ -1,16 +1,16 @@
 from reporting.wandb import send_report_to_wandb
 import pandas as pd
-from config.preprocess import get_model_name
 from utils.helpers import weighted_average
+from config.config import Config 
 
-def report_results(results:pd.DataFrame, all_predictions:pd.DataFrame, model_config:dict, wandb, sweep: bool, project_name:str):
+def report_results(results:pd.DataFrame, all_predictions:pd.DataFrame, config: Config, wandb, sweep: bool, project_name:str):
 
     primary_results = results[[column for column in results.columns if 'ensemble' not in column]]
     ensemble_results = results[[column for column in results.columns if 'ensemble' in column]]
 
     # Only send the results of the final model to wandb
     results_to_send = ensemble_results if ensemble_results.shape[1] > 0 else primary_results
-    send_report_to_wandb(results_to_send, wandb, project_name, get_model_name(model_config))
+    send_report_to_wandb(results_to_send, wandb)
     results.to_csv('output/results.csv')
 
     primary_weights = all_predictions[[column for column in all_predictions.columns if 'ensemble' not in column]]
@@ -29,7 +29,7 @@ def report_results(results:pd.DataFrame, all_predictions:pd.DataFrame, model_con
     print("Mean Sharpe ratio for Level-1 models: ", round(primary_avg_results.loc['sharpe'], 3))
     print("Mean Probabilistic Sharpe ratio for Level-1 models: ", round(primary_avg_results.loc['prob_sharpe'].mean(), 3))
 
-    if len(model_config['meta_labeling_models']) > 0: 
+    if len(config.meta_labeling_models) > 0: 
         print("Level-2 (Ensemble): Number of samples evaluated: ", ensemble_results.loc['no_of_samples'].sum())
         print("Mean Sharpe ratio for Level-2 (Ensemble) models: ", round(ensemble_avg_results.loc['sharpe'].mean(), 3))
         print("Mean Probabilistic Sharpe ratio for Level-2 (Ensemble) models: ", round(ensemble_avg_results.loc['prob_sharpe'].mean(), 3))

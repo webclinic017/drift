@@ -5,7 +5,7 @@ import pandas as pd
 from models.base import Model
 from reporting.types import Reporting
 from typing import Union, Optional
-
+from config.config import Config
 
 def train_meta_labeling_model(
                             target_asset: str,
@@ -14,9 +14,7 @@ def train_meta_labeling_model(
                             y: pd.Series,
                             target_returns: pd.Series,
                             models: list[tuple[str, Model]],
-                            data_config: dict,
-                            model_config: dict,
-                            training_config: dict,
+                            config: Config,
                             model_suffix: str,
                             from_index: Optional[int],
                             preloaded_models: Optional[list[tuple[str, pd.Series, list[pd.Series]]]] = None
@@ -34,11 +32,11 @@ def train_meta_labeling_model(
         y = meta_y,
         target_returns = target_returns,
         models = models,
-        expanding_window = training_config['expanding_window_meta_labeling'],
-        sliding_window_size = training_config['sliding_window_size_meta_labeling'],
-        retrain_every = training_config['retrain_every'],
+        expanding_window = config.expanding_window_meta_labeling,
+        sliding_window_size = config.sliding_window_size_meta_labeling,
+        retrain_every = config.retrain_every,
         from_index = from_index,
-        scaler = training_config['scaler'],
+        scaler = config.scaler,
         no_of_classes = 'two',
         level = 'meta_labeling',
         print_results = False,

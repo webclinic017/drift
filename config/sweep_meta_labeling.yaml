@@ -14,7 +14,7 @@ parameters:
       value: ['daily_etf']
     exogenous_data:
       value: ['daily_glassnode']
-    expanding_window_primary:
+    expanding_window_base:
       values: [True, False]
       distribution: categorical
     expanding_window_meta_labeling:
@@ -25,7 +25,7 @@ parameters:
       distribution: categorical
     dimensionality_reduction:
       value: True
-    sliding_window_size_primary: 
+    sliding_window_size_base: 
       values: [180, 280, 380]
       distribution: categorical
     sliding_window_size_meta_labeling: 

@@ -8,7 +8,7 @@ Name = str
 FeatureExtractorConfig = tuple[Name, FeatureExtractor, list[Period]]
 Path = str
 FileName = str
-DataSource = list[tuple[Path, FileName]]
+DataSource = tuple[Path, FileName]
 DataCollection = list[DataSource]
 
 ScalerTypes = Literal['normalize', 'minmax', 'standardize', 'none']

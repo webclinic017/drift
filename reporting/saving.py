@@ -1,5 +1,6 @@
 import pickle
 import datetime
+from config.config import Config
 from typing import Optional, Union
 import os
 import warnings
@@ -7,11 +8,9 @@ from reporting.types import Reporting
 
 
 
-def save_models(all_models: Reporting.Asset, data_config:dict, training_config:dict, model_config:dict) -> None:
+def save_models(all_models: Reporting.Asset, config: Config) -> None:
     dict_for_pickle = dict()
-    dict_for_pickle['training_config'] = training_config
-    dict_for_pickle['data_config'] = data_config
-    dict_for_pickle['model_config'] = model_config
+    dict_for_pickle['config'] = config
     dict_for_pickle['all_models'] = all_models
     
     date_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
@@ -23,7 +22,7 @@ def save_models(all_models: Reporting.Asset, data_config:dict, training_config:d
     pickle.dump( dict_for_pickle, open( "output/models/{}.p".format(date_string), "wb" ) )
 
 
-def load_models(file_name:Union[str, None]) -> tuple[Reporting.Asset, dict, dict, dict]:
+def load_models(file_name:Union[str, None]) -> tuple[Reporting.Asset, Config]:
 
     if file_name is None: 
         warnings.warn("No file name provided, will load latest models and configurations.")
@@ -34,10 +33,8 @@ def load_models(file_name:Union[str, None]) -> tuple[Reporting.Asset, dict, dict
     
     packacked_dict = pickle.load( open( "output/models/{}".format(file_name), "rb" ) )
     
-    data_config = packacked_dict.pop("data_config", None)
-    training_config = packacked_dict.pop("training_config", None)
-    model_config = packacked_dict.pop("model_config", None)    
+    config = packacked_dict.pop("config", None)    
     all_models = packacked_dict.pop("all_models", None)    
     
-    return all_models, data_config, training_config, model_config
+    return all_models, config
 

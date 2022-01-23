@@ -3,7 +3,7 @@ from data_loader.process_data import check_data
 from reporting.saving import load_models
 
 from run_pipeline import run_pipeline
-from config.config import get_dev_config, get_default_ensemble_config, get_lightweight_ensemble_config
+from config.config import Config, get_dev_config, get_default_ensemble_config, get_lightweight_ensemble_config
 
 from typing import Callable, Optional
 from reporting.types import Reporting
@@ -12,30 +12,30 @@ import warnings
 
 def run_inference(preload_models:bool, get_config:Callable):
     if preload_models:
-        all_models, data_config, training_config, model_config = load_models(None)
+        all_models, config = load_models(None)
     else:
-        all_models, data_config, training_config, model_config, _, _, _ = run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, get_config=get_config)
+        all_models, config, _, _, _ = run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, get_config=get_config)
     
-    configs = dict(model_config=model_config, training_config=training_config, data_config=data_config)
-    __inference(configs, all_models.primary, all_models.secondary)
+    __inference(config, all_models.primary, all_models.secondary)
 
 
-def __inference(configs: dict, primary_models: Optional[Reporting.Training_Step], secondary_models: Optional[Reporting.Training_Step]):
+def __inference(config: Config, primary_models: Optional[Reporting.Training_Step], secondary_models: Optional[Reporting.Training_Step]):
     reporting = Reporting()
-    asset = configs['data_config']['target_asset']
+    asset = config.target_asset
     
     # 1. Load data, check for validity and process data
-    X, y, target_returns = load_data(**configs['data_config'])
-    assert check_data(X, y, configs['training_config']) == True, "Data is not valid. Cancelling Inference." 
+    X, y, target_returns = load_data(
+    )
+    assert check_data(X, y, config) == True, "Data is not valid. Cancelling Inference." 
 
     inference_from = X.index.stop - 2
     # 2. Train a Primary model with optional metalabeling for each asset
-    training_step_primary, current_predictions = primary_step(X, y, target_returns, configs, reporting, from_index = inference_from, preloaded_training_step = primary_models)
+    training_step_primary, current_predictions = primary_step(X, y, target_returns, config, reporting, from_index = inference_from, preloaded_training_step = primary_models)
 
     # 3. Train an Ensemble model with optional metalabeling for each asset
     if secondary_models is not None:
         warnings.warn("Secondary models are not specified.")
-        training_step_secondary = secondary_step(X, y, current_predictions, target_returns, configs, reporting, from_index = inference_from, preloaded_training_step = secondary_models)
+        training_step_secondary = secondary_step(X, y, current_predictions, target_returns, config, reporting, from_index = inference_from, preloaded_training_step = secondary_models)
 
     # 4. Save the models
     reporting.asset = Reporting.Asset(ticker=asset, primary=training_step_primary, secondary=training_step_secondary)

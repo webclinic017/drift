@@ -19,5 +19,4 @@ def hash_data_config(data_config: dict) -> str:
         hash_feature_extractors(data_config['exogenous_features']),
         data_config['index_column'],
         data_config['no_of_classes'],
-        data_config['narrow_format']
     ]))

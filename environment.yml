@@ -33,4 +33,5 @@ dependencies:
     - lightgbm
     - alphalens-reloaded
     - vectorbt
+    - pydantic
 prefix: /usr/local/anaconda3/envs/quant

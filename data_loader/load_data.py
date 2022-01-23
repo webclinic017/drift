@@ -31,7 +31,6 @@ def __load_data(assets: DataCollection,
             exogenous_features: list[tuple[str, FeatureExtractor, list[int]]],
             index_column: Literal['date', 'int'],
             no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
-            narrow_format: bool = False
         ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     Loads asset data from the specified path.
@@ -51,7 +50,6 @@ def __load_data(assets: DataCollection,
         prefix=data_source[1],
         returns='log_returns' if log_returns else 'returns',
         feature_extractors=own_features,
-        narrow_format=narrow_format,
     ) for data_source in target_file]
     target_asset_df = ray.get(target_asset_future)
     
@@ -60,7 +58,6 @@ def __load_data(assets: DataCollection,
         prefix=target_file[0][1],
         returns='returns',
         feature_extractors=[],
-        narrow_format=narrow_format,
     )
     df_target_asset_only_returns = ray.get(target_asset_only_returns_future)
 
@@ -69,7 +66,6 @@ def __load_data(assets: DataCollection,
         prefix=data_source[1],
         returns='log_returns' if log_returns else 'returns',
         feature_extractors=other_features,
-        narrow_format=narrow_format,
     ) for data_source in files]
     asset_dfs = ray.get(asset_futures)
 
@@ -78,27 +74,19 @@ def __load_data(assets: DataCollection,
         prefix=data_source[1],
         returns='none',
         feature_extractors=exogenous_features,
-        narrow_format=narrow_format,
     ) for data_source in exogenous_data]
     exogenous_dfs = ray.get(exogenous_futures)
 
     dfs = target_asset_df + asset_dfs + exogenous_dfs
     dfs = [deduplicate_indexes(df) for df in dfs]
     target_df = dfs[0]
-    if narrow_format:
-        dfs = pd.concat([df.sort_index().reindex(target_df.index) for df in dfs], axis=0).fillna(0.)
-    else:
-        dfs = pd.concat([df.sort_index().reindex(target_df.index) for df in dfs], axis=1).fillna(0.)
+    dfs = pd.concat([df.sort_index().reindex(target_df.index) for df in dfs], axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
 
     if index_column == 'int':
         dfs.reset_index(drop=True, inplace=True)
         df_target_asset_only_returns.reset_index(drop=True, inplace=True)
-
-    if narrow_format:
-        dfs = dfs.drop(index=dfs.index[0], axis=0)
-        df_target_asset_only_returns = df_target_asset_only_returns.drop(index=dfs.index[0], axis=0)
 
     ## Create target 
     target_col = 'target'
@@ -119,8 +107,7 @@ def __load_data(assets: DataCollection,
 def __load_df(data_source: DataSource,
             prefix: str,
             returns: Literal['none', 'price', 'returns', 'log_returns'],
-            feature_extractors: list[tuple[str, FeatureExtractor, list[int]]],
-            narrow_format: bool = False) -> pd.DataFrame:
+            feature_extractors: list[tuple[str, FeatureExtractor, list[int]]]) -> pd.DataFrame:
     df = pd.read_csv(os.path.join(data_source[0], data_source[1] + '.csv'), header=0, index_col=0).fillna(0)
 
     if returns == 'log_returns':
@@ -135,10 +122,7 @@ def __load_df(data_source: DataSource,
     df = df.replace([np.inf, -np.inf], 0.)
     df = drop_columns_if_exist(df, ['open', 'high', 'low', 'close', 'volume'])
     
-    if narrow_format:
-        df["ticker"] = np.repeat(prefix, df.shape[0])
-    else: 
-        df.columns = [prefix + "_" + c if 'date' not in c else c for c in df.columns]
+    df.columns = [prefix + "_" + c if 'date' not in c else c for c in df.columns]
     return df
 
 
@@ -239,7 +223,6 @@ def load_only_returns(assets: DataCollection, index_column: Literal['date', 'int
         prefix=data_source[1],
         returns=returns,
         feature_extractors=[],
-        narrow_format=False,
     ) for data_source in assets]
     target_asset_df = ray.get(assets_future)
 

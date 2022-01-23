@@ -1,36 +1,34 @@
 import pandas as pd
+from config.config import RawConfig
 from typing import Optional
 from utils.helpers import weighted_average
 
-def launch_wandb(project_name:str, default_config:dict, sweep:bool=False):
+def launch_wandb(project_name:str, default_config: RawConfig, sweep:bool=False) -> Optional[object]:
     from wandb_setup import get_wandb
     wandb = get_wandb()   
     if wandb is None:
         raise Exception("Wandb can not be initalized, the environment variable WANDB_API_KEY is missing (can also use .env file)")  
 
     elif sweep:
-        wandb.init(project=project_name, config = default_config)             
+        wandb.init(project=project_name, config = vars(default_config))             
         return wandb
     else:
-        wandb.init(project=project_name, config = default_config, reinit=True)
+        wandb.init(project=project_name, config = vars(default_config), reinit=True)
         return wandb
     
     
-def register_config_with_wandb(wandb: Optional[object], model_config:dict, training_config:dict, data_config:dict):
-    if wandb is None: return model_config, training_config, data_config
+def override_config_with_wandb_values(wandb: Optional[object], raw_config: RawConfig) -> RawConfig:
+    if wandb is None: return raw_config
 
-    config: dict = wandb.config
+    wandb_config: dict = wandb.config
     
-    for k in training_config:
-        training_config[k] = config[k]
-    for k in model_config:
-        model_config[k] = config[k]
-    for k in data_config:
-        data_config[k] = config[k]
+    config_dict = vars(raw_config)
+    for k in config_dict:
+        config_dict[k] = wandb_config[k]
 
-    return model_config, training_config, data_config
+    return RawConfig(**config_dict)
 
-def send_report_to_wandb(results: pd.DataFrame, wandb:Optional[object], project_name: str, model_name: str):
+def send_report_to_wandb(results: pd.DataFrame, wandb:Optional[object]):
     if wandb is None: return
 
     run = wandb.run

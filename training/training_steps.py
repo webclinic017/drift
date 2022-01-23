@@ -7,33 +7,33 @@ from training.meta_labeling import train_meta_labeling_model
 
 from reporting.types import Reporting
 from typing import Union, Optional
+from config.config import Config 
 
 
 def primary_step(
                 X: pd.DataFrame,
                 y: pd.Series,
                 target_returns: pd.Series,
-                configs: dict,
+                config: Config,
                 reporting: Reporting,
                 from_index: Optional[int],
                 preloaded_training_step: Optional[Reporting.Training_Step] = None,
                 ) -> tuple[Reporting.Training_Step, pd.DataFrame]:
     training_step = Reporting.Training_Step(level='primary')
-    model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
 
     # 3. Train Primary models
     current_result, current_predictions, current_probabilities, all_models_for_single_asset = train_primary_model(
-        ticker_to_predict = data_config['target_asset'][1],
+        ticker_to_predict = config.target_asset[1],
         X = X,
         y = y,
         target_returns = target_returns,
-        models = model_config['primary_models'],
-        expanding_window = training_config['expanding_window_primary'],
-        sliding_window_size = training_config['sliding_window_size_primary'],
-        retrain_every =  training_config['retrain_every'],
+        models = config.primary_models,
+        expanding_window = config.expanding_window_base,
+        sliding_window_size = config.sliding_window_size_base,
+        retrain_every =  config.retrain_every,
         from_index = from_index,
-        scaler =  training_config['scaler'],
-        no_of_classes = data_config['no_of_classes'],
+        scaler =  config.scaler,
+        no_of_classes = config.no_of_classes,
         level = 'primary',
         print_results= True,
         preloaded_models = preloaded_training_step.get_base() if preloaded_training_step is not None else None
@@ -42,20 +42,18 @@ def primary_step(
     training_step.base = all_models_for_single_asset
     
     # 4. Train a Meta-Labeling model for each Primary model and replace their predictions with the meta-labeling predictions
-    if training_config['primary_models_meta_labeling'] == True:
+    if config.primary_models_meta_labeling == True:
         for model_name in current_result.columns:
             primary_model_predictions = current_predictions[model_name]
             primary_meta_result, primary_meta_preds, primary_meta_probabilities, meta_labeling_models = train_meta_labeling_model(
-                target_asset = data_config['target_asset'][1],
+                target_asset = config.target_asset[1],
                 X = X,
                 input_predictions= primary_model_predictions,
                 y = y,
                 target_returns = target_returns,
-                models = model_config['meta_labeling_models'],
-                data_config= data_config,
-                model_config= model_config,
-                training_config= training_config,
                 model_suffix = 'meta',
+                models = config.meta_labeling_models,
+                config = config,
                 from_index = from_index,
                 preloaded_models = preloaded_training_step.get_metalabeling()[model_name] if preloaded_training_step is not None else None
             )
@@ -78,27 +76,27 @@ def secondary_step(
                 y:pd.Series,
                 current_predictions:pd.DataFrame,
                 target_returns:pd.Series,
-                configs: dict,
+                config: Config,
                 reporting: Reporting,
                 from_index: Optional[int],
                 preloaded_training_step: Optional[Reporting.Training_Step] = None,
                 ) -> Reporting.Training_Step:
     training_step = Reporting.Training_Step(level='secondary')
-    model_config, training_config, data_config = itemgetter('model_config', 'training_config', 'data_config')(configs)
     
     # 5. Ensemble primary model predictions (If Ensemble model is present)
-    if model_config['ensemble_model'] is not None:
+    if config.ensemble_model is not None:
         ensemble_result, ensemble_predictions, _, ensemble_models_one_asset = train_primary_model(
-            ticker_to_predict = data_config['target_asset'][1],
+            ticker_to_predict = config.target_asset[1],
             X = current_predictions,
             y = y,
             target_returns = target_returns,
-            models = [model_config['ensemble_model']],            expanding_window = False,
+            models = [config.ensemble_model],
+            expanding_window = False,
             sliding_window_size = 1,
-            retrain_every = training_config['retrain_every'],
+            retrain_every = config.retrain_every,
             from_index = from_index,
-            scaler = training_config['scaler'],
-            no_of_classes = data_config['no_of_classes'],
+            scaler = config.scaler,
+            no_of_classes = config.no_of_classes,
             level = 'ensemble',
             print_results= True,
             preloaded_models = preloaded_training_step.get_base() if preloaded_training_step is not None else None
@@ -111,19 +109,17 @@ def secondary_step(
         reporting.all_predictions = pd.concat([reporting.all_predictions, ensemble_predictions], axis=1)
     
         
-        if len(model_config['meta_labeling_models']) > 0: 
+        if len(config.meta_labeling_models) > 0: 
 
             # 3. Train a Meta-labeling model on the averaged level-1 model predictions
             ensemble_meta_result, ensemble_meta_predictions, ensemble_meta_probabilities, ensemble_meta_labeling_models = train_meta_labeling_model(
-                target_asset = data_config['target_asset'][1],
+                target_asset = config.target_asset[1],
                 X = X,
                 input_predictions= ensemble_predictions,
                 y = y,
                 target_returns = target_returns,
-                models = model_config['meta_labeling_models'],
-                data_config= data_config,
-                model_config= model_config,
-                training_config= training_config,
+                models = config.meta_labeling_models,
+                config = config,
                 model_suffix = 'ensemble',
                 from_index = from_index,
                 preloaded_models = preloaded_training_step.get_metalabeling()[ensemble_predictions.name] if preloaded_training_step is not None else None

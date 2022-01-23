@@ -1,16 +1,19 @@
-
+from config.config import Config, RawConfig
 from utils.helpers import flatten
 from feature_extractors.feature_extractor_presets import presets as feature_extractor_presets
 from models.model_map import get_model_map
 from data_loader.collections import data_collections
 
-def preprocess_config(model_config:dict, training_config:dict, data_config:dict) -> tuple[dict, dict, dict]:
-    model_config = __preprocess_model_config(model_config)
-    data_config = __preprocess_feature_extractors_config(data_config)
-    data_config = __preprocess_data_collections_config(data_config)
 
-    validate_config(model_config, training_config, data_config)
-    return model_config, training_config, data_config
+def preprocess_config(raw_config: RawConfig) -> Config:
+    config_dict = vars(raw_config)
+    config_dict = __preprocess_model_config(config_dict)
+    config_dict = __preprocess_feature_extractors_config(config_dict)
+    config_dict = __preprocess_data_collections_config(config_dict)
+
+    config = Config(**config_dict)
+    validate_config(config)
+    return config
 
 def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
     data_dict = data_dict.copy()
@@ -42,18 +45,11 @@ def __preprocess_data_collections_config(data_dict: dict) -> dict:
     return data_dict
 
 
-def validate_config(model_config:dict, training_config:dict, data_config:dict):
+def validate_config(config: Config):
     # We need to make sure there's only one output from the pipeline
     # If level-2 model is there, we need more than one level-1 models to train
-    if len(model_config["meta_labeling_models"]) > 1: assert len(model_config["primary_models"]) > 0
+    if len(config.meta_labeling_models) > 1: assert len(config.primary_models) > 0
     # If there's no level-2 model, we need to have only one level-1 model
-    if len(model_config["meta_labeling_models"]) == 0: assert len(model_config["primary_models"]) == 1
+    if len(config.meta_labeling_models) == 0: assert len(config.primary_models) == 1
 
-def get_model_name(model_config:dict) -> str:
-    if len(model_config["meta_labeling_models"]) > 0:
-        return model_config["meta_labeling_models"][0][0]
-    elif len(model_config["primary_models"]) == 1:
-        return model_config["primary_models"][0][0]
-    else:
-        raise Exception("No model name found")
 
