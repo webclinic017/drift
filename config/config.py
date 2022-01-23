@@ -25,7 +25,6 @@ def get_dev_config() -> tuple[dict, dict, dict]:
         other_features = ['single_mom'],
         exogenous_features = ['z_score'],
         index_column= 'int',
-        method= 'classification',
         no_of_classes= 'two',
         narrow_format = False,
     )
@@ -34,7 +33,7 @@ def get_dev_config() -> tuple[dict, dict, dict]:
     classification_models = ["LogisticRegression_two_class"]
 
     model_config = dict(
-        primary_models = regression_models if data_config['method'] == 'regression' else classification_models,
+        primary_models = classification_models,
         meta_labeling_models = [],
         ensemble_model = None
     )
@@ -69,7 +68,6 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
         other_features = ['level_2', 'lags_up_to_5'],
         exogenous_features = ['z_score'],
         index_column= 'int',
-        method= 'classification',
         no_of_classes= 'two',
         narrow_format = False,
     )
@@ -80,7 +78,7 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
     ensemble_model = 'Average'
 
     model_config = dict(
-        primary_models = regression_models if data_config['method'] == 'regression' else classification_models,
+        primary_models = classification_models,
         meta_labeling_models = meta_labeling_models,
         ensemble_model = ensemble_model
     )
@@ -115,7 +113,6 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
         other_features = ['level_2'],
         exogenous_features = ['z_score'],
         index_column= 'int',
-        method= 'classification',
         no_of_classes= 'two',
         narrow_format = False,
     )
@@ -126,7 +123,7 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
     ensemble_model = 'Average'
 
     model_config = dict(
-        primary_models = regression_models if data_config['method'] == 'regression' else classification_models,
+        primary_models = classification_models,
         meta_labeling_models = meta_labeling_models,
         ensemble_model = ensemble_model
     )

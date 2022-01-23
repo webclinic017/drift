@@ -12,19 +12,15 @@ def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.002) ->
     return (signal * returns) - costs
 
 
-def __preprocess(target_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, method: Literal['classification', 'regression'], no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
+def __preprocess(target_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
     y_pred.name = 'y_pred'
     target_returns.name = 'target_returns'
     df = pd.concat([y_pred, target_returns],axis=1).dropna()
 
     discretize_func = get_discretize_function(no_of_classes)
     # make sure that we evaluate binary/three-way predictions even if the model is a regression
-    if method == 'regression':
-        df['sign_pred'] = df.y_pred.apply(discretize_func) if discretize else df.y_pred
-        df['sign_true'] = df.target_returns.apply(discretize_func)
-    else:
-        df['sign_pred'] = df.y_pred.apply(discretize_func) if discretize else df.y_pred
-        df['sign_true'] = y_true
+    df['sign_pred'] = df.y_pred.apply(discretize_func) if discretize else df.y_pred
+    df['sign_true'] = y_true
 
     df['result'] = backtest(df.target_returns, df.sign_pred)
 
@@ -35,7 +31,6 @@ def evaluate_predictions(
                         target_returns: pd.Series,
                         y_pred: pd.Series,
                         y_true: pd.Series,
-                        method: Literal['classification', 'regression'],
                         no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                         print_results: bool,
                         discretize: bool = False,
@@ -45,14 +40,9 @@ def evaluate_predictions(
     evaluate_from = first_nonzero_return + 1
     
     target_returns = pd.Series(target_returns[evaluate_from:])
-    if method == 'regression':
-        # if there are lots of zeros in the ground truth returns, probably something is wrong, but we can tolerate a couple of days of missing data.
-        is_zero = target_returns[target_returns == 0]
-        assert len(is_zero) < 15
-
     y_pred = pd.Series(y_pred[evaluate_from:])
 
-    df = __preprocess(target_returns, y_pred, y_true, method, no_of_classes, discretize)
+    df = __preprocess(target_returns, y_pred, y_true, no_of_classes, discretize)
     
     scorecard = pd.Series()
     

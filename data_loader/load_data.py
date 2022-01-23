@@ -30,7 +30,6 @@ def __load_data(assets: DataCollection,
             other_features: list[tuple[str, FeatureExtractor, list[int]]],
             exogenous_features: list[tuple[str, FeatureExtractor, list[int]]],
             index_column: Literal['date', 'int'],
-            method: Literal['regression', 'classification'],
             no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
             narrow_format: bool = False
         ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
@@ -105,10 +104,7 @@ def __load_data(assets: DataCollection,
     target_col = 'target'
     returns_col = target_asset[1] + '_returns'
     forward_returns = __create_target_cum_forward_returns(df_target_asset_only_returns, returns_col, forecasting_horizon)
-    if method == 'regression':
-        dfs[target_col] = forward_returns
-    elif method == 'classification':
-        dfs[target_col] = __create_target_classes(dfs, returns_col, forecasting_horizon, no_of_classes)
+    dfs[target_col] = __create_target_classes(dfs, returns_col, forecasting_horizon, no_of_classes)
     # we need to drop the last row, because we forward-shift the target (see what happens if you call .shift[-1] on a pd.Series) 
     dfs = dfs.iloc[:-forecasting_horizon]
     forward_returns = forward_returns.iloc[:-forecasting_horizon]

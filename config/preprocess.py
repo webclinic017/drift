@@ -5,7 +5,7 @@ from models.model_map import get_model_map
 from data_loader.collections import data_collections
 
 def preprocess_config(model_config:dict, training_config:dict, data_config:dict) -> tuple[dict, dict, dict]:
-    model_config = __preprocess_model_config(model_config, data_config['method'])
+    model_config = __preprocess_model_config(model_config)
     data_config = __preprocess_feature_extractors_config(data_config)
     data_config = __preprocess_data_collections_config(data_config)
 
@@ -20,7 +20,7 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
         data_dict[key] = flatten([feature_extractor_presets[preset_name] for preset_name in preset_names])
     return data_dict
 
-def __preprocess_model_config(model_config:dict, method:str) -> dict:
+def __preprocess_model_config(model_config:dict) -> dict:
     model_map = get_model_map(model_config)
     model_config['primary_models'] = [(model_name, model_map['primary_models'][model_name]) for model_name in model_config['primary_models']]
     if len(model_config['meta_labeling_models']) > 0:

@@ -2,7 +2,6 @@ from utils.evaluate import discretize_threeway_threshold, evaluate_predictions
 from utils.helpers import equal_except_nan
 from training.primary_model import train_primary_model
 import pandas as pd
-from models.model_map import default_feature_selector_classification, default_feature_selector_regression
 from models.base import Model
 from reporting.types import Reporting
 from typing import Union, Optional
@@ -35,7 +34,6 @@ def train_meta_labeling_model(
         y = meta_y,
         target_returns = target_returns,
         models = models,
-        method = 'classification',
         expanding_window = training_config['expanding_window_meta_labeling'],
         sliding_window_size = training_config['sliding_window_size_meta_labeling'],
         retrain_every = training_config['retrain_every'],
@@ -59,7 +57,6 @@ def train_meta_labeling_model(
         target_returns = target_returns,
         y_pred = avg_predictions_with_sizing,
         y_true = y,
-        method = 'classification',
         no_of_classes = 'two',
         print_results = True,
         discretize=False

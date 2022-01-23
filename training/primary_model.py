@@ -15,7 +15,6 @@ def train_primary_model(
                     y: pd.Series,
                     target_returns: pd.Series,
                     models: list[tuple[str, Model]],
-                    method: Literal['regression', 'classification'],
                     expanding_window: bool,
                     sliding_window_size: int,
                     retrain_every: int,
@@ -80,7 +79,6 @@ def train_primary_model(
             target_returns = target_returns,
             y_pred = preds,
             y_true = y,
-            method = method,
             no_of_classes=no_of_classes,
             print_results = print_results,
             discretize=True

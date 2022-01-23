@@ -36,8 +36,6 @@ parameters:
       distribution: categorical
     scaler:
       value: 'minmax'
-    method: 
-      value: 'classification'
     no_of_classes:
       values: ['two', 'three-balanced', 'three-imbalanced']
       distribution: categorical

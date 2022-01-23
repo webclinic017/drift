@@ -102,7 +102,6 @@ def test_evaluation():
         target_returns=fake_target_returns,
         y_pred=processed_predictions_to_match_returns,
         y_true=y,
-        method='classification',
         no_of_classes='two',
         print_results = False,
         discretize=True
