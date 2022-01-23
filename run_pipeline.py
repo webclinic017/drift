@@ -7,7 +7,7 @@ from data_loader.process_data import check_data
 from reporting.wandb import launch_wandb, register_config_with_wandb
 from reporting.reporting import report_results
 
-from models.saving import save_models
+from reporting.saving import save_models
 
 from config.config import get_default_ensemble_config
 from config.preprocess import validate_config, preprocess_config
@@ -20,14 +20,14 @@ import ray
 ray.init()
 
 
-def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[list[Reporting.Asset], dict, dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def run_pipeline(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Reporting.Asset, dict, dict, dict, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     wandb, model_config, training_config, data_config = __setup_config(project_name, with_wandb, sweep, get_config)
     reporting = __run_training(model_config, training_config, data_config) 
-    results, all_predictions, all_probabilities, all_models_all_assets = reporting.get_results()
+    results, all_predictions, all_probabilities, all_models = reporting.get_results()
     report_results(results, all_predictions, model_config, wandb, sweep, project_name)
-    save_models(all_models_all_assets, data_config, training_config, model_config)
+    save_models(all_models, data_config, training_config, model_config)
 
-    return all_models_all_assets, data_config, training_config, model_config, results, all_predictions, all_probabilities
+    return all_models, data_config, training_config, model_config, results, all_predictions, all_probabilities
     
 
 def __setup_config(project_name:str, with_wandb: bool, sweep: bool, get_config: Callable) -> tuple[Optional[object], dict, dict, dict]:
@@ -48,24 +48,19 @@ def __run_training(model_config:dict, training_config:dict, data_config:dict):
     configs = dict(model_config=model_config, training_config=training_config, data_config=data_config)
     reporting = Reporting()
     
-    for asset in data_config['assets']:
-        print('--------\nPredicting: ', asset[1])
+    # 1. Load data, check for validity
+    X, y, target_returns = load_data(**configs['data_config'])
+    assert check_data(X, y, configs['training_config']) == True, "Data is not valid." 
 
-        configs['data_config']['target_asset'] = asset
-
-        # 1. Load data, check for validity and process data (feature selection, dimensionality reduction, etc.)
-        X, y, target_returns = load_data(**configs['data_config'])
-        if check_data(X, y, configs['training_config']) is False: continue
-
-        # 2. Train a Primary model with optional metalabeling for each asset
-        training_step_primary, current_predictions = primary_step(X, y, asset, target_returns, configs, reporting)
-        
-        # 3. Train an Ensemble model with optional metalabeling for each asset
-        training_step_secondary = secondary_step(X, y, current_predictions, asset, target_returns, configs, reporting)
-        
-        # 4. Save the models
-        reporting.all_assets.append(Reporting.Asset(ticker=asset[1], primary=training_step_primary, secondary=training_step_secondary))
-      
+    # 2. Train a Primary model with optional metalabeling for each asset
+    training_step_primary, current_predictions = primary_step(X, y, target_returns, configs, reporting, from_index = None)
+    
+    # 3. Train an Ensemble model with optional metalabeling for each asset
+    training_step_secondary = secondary_step(X, y, current_predictions, target_returns, configs, reporting, from_index = None)
+    
+    # 4. Save the models
+    reporting.asset = Reporting.Asset(ticker= data_config['target_asset'][1], primary=training_step_primary, secondary=training_step_secondary)
+    
     return reporting
     
     

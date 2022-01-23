@@ -75,6 +75,7 @@ def test_walk_forward_train_test():
         expanding_window=False,
         window_size=window_length,
         retrain_every=10,
+        from_index=None,
         transformations=[],
         preloaded_transformations=None
     )
@@ -84,7 +85,8 @@ def test_walk_forward_train_test():
         transformations_over_time=transformations_over_time,
         X=X,
         expanding_window=False,
-        window_size=window_length
+        window_size=window_length,
+        from_index=None,
     )
     
     # verify if predictions are the same as y

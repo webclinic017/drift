@@ -77,6 +77,7 @@ def test_evaluation():
         expanding_window=False,
         window_size=window_length,
         retrain_every=10,
+        from_index=None,
         transformations=[],
         preloaded_transformations=None)
     predictions, _ = walk_forward_inference(
@@ -86,6 +87,7 @@ def test_evaluation():
         X=X,
         expanding_window=False,
         window_size=window_length,
+        from_index=None,
     )
     
     # verify if predictions are the same as y

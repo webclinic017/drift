@@ -1,6 +1,7 @@
 from __future__ import annotations
 import pandas as pd
 from models.base import Model
+from typing import Optional, Union
 
 
 class Reporting:
@@ -8,16 +9,17 @@ class Reporting:
         self.results: pd.DataFrame = pd.DataFrame() 
         self.all_predictions: pd.DataFrame = pd.DataFrame() 
         self.all_probabilities: pd.DataFrame = pd.DataFrame() 
-        self.all_assets:list[Reporting.Asset] = []
+        self.asset: Reporting.Asset
     
-    def get_results(self)->tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[Reporting.Asset]]:
-        return self.results, self.all_predictions, self.all_probabilities, self.all_assets
+    def get_results(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Reporting.Asset]:
+        return self.results, self.all_predictions, self.all_probabilities, self.asset
     
 
     class Single_Model:
-        def __init__(self, model_name: str, model_over_time: list[Model]):
+        def __init__(self, model_name: str, model_over_time: pd.Series, transformations_over_time: list[pd.Series]):
             self.model_name: str = model_name
-            self.model_over_time: list[Model] = model_over_time
+            self.model_over_time: pd.Series = model_over_time
+            self.transformations_over_time: list[pd.Series] = transformations_over_time
 
 
     class Training_Step: 
@@ -26,14 +28,14 @@ class Reporting:
             self.base: list[Reporting.Single_Model] = []
             self.metalabeling: list[list[Reporting.Single_Model]] = []
             
-        def convert_step_to_tuple(self, step:str)->list[tuple[str, list[Model]]]:
-            if step == 'base':
-                return [(x.model_name, x.model_over_time) for x in self.base ]
-            elif step == 'metalabeling':
-                return [(x.model_name, x.model_over_time) for sub in self.metalabeling for x in sub]
-            else:
-                raise ValueError('Unknown step: {}'.format(step))
+        def get_base(self) -> list[tuple[str, pd.Series, list[pd.Series]]]:
+            return [(x.model_name, x.model_over_time, x.transformations_over_time) for x in self.base ]
 
+        def get_metalabeling(self) -> dict:
+            structured_dict = dict()
+            for i, model in enumerate(self.base):
+                structured_dict[model.model_name] = [(x.model_name, x.model_over_time, x.transformations_over_time) for x in self.metalabeling[i]]
+            return structured_dict
 
     class Asset():
         def __init__(self, ticker: str, primary: Reporting.Training_Step, secondary: Reporting.Training_Step):

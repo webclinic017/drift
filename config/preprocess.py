@@ -36,6 +36,9 @@ def __preprocess_data_collections_config(data_dict: dict) -> dict:
     for key in keys:
         preset_names = data_dict[key]
         data_dict[key] = flatten([data_collections[preset_name] for preset_name in preset_names])
+    target_asset = next(iter([asset for asset in data_dict['assets'] if asset[1] == data_dict['target_asset']]), None)
+    if target_asset is None: raise Exception('Target asset wasnt found in assets')
+    data_dict['target_asset'] = target_asset
     return data_dict
 
 

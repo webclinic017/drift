@@ -15,6 +15,7 @@ def walk_forward_train(
                         expanding_window: bool,
                         window_size: int,
                         retrain_every: int,
+                        from_index: Optional[int],
                         transformations: list[Transformation],
                         preloaded_transformations: Optional[list[pd.Series]],
                     ) -> tuple[pd.Series, list[pd.Series]]:
@@ -23,7 +24,7 @@ def walk_forward_train(
     transformations_over_time = [pd.Series(index=y.index).rename(t.get_name()) for t in transformations]
 
     first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
-    train_from = first_nonzero_return + window_size + 1
+    train_from = first_nonzero_return + window_size + 1 if from_index is None else from_index
     train_till = len(y)
     iterations_before_retrain = 0
 
@@ -80,11 +81,12 @@ def walk_forward_inference(
                     X: pd.DataFrame,
                     expanding_window: bool,
                     window_size: int,
+                    from_index: Optional[int],
                 ) -> tuple[pd.Series, pd.DataFrame]:
     predictions = pd.Series(index=X.index).rename(model_name)
     probabilities = pd.DataFrame(index=X.index)
 
-    inference_from = get_first_valid_return_index(model_over_time)
+    inference_from = max(get_first_valid_return_index(model_over_time), get_first_valid_return_index(X.iloc[:,0])) if from_index is None else from_index
     inference_till = X.shape[0]
     first_model = model_over_time[inference_from]
 

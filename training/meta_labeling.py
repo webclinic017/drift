@@ -5,7 +5,7 @@ import pandas as pd
 from models.model_map import default_feature_selector_classification, default_feature_selector_regression
 from models.base import Model
 from reporting.types import Reporting
-from typing import Union
+from typing import Union, Optional
 
 
 def train_meta_labeling_model(
@@ -18,8 +18,9 @@ def train_meta_labeling_model(
                             data_config: dict,
                             model_config: dict,
                             training_config: dict,
-                            model_suffix: str, 
-                            preloaded_models: Union[list[Reporting.Single_Model], None] = None
+                            model_suffix: str,
+                            from_index: Optional[int],
+                            preloaded_models: Optional[list[tuple[str, pd.Series, list[pd.Series]]]] = None
                         ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Reporting.Single_Model]]:
 
     discretize = discretize_threeway_threshold(0.33)
@@ -38,6 +39,7 @@ def train_meta_labeling_model(
         expanding_window = training_config['expanding_window_meta_labeling'],
         sliding_window_size = training_config['sliding_window_size_meta_labeling'],
         retrain_every = training_config['retrain_every'],
+        from_index = from_index,
         scaler = training_config['scaler'],
         no_of_classes = 'two',
         level = 'meta_labeling',

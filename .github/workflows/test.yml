@@ -22,6 +22,7 @@ jobs:
       - name: Run pipeline
         shell: bash -l {0}
         run: |
+          export RAY_DISABLE_MEMORY_MONITOR=1
           python run_pipeline.py
       - name: Run portfolio reporting
         shell: bash -l {0}

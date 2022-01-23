@@ -15,6 +15,7 @@ def get_dev_config() -> tuple[dict, dict, dict]:
 
     data_config = dict(
         assets = ['daily_only_btc'],
+        target_asset = 'BTC_USD',
         other_assets = [],
         exogenous_data = [],
         load_non_target_asset= True,
@@ -52,12 +53,13 @@ def get_default_ensemble_config() -> tuple[dict, dict, dict]:
         expanding_window_meta_labeling = True,
         sliding_window_size_primary = 380,
         sliding_window_size_meta_labeling = 240,
-        retrain_every = 40,
+        retrain_every = 10,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
     )
 
     data_config = dict(
         assets = ['daily_crypto'],
+        target_asset = 'BTC_USD',
         other_assets = ['daily_etf'],
         exogenous_data = ['daily_glassnode'],
         load_non_target_asset= True,
@@ -103,6 +105,7 @@ def get_lightweight_ensemble_config() -> tuple[dict, dict, dict]:
 
     data_config = dict(
         assets = ['daily_crypto_lightweight'],
+        target_asset = 'BTC_USD',
         other_assets = ['daily_etf'],
         exogenous_data = ['daily_glassnode'],
         load_non_target_asset= True,
