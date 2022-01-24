@@ -29,7 +29,6 @@ def __load_data(assets: DataCollection,
             own_features: list[tuple[str, FeatureExtractor, list[int]]],
             other_features: list[tuple[str, FeatureExtractor, list[int]]],
             exogenous_features: list[tuple[str, FeatureExtractor, list[int]]],
-            index_column: Literal['date', 'int'],
             no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
         ) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
@@ -83,15 +82,12 @@ def __load_data(assets: DataCollection,
     dfs = pd.concat([df.sort_index().reindex(target_df.index) for df in dfs], axis=1).fillna(0.)
 
     dfs.index = pd.DatetimeIndex(dfs.index)
-
-    if index_column == 'int':
-        dfs.reset_index(drop=True, inplace=True)
-        df_target_asset_only_returns.reset_index(drop=True, inplace=True)
-
+    
     ## Create target 
     target_col = 'target'
     returns_col = target_asset[1] + '_returns'
     forward_returns = __create_target_cum_forward_returns(df_target_asset_only_returns, returns_col, forecasting_horizon)
+    forward_returns.index = pd.DatetimeIndex(dfs.index)
     dfs[target_col] = __create_target_classes(dfs, returns_col, forecasting_horizon, no_of_classes)
     # we need to drop the last row, because we forward-shift the target (see what happens if you call .shift[-1] on a pd.Series) 
     dfs = dfs.iloc[:-forecasting_horizon]
@@ -216,7 +212,7 @@ def datasource_to_file(data_source: DataSource) -> str:
 
 
 
-def load_only_returns(assets: DataCollection, index_column: Literal['date', 'int'], returns: Literal['price', 'returns']) -> pd.DataFrame:
+def load_only_returns(assets: DataCollection, returns: Literal['price', 'returns']) -> pd.DataFrame:
 
     assets_future = [__load_df.remote(
         data_source=data_source,
@@ -228,10 +224,6 @@ def load_only_returns(assets: DataCollection, index_column: Literal['date', 'int
 
     dfs = [deduplicate_indexes(df) for df in target_asset_df]
     dfs = pd.concat(dfs, axis=1)
-    # dfs = dfs.applymap(lambda x: np.nan if x == 0 else x)
     dfs.index = pd.DatetimeIndex(dfs.index)
-
-    if index_column == 'int':
-        dfs.reset_index(drop=True, inplace=True)
 
     return dfs

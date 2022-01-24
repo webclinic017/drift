@@ -36,8 +36,7 @@ def evaluate_predictions(
                         discretize: bool = False,
                         ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
-    first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(y_pred))
-    evaluate_from = first_nonzero_return + 1
+    evaluate_from = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(y_pred))
     
     target_returns = pd.Series(target_returns[evaluate_from:])
     y_pred = pd.Series(y_pred[evaluate_from:])

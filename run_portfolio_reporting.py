@@ -98,17 +98,17 @@ def create_quantile_weights(predictions: pd.DataFrame, availability: pd.DataFram
         row = row.apply(only_select_bottom_top)
         no_of_nonzero_predictions = row[row != 0].count()
         units = min(1 / no_of_nonzero_predictions, 0.25)
-        weights.iloc[index] = row * units
+        weights.loc[index] = row * units
     return weights
 
 
 predictions = pd.read_csv('output/predictions.csv', index_col=0)
+predictions.index = pd.DatetimeIndex(predictions.index)
 predictions.columns = ['_'.join(col.replace("model_", "").split("_")[:2]) for col in predictions.columns]
 first_index = get_first_valid_return_index(predictions[predictions.columns[0]])
 predictions = predictions.iloc[first_index:]
-predictions.reset_index(drop=True, inplace=True)
 
-close = load_only_returns(data_collections['daily_crypto'], 'date', 'price')
+close = load_only_returns(data_collections['daily_crypto'], 'price')
 close = close.iloc[first_index:-1]
 close.columns = [col.replace("_returns", "") for col in close.columns]
 close = close[predictions.columns]

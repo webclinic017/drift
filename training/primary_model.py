@@ -18,7 +18,7 @@ def train_primary_model(
                     expanding_window: bool,
                     sliding_window_size: int,
                     retrain_every: int,
-                    from_index: Optional[int],
+                    from_index: Optional[pd.Timestamp],
                     scaler: ScalerTypes,
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                     level: str,

@@ -16,7 +16,7 @@ def primary_step(
                 target_returns: pd.Series,
                 config: Config,
                 reporting: Reporting,
-                from_index: Optional[int],
+                from_index: Optional[pd.Timestamp],
                 preloaded_training_step: Optional[Reporting.Training_Step] = None,
                 ) -> tuple[Reporting.Training_Step, pd.DataFrame]:
     training_step = Reporting.Training_Step(level='primary')
@@ -78,7 +78,7 @@ def secondary_step(
                 target_returns:pd.Series,
                 config: Config,
                 reporting: Reporting,
-                from_index: Optional[int],
+                from_index: Optional[pd.Timestamp],
                 preloaded_training_step: Optional[Reporting.Training_Step] = None,
                 ) -> Reporting.Training_Step:
     training_step = Reporting.Training_Step(level='secondary')

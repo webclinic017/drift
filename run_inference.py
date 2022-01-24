@@ -8,6 +8,7 @@ from config.config import Config, get_dev_config, get_default_ensemble_config, g
 from typing import Callable, Optional
 from reporting.types import Reporting
 from training.training_steps import primary_step, secondary_step
+import pandas as pd
 import warnings
 
 def run_inference(preload_models:bool, get_config:Callable):
@@ -25,10 +26,21 @@ def __inference(config: Config, primary_models: Optional[Reporting.Training_Step
     
     # 1. Load data, check for validity and process data
     X, y, target_returns = load_data(
+        assets = config.assets,
+        other_assets = config.other_assets,
+        exogenous_data = config.exogenous_data,
+        target_asset = config.target_asset,
+        load_non_target_asset = config.load_non_target_asset,
+        log_returns = config.log_returns,
+        forecasting_horizon = config.forecasting_horizon,
+        own_features = config.own_features,
+        other_features = config.other_features,
+        exogenous_features = config.exogenous_features,
+        no_of_classes = config.no_of_classes,
     )
     assert check_data(X, y, config) == True, "Data is not valid. Cancelling Inference." 
 
-    inference_from = X.index.stop - 2
+    inference_from: pd.Timestamp = X.index[len(X.index) - 2]
     # 2. Train a Primary model with optional metalabeling for each asset
     training_step_primary, current_predictions = primary_step(X, y, target_returns, config, reporting, from_index = inference_from, preloaded_training_step = primary_models)
 
@@ -38,7 +50,7 @@ def __inference(config: Config, primary_models: Optional[Reporting.Training_Step
         training_step_secondary = secondary_step(X, y, current_predictions, target_returns, config, reporting, from_index = inference_from, preloaded_training_step = secondary_models)
 
     # 4. Save the models
-    reporting.asset = Reporting.Asset(ticker=asset, primary=training_step_primary, secondary=training_step_secondary)
+    reporting.asset = Reporting.Asset(ticker=asset[1], primary=training_step_primary, secondary=training_step_secondary)
 
     return reporting
 

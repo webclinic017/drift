@@ -46,8 +46,6 @@ parameters:
       distribution: categorical
     log_returns: 
       value: True
-    index_column: 
-      value: 'int'
     primary_models: 
       value: ["LogisticRegression_two_class", "LDA", "KNN", "CART", "NB", "AB", "RFC", "StaticMom"]
     meta_labeling_models: 

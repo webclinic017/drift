@@ -27,7 +27,6 @@ class RawConfig(BaseModel):
     other_features: list[str]
     exogenous_features: list[str]
     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
-    index_column: Literal['date', 'int']
 
     primary_models: list[str]
     meta_labeling_models: list[str]
@@ -56,7 +55,6 @@ class Config(BaseModel):
     other_features: list[tuple[str, FeatureExtractor, list[int]]]
     exogenous_features: list[tuple[str, FeatureExtractor, list[int]]]
     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
-    index_column: Literal['date', 'int']
 
     primary_models: list[tuple[str, Model]]
     meta_labeling_models: list[tuple[str, Model]]
@@ -92,7 +90,6 @@ def get_dev_config() -> RawConfig:
         own_features = ['level_2', 'date_days'],
         other_features = ['single_mom'],
         exogenous_features = ['z_score'],
-        index_column= 'int',
         no_of_classes= 'two',
 
         primary_models = classification_models,
@@ -129,7 +126,6 @@ def get_default_ensemble_config() -> RawConfig:
         own_features = ['level_2', 'date_days', 'lags_up_to_5'],
         other_features = ['level_2', 'lags_up_to_5'],
         exogenous_features = ['z_score'],
-        index_column= 'int',
         no_of_classes= 'two',
 
         primary_models = classification_models,
@@ -167,7 +163,6 @@ def get_lightweight_ensemble_config() -> RawConfig:
         own_features = ['level_2' ],
         other_features = ['level_2'],
         exogenous_features = ['z_score'],
-        index_column= 'int',
         no_of_classes= 'two',
 
         primary_models = classification_models,

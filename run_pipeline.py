@@ -59,7 +59,6 @@ def __run_training(config: Config):
         own_features = config.own_features,
         other_features = config.other_features,
         exogenous_features = config.exogenous_features,
-        index_column = config.index_column,
         no_of_classes = config.no_of_classes,
     )
     assert check_data(X, y, config) == True, "Data is not valid." 

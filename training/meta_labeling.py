@@ -16,7 +16,7 @@ def train_meta_labeling_model(
                             models: list[tuple[str, Model]],
                             config: Config,
                             model_suffix: str,
-                            from_index: Optional[int],
+                            from_index: Optional[pd.Timestamp],
                             preloaded_models: Optional[list[tuple[str, pd.Series, list[pd.Series]]]] = None
                         ) -> tuple[pd.Series, pd.Series, pd.DataFrame, list[Reporting.Single_Model]]:
 

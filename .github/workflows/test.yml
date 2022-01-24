@@ -28,6 +28,14 @@ jobs:
         shell: bash -l {0}
         run: |
           python run_portfolio_reporting.py
+      - name: Run inference
+        shell: bash -l {0}
+        run: |
+          python run_inference.py
+      - name: Delete models
+        shell: bash -l {0}
+        run: |
+          rm -rf ./output/models
       - uses: actions/upload-artifact@v2
         with:
           name: artifacts

@@ -40,8 +40,6 @@ parameters:
       value: True
     log_returns: 
       value: True
-    index_column: 
-      value: 'int'
     primary_models: 
       values: [['LogisticRegression_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RFC'], ['XGB_two_class'], ['LGBM']]
       distribution: categorical

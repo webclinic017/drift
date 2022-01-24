@@ -40,8 +40,6 @@ parameters:
       value: True
     log_returns: 
       value: True
-    index_column: 
-      value: 'int'
     primary_models: 
       distribution: categorical
       values:
