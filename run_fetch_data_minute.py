@@ -1,24 +1,21 @@
 import pandas as pd
 import ssl
 from tqdm import tqdm
+from data_loader.utils import deduplicate_indexes
 
 base_url = "https://www.cryptodatadownload.com/cdd/"
 
 exchange_name = "Bitfinex"
+period = "minute" # 1h
 files_to_download = [
- exchange_name + '_TRXUSD_1h.csv',
- exchange_name + '_ETHUSD_1h.csv',
- exchange_name + '_XLMUSD_1h.csv',
- exchange_name + '_XMRUSD_1h.csv',
- exchange_name + '_LTCUSD_1h.csv',
-#  exchange_name + '_FILUSD_1h.csv',
- exchange_name + '_DASHUSD_1h.csv',
-#  exchange_name + '_LINKUSD_1h.csv',
-#  exchange_name + '_SOLUSD_1h.csv',
- exchange_name + '_BTCUSD_1h.csv',
- exchange_name + '_ETCUSD_1h.csv',
-#  exchange_name + '_VETUSD_1h.csv',
-#  exchange_name + '_DOTUSD_1h.csv'
+ exchange_name + '_TRXUSD_' + period + '.csv',
+ exchange_name + '_ETHUSD_' + period + '.csv',
+ exchange_name + '_XLMUSD_' + period + '.csv',
+ exchange_name + '_XMRUSD_' + period + '.csv',
+ exchange_name + '_LTCUSD_' + period + '.csv',
+ exchange_name + '_DASHUSD_' + period + '.csv',
+ exchange_name + '_BTCUSD_' + period + '.csv',
+ exchange_name + '_ETCUSD_' + period + '.csv',
  ]
 
 
@@ -31,4 +28,5 @@ for file in tqdm(files_to_download):
     data.rename({'Volume USD': 'volume'}, axis=1, inplace=True)
     data.index.rename('time', inplace=True)
     target_file = file.split('_')[1].replace('USD', '') + '_USD'
-    data.to_csv(f"data/hourly_crypto/{target_file}.csv")
+    data = deduplicate_indexes(data)
+    data.to_csv(f"data/minute_crypto/{target_file}.csv")

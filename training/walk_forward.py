@@ -11,7 +11,7 @@ def walk_forward_train(
                         model: Model,
                         X: pd.DataFrame,
                         y: pd.Series,
-                        target_returns: pd.Series,
+                        forward_returns: pd.Series,
                         expanding_window: bool,
                         window_size: int,
                         retrain_every: int,
@@ -23,7 +23,7 @@ def walk_forward_train(
     models_over_time = pd.Series(index=y.index).rename(model_name)
     transformations_over_time = [pd.Series(index=y.index).rename(t.get_name()) for t in transformations]
 
-    first_nonzero_return = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
+    first_nonzero_return = max(get_first_valid_return_index(forward_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
     train_from = first_nonzero_return + window_size + 1 if from_index is None else X.index.to_list().index(from_index)
     train_till = len(y)
     iterations_before_retrain = 0

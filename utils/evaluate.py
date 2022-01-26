@@ -12,23 +12,23 @@ def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.002) ->
     return (signal * returns) - costs
 
 
-def __preprocess(target_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
+def __preprocess(forward_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
     y_pred.name = 'y_pred'
-    target_returns.name = 'target_returns'
-    df = pd.concat([y_pred, target_returns],axis=1).dropna()
+    forward_returns.name = 'forward_returns'
+    df = pd.concat([y_pred, forward_returns],axis=1).dropna()
 
     discretize_func = get_discretize_function(no_of_classes)
     # make sure that we evaluate binary/three-way predictions even if the model is a regression
     df['sign_pred'] = df.y_pred.apply(discretize_func) if discretize else df.y_pred
     df['sign_true'] = y_true
 
-    df['result'] = backtest(df.target_returns, df.sign_pred)
+    df['result'] = backtest(df.forward_returns, df.sign_pred)
 
     return df
 
 def evaluate_predictions(
                         model_name: str,
-                        target_returns: pd.Series,
+                        forward_returns: pd.Series,
                         y_pred: pd.Series,
                         y_true: pd.Series,
                         no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
@@ -36,12 +36,12 @@ def evaluate_predictions(
                         discretize: bool = False,
                         ) -> pd.Series:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
-    evaluate_from = max(get_first_valid_return_index(target_returns), get_first_valid_return_index(y_pred))
+    evaluate_from = max(get_first_valid_return_index(forward_returns), get_first_valid_return_index(y_pred))
     
-    target_returns = pd.Series(target_returns[evaluate_from:])
+    forward_returns = pd.Series(forward_returns[evaluate_from:])
     y_pred = pd.Series(y_pred[evaluate_from:])
 
-    df = __preprocess(target_returns, y_pred, y_true, no_of_classes, discretize)
+    df = __preprocess(forward_returns, y_pred, y_true, no_of_classes, discretize)
     
     scorecard = pd.Series()
     
@@ -51,7 +51,7 @@ def evaluate_predictions(
     scorecard.loc['no_of_samples'] = no_of_samples
     sharpe = sharpe_ratio(df.result)
     scorecard.loc['sharpe'] = sharpe
-    benchmark_sharpe = sharpe_ratio(df.target_returns)
+    benchmark_sharpe = sharpe_ratio(df.forward_returns)
     scorecard.loc['benchmark_sharpe'] = benchmark_sharpe
     scorecard.loc['prob_sharpe'] = probabilistic_sharpe_ratio(sharpe, benchmark_sharpe, no_of_samples)
     scorecard.loc['sortino'] = sortino(df.result)

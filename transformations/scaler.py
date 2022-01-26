@@ -1,6 +1,8 @@
 from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
-from transformations.sklearn import SKLearnTransformation
-from utils.types import ScalerTypes
+from .sklearn import SKLearnTransformation
+from typing import Literal
+
+ScalerTypes = Literal['normalize', 'minmax', 'standardize']
 
 def get_scaler(type: ScalerTypes) -> SKLearnTransformation:
     if type == 'normalize':

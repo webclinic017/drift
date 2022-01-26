@@ -1,6 +1,6 @@
 import pickle
 import datetime
-from config.config import Config
+from config.types import Config
 from typing import Optional, Union
 import os
 import warnings

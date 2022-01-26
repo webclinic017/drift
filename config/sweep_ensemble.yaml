@@ -34,11 +34,7 @@ parameters:
       value: 'minmax'
     no_of_classes:
       value: 'two'
-    forecasting_horizon: 
-      value: 1
     load_non_target_asset: 
-      value: True
-    log_returns: 
       value: True
     primary_models: 
       distribution: categorical

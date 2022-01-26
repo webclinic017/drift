@@ -73,7 +73,7 @@ def test_evaluation():
         model=model,
         X=X,
         y=y,
-        target_returns=y,
+        forward_returns=y,
         expanding_window=False,
         window_size=window_length,
         retrain_every=10,
@@ -94,12 +94,12 @@ def test_evaluation():
     for i in range(window_length+2, no_of_rows):
         assert predictions[i] == y[i]
 
-    fake_target_returns = y * 0.1
+    fake_forward_returns = y * 0.1
     processed_predictions_to_match_returns = predictions * 0.1
 
     result = evaluate_predictions(
         model_name='test',
-        target_returns=fake_target_returns,
+        forward_returns=fake_forward_returns,
         y_pred=processed_predictions_to_match_returns,
         y_true=y,
         no_of_classes='two',

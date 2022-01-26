@@ -34,4 +34,5 @@ dependencies:
     - alphalens-reloaded
     - vectorbt
     - pydantic
+    - pandera[mypy]
 prefix: /usr/local/anaconda3/envs/quant

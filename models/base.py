@@ -3,8 +3,6 @@ from typing import Literal, Optional, Union
 from abc import ABC, abstractmethod
 import numpy as np
 
-# import numpy as np
-
 class Model(ABC):
 
     method: Literal["regression", "classification"]

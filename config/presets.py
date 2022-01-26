@@ -1,68 +1,4 @@
-
-from pydantic import BaseModel
-from typing import Literal, Optional
-from models.base import Model
-from utils.types import DataCollection, DataSource, FeatureExtractor
-
-# RawConfig is needed to ensure we can declare config presets here with static typing, we then convert it to Config
-class RawConfig(BaseModel):
-    primary_models_meta_labeling: bool
-    dimensionality_reduction: bool
-    n_features_to_select: int
-    expanding_window_base: bool
-    expanding_window_meta_labeling: bool
-    sliding_window_size_base: int
-    sliding_window_size_meta_labeling: int
-    retrain_every: int
-    scaler: Literal['normalize', 'minmax', 'standardize']
-
-    assets: list[str]
-    target_asset: str
-    other_assets: list[str]
-    exogenous_data: list[str]
-    load_non_target_asset: bool
-    log_returns: bool
-    forecasting_horizon: int
-    own_features: list[str]
-    other_features: list[str]
-    exogenous_features: list[str]
-    no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
-
-    primary_models: list[str]
-    meta_labeling_models: list[str]
-    ensemble_model: Optional[str]
-
-
-class Config(BaseModel):
-    primary_models_meta_labeling: bool
-    dimensionality_reduction: bool
-    n_features_to_select: int
-    expanding_window_base: bool
-    expanding_window_meta_labeling: bool
-    sliding_window_size_base: int
-    sliding_window_size_meta_labeling: int
-    retrain_every: int
-    scaler: Literal['normalize', 'minmax', 'standardize']
-
-    assets: DataCollection
-    target_asset: DataSource
-    other_assets: DataCollection
-    exogenous_data: DataCollection
-    load_non_target_asset: bool
-    log_returns: bool
-    forecasting_horizon: int
-    own_features: list[tuple[str, FeatureExtractor, list[int]]]
-    other_features: list[tuple[str, FeatureExtractor, list[int]]]
-    exogenous_features: list[tuple[str, FeatureExtractor, list[int]]]
-    no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
-
-    primary_models: list[tuple[str, Model]]
-    meta_labeling_models: list[tuple[str, Model]]
-    ensemble_model: Optional[tuple[str, Model]]
-
-    class Config:
-        arbitrary_types_allowed = True
-
+from .types import RawConfig, Config
 
 def get_dev_config() -> RawConfig:
   
@@ -85,16 +21,16 @@ def get_dev_config() -> RawConfig:
         other_assets = [],
         exogenous_data = [],
         load_non_target_asset= True,
-        log_returns= True,
-        forecasting_horizon = 1,
         own_features = ['level_2', 'date_days'],
         other_features = ['single_mom'],
         exogenous_features = ['z_score'],
-        no_of_classes= 'two',
 
         primary_models = classification_models,
         meta_labeling_models = [],
-        ensemble_model = None
+        ensemble_model = None,
+
+        event_filter = 'none',
+        labeling = 'two_class'
     )
 
 
@@ -121,16 +57,16 @@ def get_default_ensemble_config() -> RawConfig:
         other_assets = ['daily_etf'],
         exogenous_data = ['daily_glassnode'],
         load_non_target_asset= True,
-        log_returns= True,
-        forecasting_horizon = 1,
         own_features = ['level_2', 'date_days', 'lags_up_to_5'],
         other_features = ['level_2', 'lags_up_to_5'],
         exogenous_features = ['z_score'],
-        no_of_classes= 'two',
 
         primary_models = classification_models,
         meta_labeling_models = meta_labeling_models,
-        ensemble_model = ensemble_model
+        ensemble_model = ensemble_model,
+
+        event_filter = 'cusum_vol',
+        labeling = 'two_class'
     )
 
 
@@ -158,16 +94,16 @@ def get_lightweight_ensemble_config() -> RawConfig:
         other_assets = ['daily_etf'],
         exogenous_data = ['daily_glassnode'],
         load_non_target_asset= True,
-        log_returns= True,
-        forecasting_horizon = 1,
         own_features = ['level_2' ],
         other_features = ['level_2'],
         exogenous_features = ['z_score'],
-        no_of_classes= 'two',
 
         primary_models = classification_models,
         meta_labeling_models = meta_labeling_models,
-        ensemble_model = ensemble_model
+        ensemble_model = ensemble_model,
+
+        event_filter = 'none',
+        labeling = 'two_class'
     )
 
 

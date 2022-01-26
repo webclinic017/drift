@@ -1,7 +1,6 @@
 from __future__ import annotations
+from dataclasses import dataclass
 import pandas as pd
-from models.base import Model
-from typing import Optional, Union
 
 
 class Reporting:
@@ -14,12 +13,11 @@ class Reporting:
     def get_results(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Reporting.Asset]:
         return self.results, self.all_predictions, self.all_probabilities, self.asset
     
-
+    @dataclass
     class Single_Model:
-        def __init__(self, model_name: str, model_over_time: pd.Series, transformations_over_time: list[pd.Series]):
-            self.model_name: str = model_name
-            self.model_over_time: pd.Series = model_over_time
-            self.transformations_over_time: list[pd.Series] = transformations_over_time
+        model_name: str
+        model_over_time: pd.Series
+        transformations_over_time: list[pd.Series]
 
 
     class Training_Step: 
@@ -37,8 +35,9 @@ class Reporting:
                 structured_dict[model.model_name] = [(x.model_name, x.model_over_time, x.transformations_over_time) for x in self.metalabeling[i]]
             return structured_dict
 
+    @dataclass
     class Asset():
-        def __init__(self, ticker: str, primary: Reporting.Training_Step, secondary: Reporting.Training_Step):
-            self.name: str = ticker
-            self.primary: Reporting.Training_Step = primary
-            self.secondary: Reporting.Training_Step = secondary 
+        name: str
+        primary: Reporting.Training_Step
+        secondary: Reporting.Training_Step 
+

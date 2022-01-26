@@ -1,8 +1,7 @@
 #%%
 import pandas as pd
 import numpy as np
-from data_loader.load_data import load_only_returns
-from data_loader.collections import data_collections
+from data_loader import load_only_returns, data_collections
 
 from utils.helpers import get_first_valid_return_index
 import alphalens
@@ -109,9 +108,10 @@ first_index = get_first_valid_return_index(predictions[predictions.columns[0]])
 predictions = predictions.iloc[first_index:]
 
 close = load_only_returns(data_collections['daily_crypto'], 'price')
-close = close.iloc[first_index:-1]
+close = close.iloc[first_index:]
 close.columns = [col.replace("_returns", "") for col in close.columns]
 close = close[predictions.columns]
+close = close.filter(items = predictions.index, axis = 0)
 
 availability = close.applymap(lambda x: 0 if x == 0.0 or x == 0 or np.isnan(x) else 1)
 

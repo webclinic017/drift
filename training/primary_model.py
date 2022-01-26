@@ -3,8 +3,7 @@ from typing import Literal, Optional, Union
 from training.walk_forward import walk_forward_train, walk_forward_inference
 from utils.evaluate import evaluate_predictions
 from models.base import Model
-from utils.scaler import get_scaler
-from utils.types import ScalerTypes
+from transformations.scaler import get_scaler, ScalerTypes
 from reporting.types import Reporting
 from transformations.rfe import RFETransformation
 from transformations.pca import PCATransformation
@@ -13,7 +12,7 @@ def train_primary_model(
                     ticker_to_predict: str,
                     X: pd.DataFrame,
                     y: pd.Series,
-                    target_returns: pd.Series,
+                    forward_returns: pd.Series,
                     models: list[tuple[str, Model]],
                     expanding_window: bool,
                     sliding_window_size: int,
@@ -46,7 +45,7 @@ def train_primary_model(
                 model = model,
                 X = X,
                 y = y,
-                target_returns = target_returns,
+                forward_returns = forward_returns,
                 expanding_window = expanding_window,
                 window_size = sliding_window_size,
                 retrain_every = retrain_every,
@@ -76,7 +75,7 @@ def train_primary_model(
         assert len(preds) == len(y)
         result = evaluate_predictions(
             model_name = model_name,
-            target_returns = target_returns,
+            forward_returns = forward_returns,
             y_pred = preds,
             y_true = y,
             no_of_classes=no_of_classes,

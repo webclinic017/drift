@@ -1,4 +1,4 @@
-from utils.types import Path, FileName, DataSource, DataCollection
+from .types import Path, FileName, DataSource, DataCollection
 from utils.helpers import flatten
 
 def transform_to_data_collection(path: str, file_names: list[str]) -> DataCollection:
@@ -10,7 +10,7 @@ __daily_crypto = ["ADA_USD", "BCH_USD", "BNB_USD", "BTC_USD", "DOT_USD", "ETC_US
 
 __daily_crypto_lightweight = ["ADA_USD", "BCH_USD"]
 
-__hourly_crypto = ["BTC_USD", "DASH_USD", "ETC_USD", "ETH_USD", "LTC_USD", "TRX_USD", "XLM_USD", "XMR_USD", "XRP_USD"]
+__minute_crypto = ["BTC_USD", "DASH_USD", "ETC_USD", "ETH_USD", "LTC_USD", "TRX_USD", "XLM_USD", "XMR_USD"]
 
 __daily_glassnode = ['rhodl_ratio',
     # 'cvdd',
@@ -45,7 +45,7 @@ data_collections = dict(
     daily_crypto = transform_to_data_collection("data/daily_crypto", __daily_crypto),
     daily_crypto_lightweight = transform_to_data_collection("data/daily_crypto", __daily_crypto_lightweight),
     daily_etf = transform_to_data_collection("data/daily_etf", __daily_etf),
-    hourly_crypto = transform_to_data_collection("data/hourly_crypto", __hourly_crypto),
+    minute_crypto = transform_to_data_collection("data/minute_crypto", __minute_crypto),
     daily_glassnode =transform_to_data_collection("data/daily_glassnode",  __daily_glassnode),
 )
 

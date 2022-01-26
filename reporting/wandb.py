@@ -1,5 +1,5 @@
 import pandas as pd
-from config.config import RawConfig
+from config.types import RawConfig
 from typing import Optional
 from utils.helpers import weighted_average
 

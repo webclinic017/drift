@@ -39,13 +39,9 @@ parameters:
     no_of_classes:
       values: ['two', 'three-balanced', 'three-imbalanced']
       distribution: categorical
-    forecasting_horizon: 
-      value: 1
     load_non_target_asset: 
       values: [True, False]
       distribution: categorical
-    log_returns: 
-      value: True
     primary_models: 
       value: ["LogisticRegression_two_class", "LDA", "KNN", "CART", "NB", "AB", "RFC", "StaticMom"]
     meta_labeling_models: 

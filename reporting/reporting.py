@@ -1,7 +1,7 @@
 from reporting.wandb import send_report_to_wandb
 import pandas as pd
 from utils.helpers import weighted_average
-from config.config import Config 
+from config.types import Config 
 
 def report_results(results:pd.DataFrame, all_predictions:pd.DataFrame, config: Config, wandb, sweep: bool, project_name:str):
 

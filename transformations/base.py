@@ -26,6 +26,3 @@ class Transformation(ABC):
         raise NotImplementedError
     
 
-
-    
-    

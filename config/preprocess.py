@@ -1,16 +1,20 @@
-from config.config import Config, RawConfig
+from .types import Config, RawConfig
 from utils.helpers import flatten
 from feature_extractors.feature_extractor_presets import presets as feature_extractor_presets
-from models.model_map import get_model_map
+from models.model_map import get_model
 from data_loader.collections import data_collections
-
+from labeling.eventfilters_map import eventfilters_map
+from labeling.labellers_map import labellers_map
 
 def preprocess_config(raw_config: RawConfig) -> Config:
     config_dict = vars(raw_config)
     config_dict = __preprocess_model_config(config_dict)
     config_dict = __preprocess_feature_extractors_config(config_dict)
     config_dict = __preprocess_data_collections_config(config_dict)
+    config_dict = __preprocess_event_filter_config(config_dict)
+    config_dict = __preprocess_event_labeller_config(config_dict)
 
+    config_dict['no_of_classes'] = 'two'
     config = Config(**config_dict)
     validate_config(config)
     return config
@@ -24,17 +28,15 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
     return data_dict
 
 def __preprocess_model_config(model_config:dict) -> dict:
-    model_map = get_model_map(model_config)
-    model_config['primary_models'] = [(model_name, model_map['primary_models'][model_name]) for model_name in model_config['primary_models']]
+    model_config['primary_models'] = [(model_name, get_model(model_name)) for model_name in model_config['primary_models']]
     if len(model_config['meta_labeling_models']) > 0:
-        model_config['meta_labeling_models'] = [(model_name, model_map['primary_models'][model_name]) for model_name in  model_config['meta_labeling_models']]
+        model_config['meta_labeling_models'] = [(model_name, get_model(model_name)) for model_name in  model_config['meta_labeling_models']]
     if model_config['ensemble_model'] is not None:
-        model_config['ensemble_model'] = (model_config['ensemble_model'], model_map['ensemble_models'][model_config['ensemble_model']])
+        model_config['ensemble_model'] = (model_config['ensemble_model'], get_model(model_config['ensemble_model']))
 
     return model_config
 
 def __preprocess_data_collections_config(data_dict: dict) -> dict:
-    data_dict = data_dict.copy()
     keys = ['assets', 'other_assets', 'exogenous_data']
     for key in keys:
         preset_names = data_dict[key]
@@ -44,6 +46,14 @@ def __preprocess_data_collections_config(data_dict: dict) -> dict:
     data_dict['target_asset'] = target_asset
     return data_dict
 
+def __preprocess_event_filter_config(data_dict: dict) -> dict:
+    data_dict['event_filter'] = eventfilters_map[data_dict['event_filter']]
+    return data_dict
+
+def __preprocess_event_labeller_config(data_dict: dict) -> dict:
+    data_dict['labeling'] = labellers_map[data_dict['labeling']]
+    return data_dict
+    
 
 def validate_config(config: Config):
     # We need to make sure there's only one output from the pipeline

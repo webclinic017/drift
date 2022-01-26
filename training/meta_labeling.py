@@ -5,14 +5,14 @@ import pandas as pd
 from models.base import Model
 from reporting.types import Reporting
 from typing import Union, Optional
-from config.config import Config
+from config.types import Config
 
 def train_meta_labeling_model(
                             target_asset: str,
                             X: pd.DataFrame,
                             input_predictions: pd.Series,
                             y: pd.Series,
-                            target_returns: pd.Series,
+                            forward_returns: pd.Series,
                             models: list[tuple[str, Model]],
                             config: Config,
                             model_suffix: str,
@@ -30,7 +30,7 @@ def train_meta_labeling_model(
         ticker_to_predict = "prediction_correct",
         X = meta_X,
         y = meta_y,
-        target_returns = target_returns,
+        forward_returns = forward_returns,
         models = models,
         expanding_window = config.expanding_window_meta_labeling,
         sliding_window_size = config.sliding_window_size_meta_labeling,
@@ -52,7 +52,7 @@ def train_meta_labeling_model(
 
     meta_result = evaluate_predictions(
         model_name = "Meta",
-        target_returns = target_returns,
+        forward_returns = forward_returns,
         y_pred = avg_predictions_with_sizing,
         y_true = y,
         no_of_classes = 'two',

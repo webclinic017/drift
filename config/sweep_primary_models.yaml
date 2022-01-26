@@ -34,11 +34,7 @@ parameters:
       value: 'minmax'
     no_of_classes:
       value: 'two'
-    forecasting_horizon: 
-      value: 1
     load_non_target_asset: 
-      value: True
-    log_returns: 
       value: True
     primary_models: 
       values: [['LogisticRegression_two_class'], ['SVC'], ['LDA'], ['KNN'], ['CART'], ['MNB'], ['NB'], ['AB'], ['RFC'], ['XGB_two_class'], ['LGBM']]

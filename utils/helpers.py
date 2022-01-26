@@ -3,9 +3,6 @@ import numpy as np
 import os
 import string
 import random
-from typing import Union
-from config.config import Config
-
 
 def get_files_from_dir(path: str) -> list[str]:
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
@@ -19,10 +16,7 @@ def get_first_valid_return_index(series: pd.Series) -> int:
         return 0
     return nested_result[0]
 
-def has_enough_samples_to_train(X: pd.DataFrame, y: pd.Series, config: Config) -> bool:
-    first_valid_index = get_first_valid_return_index(X.iloc[:,0])
-    samples_to_train = len(y) - first_valid_index
-    return samples_to_train > config.sliding_window_size_base + config.sliding_window_size_meta_labeling + 100
+
 
 def flatten(list_of_lists: list) -> list:
     return [item for sublist in list_of_lists for item in sublist]
@@ -38,8 +32,6 @@ def weighted_average(df: pd.DataFrame, weights_source: str) -> pd.Series:
         mean_df.loc[i] = (row * weights).sum() / df.loc[weights_source].sum()
 
     return mean_df
-
-def deduplicate_indexes(df: pd.DataFrame) -> pd.DataFrame: return df[~df.index.duplicated(keep='last')]
 
 def drop_columns_if_exist(df: pd.DataFrame, columns: list) -> pd.DataFrame:
     for column in columns:

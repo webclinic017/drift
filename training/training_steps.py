@@ -7,13 +7,13 @@ from training.meta_labeling import train_meta_labeling_model
 
 from reporting.types import Reporting
 from typing import Union, Optional
-from config.config import Config 
+from config.types import Config 
 
 
 def primary_step(
                 X: pd.DataFrame,
                 y: pd.Series,
-                target_returns: pd.Series,
+                forward_returns: pd.Series,
                 config: Config,
                 reporting: Reporting,
                 from_index: Optional[pd.Timestamp],
@@ -26,7 +26,7 @@ def primary_step(
         ticker_to_predict = config.target_asset[1],
         X = X,
         y = y,
-        target_returns = target_returns,
+        forward_returns = forward_returns,
         models = config.primary_models,
         expanding_window = config.expanding_window_base,
         sliding_window_size = config.sliding_window_size_base,
@@ -50,7 +50,7 @@ def primary_step(
                 X = X,
                 input_predictions= primary_model_predictions,
                 y = y,
-                target_returns = target_returns,
+                forward_returns = forward_returns,
                 model_suffix = 'meta',
                 models = config.meta_labeling_models,
                 config = config,
@@ -75,7 +75,7 @@ def secondary_step(
                 X:pd.DataFrame,
                 y:pd.Series,
                 current_predictions:pd.DataFrame,
-                target_returns:pd.Series,
+                forward_returns:pd.Series,
                 config: Config,
                 reporting: Reporting,
                 from_index: Optional[pd.Timestamp],
@@ -89,7 +89,7 @@ def secondary_step(
             ticker_to_predict = config.target_asset[1],
             X = current_predictions,
             y = y,
-            target_returns = target_returns,
+            forward_returns = forward_returns,
             models = [config.ensemble_model],
             expanding_window = False,
             sliding_window_size = 1,
@@ -117,7 +117,7 @@ def secondary_step(
                 X = X,
                 input_predictions= ensemble_predictions,
                 y = y,
-                target_returns = target_returns,
+                forward_returns = forward_returns,
                 models = config.meta_labeling_models,
                 config = config,
                 model_suffix = 'ensemble',
