@@ -23,8 +23,5 @@ class StaticNaiveModel(Model):
     def clone(self) -> StaticNaiveModel:
         return self
 
-    def get_name(self) -> str:
-        return 'static_naive'
-
     def initialize_network(self, input_dim:int, output_dim:int):
         pass

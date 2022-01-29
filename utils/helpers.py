@@ -3,6 +3,7 @@ import numpy as np
 import os
 import string
 import random
+from itertools import dropwhile
 
 def get_files_from_dir(path: str) -> list[str]:
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) and not f.startswith('.')]
@@ -16,6 +17,8 @@ def get_first_valid_return_index(series: pd.Series) -> int:
         return 0
     return nested_result[0]
 
+def get_last_non_na_index(series: pd.Series, index: int) -> int:
+    return next(dropwhile(lambda x: pd.isna(x[1]), enumerate(reversed(series[:index+1]))))[0]
 
 
 def flatten(list_of_lists: list) -> list:

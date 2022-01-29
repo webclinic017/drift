@@ -5,6 +5,8 @@ from utils.metrics import probabilistic_sharpe_ratio, sharpe_ratio
 from utils.helpers import get_first_valid_return_index
 import pandas as pd
 import numpy as np
+from data_loader.types import ForwardReturnSeries, ySeries
+from training.types import Stats, WeightsSeries
 
 def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.002) -> pd.Series:
     delta_pos = signal.diff(1).abs().fillna(0.)
@@ -12,7 +14,7 @@ def backtest(returns: pd.Series, signal: pd.Series, transaction_cost = 0.002) ->
     return (signal * returns) - costs
 
 
-def __preprocess(forward_returns: pd.Series, y_pred: pd.Series, y_true: pd.Series, no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
+def __preprocess(forward_returns: ForwardReturnSeries, y_pred: pd.Series, y_true: pd.Series, no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'], discretize: bool) -> pd.DataFrame:
     y_pred.name = 'y_pred'
     forward_returns.name = 'forward_returns'
     df = pd.concat([y_pred, forward_returns],axis=1).dropna()
@@ -27,14 +29,13 @@ def __preprocess(forward_returns: pd.Series, y_pred: pd.Series, y_true: pd.Serie
     return df
 
 def evaluate_predictions(
-                        model_name: str,
-                        forward_returns: pd.Series,
-                        y_pred: pd.Series,
-                        y_true: pd.Series,
+                        forward_returns: ForwardReturnSeries,
+                        y_pred: WeightsSeries,
+                        y_true: ySeries,
                         no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                         print_results: bool,
                         discretize: bool = False,
-                        ) -> pd.Series:
+                        ) -> Stats:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
     evaluate_from = max(get_first_valid_return_index(forward_returns), get_first_valid_return_index(y_pred))
     
@@ -43,42 +44,41 @@ def evaluate_predictions(
 
     df = __preprocess(forward_returns, y_pred, y_true, no_of_classes, discretize)
     
-    scorecard = pd.Series()
+    scorecard = dict()
     
     def count_non_zero(series: pd.Series) -> int:
         return len(series[series != 0])
     no_of_samples = count_non_zero(df.y_pred)
-    scorecard.loc['no_of_samples'] = no_of_samples
+    scorecard['no_of_samples'] = no_of_samples
     sharpe = sharpe_ratio(df.result)
-    scorecard.loc['sharpe'] = sharpe
+    scorecard['sharpe'] = sharpe
     benchmark_sharpe = sharpe_ratio(df.forward_returns)
-    scorecard.loc['benchmark_sharpe'] = benchmark_sharpe
-    scorecard.loc['prob_sharpe'] = probabilistic_sharpe_ratio(sharpe, benchmark_sharpe, no_of_samples)
-    scorecard.loc['sortino'] = sortino(df.result)
-    scorecard.loc['skew'] = skew(df.result)
+    scorecard['benchmark_sharpe'] = benchmark_sharpe
+    scorecard['prob_sharpe'] = probabilistic_sharpe_ratio(sharpe, benchmark_sharpe, no_of_samples)
+    scorecard['sortino'] = sortino(df.result)
+    scorecard['skew'] = skew(df.result)
 
     labels = [1, -1] if no_of_classes == 'two' else [1, -1, 0]
     avg_type = 'weighted' if no_of_classes == 'two' else 'macro'
 
     if discretize == True:
-        scorecard.loc['accuracy'] = accuracy_score(df.sign_true, df.sign_pred) * 100
-        scorecard.loc['recall'] = recall_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
-        scorecard.loc['precision'] = precision_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
-        scorecard.loc['f1_score'] = f1_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
-    scorecard.loc['edge'] = df.result.mean()
-    scorecard.loc['noise'] = df.y_pred.diff().abs().mean()
-    scorecard.loc['edge_to_noise'] = scorecard.loc['edge'] / scorecard.loc['noise']
+        scorecard['accuracy'] = accuracy_score(df.sign_true, df.sign_pred) * 100
+        scorecard['recall'] = recall_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+        scorecard['precision'] = precision_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+        scorecard['f1_score'] = f1_score(df.sign_true, df.sign_pred, labels = labels, average=avg_type)
+    scorecard['edge'] = df.result.mean()
+    scorecard['noise'] = df.y_pred.diff().abs().mean()
+    scorecard['edge_to_noise'] = scorecard['edge'] / (scorecard['noise'] + 0.00001)
     
     if discretize == True:
         for index, row in df.sign_true.value_counts().iteritems():
-            scorecard.loc['sign_true_ratio_' + str(index)] = row / len(df.sign_true)
+            scorecard['sign_true_ratio_' + str(index)] = row / len(df.sign_true)
         
         for index, row in df.sign_pred.value_counts().iteritems():
-            scorecard.loc['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
+            scorecard['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
 
-    scorecard = scorecard.round(3)
+    scorecard = {k: round(float(v), 3) for k, v in scorecard.items()}
     if print_results:        
-        print("Model name: ", model_name)
         print(scorecard)
     return scorecard  
 

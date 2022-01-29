@@ -36,7 +36,3 @@ class LightningNeuralNetModel(Model):
 
     def initialize_network(self, input_dim:int, output_dim:int):
         self.model.initialize_network(input_dim, output_dim)
-
-    def get_name(self) -> str:
-        return self.model.__class__.__name__
-    

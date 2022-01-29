@@ -9,13 +9,13 @@ from labeling.types import EventFilter, EventLabeller
 
 # RawConfig is needed to ensure we can declare config presets here with static typing, we then convert it to Config
 class RawConfig(BaseModel):
-    primary_models_meta_labeling: bool
+    directional_models_meta: bool
     dimensionality_reduction: bool
     n_features_to_select: int
     expanding_window_base: bool
-    expanding_window_meta_labeling: bool
+    expanding_window_meta: bool
     sliding_window_size_base: int
-    sliding_window_size_meta_labeling: int
+    sliding_window_size_meta: int
     retrain_every: int
     scaler: Literal['normalize', 'minmax', 'standardize']
 
@@ -30,19 +30,18 @@ class RawConfig(BaseModel):
     event_filter: Literal['none', 'cusum_vol', 'cusum_fixed']
     labeling: Literal['two_class', 'three_class_balanced', 'three_class_imbalanced']
 
-    primary_models: list[str]
-    meta_labeling_models: list[str]
-    ensemble_model: Optional[str]
+    directional_models: list[str]
+    meta_models: list[str]
 
 
 class Config(BaseModel):
-    primary_models_meta_labeling: bool
+    directional_models_meta: bool
     dimensionality_reduction: bool
     n_features_to_select: int
     expanding_window_base: bool
-    expanding_window_meta_labeling: bool
+    expanding_window_meta: bool
     sliding_window_size_base: int
-    sliding_window_size_meta_labeling: int
+    sliding_window_size_meta: int
     retrain_every: int
     scaler: Literal['normalize', 'minmax', 'standardize']
 
@@ -58,9 +57,8 @@ class Config(BaseModel):
     labeling: EventLabeller
     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
 
-    primary_models: list[tuple[str, Model]]
-    meta_labeling_models: list[tuple[str, Model]]
-    ensemble_model: Optional[tuple[str, Model]]
+    directional_models: list[Model]
+    meta_models: list[Model]
 
     class Config:
         arbitrary_types_allowed = True

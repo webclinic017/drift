@@ -27,9 +27,6 @@ class XGBoostModel(Model):
     
     def clone(self) -> XGBoostModel:
         return XGBoostModel(clone(self.model))
-
-    def get_name(self) -> str:
-        return self.model.__class__.__name__
     
     def initialize_network(self, input_dim:int, output_dim:int):
         pass

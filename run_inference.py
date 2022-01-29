@@ -6,24 +6,23 @@ from run_pipeline import run_pipeline
 from config.types import Config, RawConfig
 from config.presets import get_dev_config, get_default_ensemble_config, get_lightweight_ensemble_config
 from labeling.process import label_data
-from typing import Callable, Optional
-from reporting.types import Reporting
-from training.training_steps import primary_step, secondary_step
 import pandas as pd
-import warnings
 
-def run_inference(preload_models:bool, raw_config: RawConfig):
+from training.directional_training import train_directional_models
+from training.bet_sizing import bet_sizing_with_meta_models
+from training.ensemble import ensemble_weights
+from training.types import PipelineOutcome
+
+def run_inference(preload_models:bool, fallback_raw_config: RawConfig):
     if preload_models:
-        all_models, config = load_models(None)
+        pipeline_outcome, config = load_models(None)
     else:
-        all_models, config, _, _, _ = run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, raw_config=raw_config)
+        pipeline_outcome, config = run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, raw_config=fallback_raw_config)
     
-    __inference(config, all_models.primary, all_models.secondary)
+    __inference(config, pipeline_outcome)
 
 
-def __inference(config: Config, primary_models: Optional[Reporting.Training_Step], secondary_models: Optional[Reporting.Training_Step]):
-    reporting = Reporting()
-    asset = config.target_asset
+def __inference(config: Config, pipeline_outcome: PipelineOutcome):
     
     # 1. Load data, check for validity and process data
     X, returns, forward_returns = load_data(
@@ -42,19 +41,23 @@ def __inference(config: Config, primary_models: Optional[Reporting.Training_Step
 
     inference_from: pd.Timestamp = X.index[len(X.index) - 2]
 
-    # 2. Train a Primary model with optional metalabeling for each asset
-    training_step_primary, current_predictions = primary_step(X, y, forward_returns, config, reporting, from_index = inference_from, preloaded_training_step = primary_models)
+        # 2. Filter for significant events when we want to trade, and label data
+    events, X, y, forward_returns = label_data(config.event_filter, config.labeling, X, returns, forward_returns)
 
-    # 3. Train an Ensemble model with optional metalabeling for each asset
-    if secondary_models is not None:
-        warnings.warn("Secondary models are not specified.")
-        training_step_secondary = secondary_step(X, y, current_predictions, forward_returns, config, reporting, from_index = inference_from, preloaded_training_step = secondary_models)
+    # 3. Train directional models
+    directional_training_outcome = train_directional_models(X, y, forward_returns, config, config.directional_models, from_index = inference_from, preloaded_training_step = pipeline_outcome.directional_training)
+    
+    # 4. Run bet sizing on primary model's output
+    bet_sizing_outcomes = [bet_sizing_with_meta_models(X, training_outcome.predictions, y, forward_returns, config.meta_models, config, 'meta', from_index = inference_from, transformations_over_time = preloaded_outcome.meta_transformations, preloaded_models = [b.model_over_time for b in preloaded_outcome.meta_training]) for training_outcome, preloaded_outcome in zip(directional_training_outcome.training, pipeline_outcome.bet_sizing)]
 
-    # 4. Save the models
-    reporting.asset = Reporting.Asset(name=asset[1], primary=training_step_primary, secondary=training_step_secondary)
+    # 4. Ensemble weights
+    ensemble_outcome = ensemble_weights([o.weights for o in bet_sizing_outcomes], forward_returns, y, config.no_of_classes)
 
-    return reporting
+    # 5. (Optional) Additional bet sizing on top of the ensembled weights
+    ensemble_bet_sizing_outcome = bet_sizing_with_meta_models(X, ensemble_outcome.weights, y, forward_returns, config.meta_models, config, 'ensemble', from_index = inference_from, transformations_over_time = pipeline_outcome.secondary_bet_sizing.meta_transformations, preloaded_models= [b.model_over_time for b in pipeline_outcome.secondary_bet_sizing.meta_training]) if len(config.meta_models) > 0 else None
+    
+    return PipelineOutcome(directional_training_outcome, bet_sizing_outcomes, ensemble_outcome, ensemble_bet_sizing_outcome)
 
 
 if __name__ == '__main__':
-    run_inference(preload_models=True, raw_config=get_lightweight_ensemble_config())
+    run_inference(preload_models=True, fallback_raw_config=get_lightweight_ensemble_config())

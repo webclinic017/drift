@@ -28,11 +28,9 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
     return data_dict
 
 def __preprocess_model_config(model_config:dict) -> dict:
-    model_config['primary_models'] = [(model_name, get_model(model_name)) for model_name in model_config['primary_models']]
-    if len(model_config['meta_labeling_models']) > 0:
-        model_config['meta_labeling_models'] = [(model_name, get_model(model_name)) for model_name in  model_config['meta_labeling_models']]
-    if model_config['ensemble_model'] is not None:
-        model_config['ensemble_model'] = (model_config['ensemble_model'], get_model(model_config['ensemble_model']))
+    model_config['directional_models'] = [get_model(model_name) for model_name in model_config['directional_models']]
+    if len(model_config['meta_models']) > 0:
+        model_config['meta_models'] = [get_model(model_name) for model_name in  model_config['meta_models']]
 
     return model_config
 
@@ -57,9 +55,9 @@ def __preprocess_event_labeller_config(data_dict: dict) -> dict:
 
 def validate_config(config: Config):
     # We need to make sure there's only one output from the pipeline
-    # If level-2 model is there, we need more than one level-1 models to train
-    if len(config.meta_labeling_models) > 1: assert len(config.primary_models) > 0
+    # If meta model is there, we need more than one directional models to train
+    if len(config.meta_models) > 1: assert len(config.directional_models) > 0
     # If there's no level-2 model, we need to have only one level-1 model
-    if len(config.meta_labeling_models) == 0: assert len(config.primary_models) == 1
+    if len(config.meta_models) == 0: assert len(config.directional_models) == 1
 
 

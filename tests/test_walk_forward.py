@@ -11,16 +11,16 @@ def __generate_incremental_test_data(no_of_rows) -> tuple[pd.DataFrame, pd.Serie
     
     no_columns = 6
     X = [[row] * no_columns for row in range(no_of_rows)]
-    assert X[0][0] == 0
     assert X[1][0] == 1
     assert X[2][0] == 2
     assert X[3][0] == 3
+    assert X[4][0] == 4
     X = pd.DataFrame(X)
 
     y = [row+1 for row in range(no_of_rows)]
-    assert y[0] == 1
     assert y[1] == 2
     assert y[2] == 3
+    assert y[3] == 4
     y = pd.Series(y)
 
     return X, y
@@ -52,9 +52,6 @@ class IncrementingStubModel(Model):
 
     def clone(self):
         return self
-
-    def get_name(self) -> str:
-        return 'test'
     
     def initialize_network(self, input_dim: int, output_dim: int):
         pass
@@ -63,29 +60,29 @@ def test_walk_forward_train_test():
     X, y = __generate_incremental_test_data(no_of_rows)
 
     window_length = 10
+    retrain_every = 10
 
     model = IncrementingStubModel(window_length = window_length)
 
-    model_over_time, transformations_over_time = walk_forward_train(
-        model_name='test',
+    model_over_time = walk_forward_train(
         model=model,
         X=X,
         y=y,
         forward_returns=y,
         expanding_window=False,
         window_size=window_length,
-        retrain_every=10,
+        retrain_every=retrain_every,
         from_index=None,
-        transformations=[],
-        preloaded_transformations=None
+        transformations_over_time=[],
     )
     predictions, _ = walk_forward_inference(
         model_name='test',
         model_over_time=model_over_time,
-        transformations_over_time=transformations_over_time,
+        transformations_over_time=[],
         X=X,
         expanding_window=False,
         window_size=window_length,
+        retrain_every=retrain_every,
         from_index=None,
     )
     

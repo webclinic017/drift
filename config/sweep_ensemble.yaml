@@ -6,7 +6,7 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
-    primary_models_meta_labeling:
+    directional_models_meta:
       value: True
     assets:
       value: ['daily_crypto']
@@ -16,11 +16,11 @@ parameters:
       value: ['daily_glassnode']
     expanding_window_base:
       value: True
-    expanding_window_meta_labeling:
+    expanding_window_meta:
       value: True
     sliding_window_size_base: 
       value: 380
-    sliding_window_size_meta_labeling: 
+    sliding_window_size_meta: 
       values: [250, 300, 380]
       distribution: categorical
     n_features_to_select:
@@ -36,13 +36,13 @@ parameters:
       value: 'two'
     load_non_target_asset: 
       value: True
-    primary_models: 
+    directional_models: 
       distribution: categorical
       values:
       - ["LDA", "LogisticRegression_two_class", "KNN", "SVC", "CART", "NB", "AB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
       - ["LogisticRegression_two_class", "LDA", "NB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
       - ["LogisticRegression_two_class", "LDA", "LGBM", "RFC", "XGB_two_class"]
-    meta_labeling_models: 
+    meta_models: 
       value: ["LGBM", "LogisticRegression_two_class"]
     own_features:
       value: ['date_days', 'level_2', 'lags_up_to_5']

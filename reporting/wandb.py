@@ -2,6 +2,7 @@ import pandas as pd
 from config.types import RawConfig
 from typing import Optional
 from utils.helpers import weighted_average
+from training.types import Stats
 
 def launch_wandb(project_name:str, default_config: RawConfig, sweep:bool=False) -> Optional[object]:
     from wandb_setup import get_wandb
@@ -28,14 +29,13 @@ def override_config_with_wandb_values(wandb: Optional[object], raw_config: RawCo
 
     return RawConfig(**config_dict)
 
-def send_report_to_wandb(results: pd.DataFrame, wandb:Optional[object]):
+def send_report_to_wandb(stats: Stats, wandb:Optional[object]):
     if wandb is None: return
 
     run = wandb.run
     run.save()
 
-    mean_results = weighted_average(results, 'no_of_samples')
-    for key, value in mean_results.iteritems():
+    for key, value in stats.items():
         run.log({ key: value })
 
     run.finish()

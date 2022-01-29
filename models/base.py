@@ -5,6 +5,7 @@ import numpy as np
 
 class Model(ABC):
 
+    name: str = ""
     method: Literal["regression", "classification"]
     data_transformation: Literal["transformed", "original"]
     only_column: Optional[str]
@@ -21,10 +22,6 @@ class Model(ABC):
 
     @abstractmethod
     def clone(self) -> Model:
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_name(self) -> str:
         raise NotImplementedError
     
     @abstractmethod

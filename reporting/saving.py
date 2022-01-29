@@ -1,17 +1,15 @@
 import pickle
 import datetime
 from config.types import Config
-from typing import Optional, Union
+from typing import Optional
 import os
 import warnings
-from reporting.types import Reporting
+from training.types import PipelineOutcome
 
-
-
-def save_models(all_models: Reporting.Asset, config: Config) -> None:
+def save_models(pipeline_outcome: PipelineOutcome, config: Config) -> None:
     dict_for_pickle = dict()
     dict_for_pickle['config'] = config
-    dict_for_pickle['all_models'] = all_models
+    dict_for_pickle['pipeline_outcome'] = pipeline_outcome
     
     date_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
     
@@ -22,7 +20,7 @@ def save_models(all_models: Reporting.Asset, config: Config) -> None:
     pickle.dump( dict_for_pickle, open( "output/models/{}.p".format(date_string), "wb" ) )
 
 
-def load_models(file_name:Union[str, None]) -> tuple[Reporting.Asset, Config]:
+def load_models(file_name: Optional[str]) -> tuple[PipelineOutcome, Config]:
 
     if file_name is None: 
         warnings.warn("No file name provided, will load latest models and configurations.")
@@ -34,7 +32,7 @@ def load_models(file_name:Union[str, None]) -> tuple[Reporting.Asset, Config]:
     packacked_dict = pickle.load( open( "output/models/{}".format(file_name), "rb" ) )
     
     config = packacked_dict.pop("config", None)    
-    all_models = packacked_dict.pop("all_models", None)    
+    pipeline_outcome = packacked_dict.pop("pipeline_outcome", None)    
     
-    return all_models, config
+    return pipeline_outcome, config
 

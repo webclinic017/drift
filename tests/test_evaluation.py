@@ -53,9 +53,7 @@ class EvenOddStubModel(Model):
 
     def clone(self):
         return self
-    
-    def get_name(self) -> str:
-        return 'test'
+
 
     def initialize_network(self, input_dim: int, output_dim: int):
         pass
@@ -65,28 +63,28 @@ def test_evaluation():
     X, y = __generate_even_odd_test_data(no_of_rows)
     
     window_length = 10
+    retrain_every = 10
 
     model = EvenOddStubModel(window_length = window_length)
     
-    model_over_time, transformations_over_time = walk_forward_train(
-        model_name='test',
+    model_over_time = walk_forward_train(
         model=model,
         X=X,
         y=y,
         forward_returns=y,
         expanding_window=False,
         window_size=window_length,
-        retrain_every=10,
+        retrain_every=retrain_every,
         from_index=None,
-        transformations=[],
-        preloaded_transformations=None)
+        transformations_over_time=[])
     predictions, _ = walk_forward_inference(
         model_name='test',
         model_over_time=model_over_time,
-        transformations_over_time=transformations_over_time,
+        transformations_over_time=[],
         X=X,
         expanding_window=False,
         window_size=window_length,
+        retrain_every = retrain_every,
         from_index=None,
     )
     
@@ -98,7 +96,6 @@ def test_evaluation():
     processed_predictions_to_match_returns = predictions * 0.1
 
     result = evaluate_predictions(
-        model_name='test',
         forward_returns=fake_forward_returns,
         y_pred=processed_predictions_to_match_returns,
         y_true=y,
