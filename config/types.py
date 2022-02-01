@@ -57,6 +57,8 @@ class Config(BaseModel):
     labeling: EventLabeller
     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
 
+    mode: Literal['training', 'inference']
+
     directional_models: list[Model]
     meta_models: list[Model]
 

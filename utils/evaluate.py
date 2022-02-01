@@ -33,7 +33,6 @@ def evaluate_predictions(
                         y_pred: WeightsSeries,
                         y_true: ySeries,
                         no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
-                        print_results: bool,
                         discretize: bool = False,
                         ) -> Stats:
     # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
@@ -78,8 +77,6 @@ def evaluate_predictions(
             scorecard['sign_pred_ratio_' + str(index)] = row / len(df.sign_pred)
 
     scorecard = {k: round(float(v), 3) for k, v in scorecard.items()}
-    if print_results:        
-        print(scorecard)
     return scorecard  
 
 

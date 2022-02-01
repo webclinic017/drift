@@ -100,7 +100,6 @@ def test_evaluation():
         y_pred=processed_predictions_to_match_returns,
         y_true=y,
         no_of_classes='two',
-        print_results = False,
         discretize=True
     )
 

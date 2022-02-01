@@ -15,6 +15,7 @@ def preprocess_config(raw_config: RawConfig) -> Config:
     config_dict = __preprocess_event_labeller_config(config_dict)
 
     config_dict['no_of_classes'] = 'two'
+    config_dict['mode'] = 'training'
     config = Config(**config_dict)
     validate_config(config)
     return config

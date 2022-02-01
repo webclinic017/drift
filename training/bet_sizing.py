@@ -62,27 +62,31 @@ def bet_sizing_with_meta_models(
         from_index = from_index,
         no_of_classes = 'two',
         level = 'meta',
-        print_results = False,
+        output_stats = config.mode == 'training',
         transformations_over_time = transformations_over_time,
         models_over_time = preloaded_models,
     )
 
     # Ensemble predictions if necessary
     if len(models) > 1:
-        # meta_predictions = pd.concat([outcome.predictions for outcome in meta_outcomes]).mean(axis = 1)
+        meta_predictions = pd.concat([outcome.predictions for outcome in meta_outcomes], axis = 1).mean(axis = 1).apply(discretize_threeway_threshold(0.5))
         bet_size = pd.concat([outcome.probabilities[outcome.probabilities.columns[1::2]] for outcome in meta_outcomes], axis = 1).mean(axis = 1)
     else:
+        meta_predictions = meta_outcomes[0].predictions
         bet_size = meta_outcomes[0].probabilities.iloc[:,1]
-    avg_predictions_with_sizing = input_predictions * bet_size
+    avg_predictions_with_sizing = input_predictions * meta_predictions * bet_size
 
-    stats = evaluate_predictions(
-        forward_returns = forward_returns,
-        y_pred = avg_predictions_with_sizing,
-        y_true = y,
-        no_of_classes = 'two',
-        print_results = True,
-        discretize=False
-    )
+    if config.mode == 'training':
+        stats = evaluate_predictions(
+            forward_returns = forward_returns,
+            y_pred = avg_predictions_with_sizing,
+            y_true = y,
+            no_of_classes = 'three-balanced',
+            discretize=False
+        )
+        print(stats)
+    else:
+        stats = None
     model_id = "model_" + config.target_asset[1] + "_" + model_suffix
 
     return BetSizingWithMetaOutcome(model_id, meta_outcomes, transformations_over_time, avg_predictions_with_sizing, stats)

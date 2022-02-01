@@ -17,11 +17,11 @@ def train_models(
                 from_index: Optional[pd.Timestamp],
                 no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                 level: str,
-                print_results: bool,
+                output_stats: bool,
                 transformations_over_time: TransformationsOverTime,
                 models_over_time: Optional[list[ModelOverTime]]
     ) -> list[TrainingOutcome]:
-    return [train_model(ticker_to_predict, X, y, forward_returns, model, expanding_window, sliding_window_size, retrain_every, from_index, no_of_classes, level, print_results, transformations_over_time, models_over_time[index] if models_over_time else None) for index, model in enumerate(models)]
+    return [train_model(ticker_to_predict, X, y, forward_returns, model, expanding_window, sliding_window_size, retrain_every, from_index, no_of_classes, level, output_stats, transformations_over_time, models_over_time[index] if models_over_time else None) for index, model in enumerate(models)]
 
 
 def train_model(
@@ -36,7 +36,7 @@ def train_model(
                 from_index: Optional[pd.Timestamp],
                 no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
                 level: str,
-                print_results: bool,
+                output_stats: bool,
                 transformations_over_time: TransformationsOverTime,
                 model_over_time: Optional[ModelOverTime]
     ) -> TrainingOutcome:
@@ -73,13 +73,15 @@ def train_model(
     )
     
     assert len(predictions) == len(y)
-    stats = evaluate_predictions(
-        forward_returns = forward_returns,
-        y_pred = predictions,
-        y_true = y,
-        no_of_classes=no_of_classes,
-        print_results = print_results,
-        discretize=True
-    )
+    if output_stats:
+        stats = evaluate_predictions(
+            forward_returns = forward_returns,
+            y_pred = predictions,
+            y_true = y,
+            no_of_classes=no_of_classes,
+            discretize=True
+        )
+    else:
+        stats = None
 
     return TrainingOutcome(model_id, predictions, probabilities, stats, model_over_time)

@@ -16,13 +16,13 @@ class TrainingOutcome:
     model_id: str
     predictions: PredictionsSeries
     probabilities: ProbabilitiesDataFrame
-    stats: Stats
+    stats: Optional[Stats]
     model_over_time: ModelOverTime
 
 @dataclass
 class EnsembleOutcome:
     weights: WeightsSeries
-    stats: Stats
+    stats: Optional[Stats]
 
 @dataclass
 class BetSizingWithMetaOutcome:
@@ -30,7 +30,7 @@ class BetSizingWithMetaOutcome:
     meta_training: list[TrainingOutcome]
     meta_transformations: TransformationsOverTime
     weights: WeightsSeries
-    stats: Stats
+    stats: Optional[Stats]
 
 @dataclass
 class DirectionalTrainingOutcome:
@@ -47,5 +47,5 @@ class PipelineOutcome:
     def get_output_weights(self) -> WeightsSeries:
         return self.secondary_bet_sizing.weights if self.secondary_bet_sizing else self.ensemble.weights
 
-    def get_output_stats(self) -> Stats:
+    def get_output_stats(self) -> Optional[Stats]:
         return self.secondary_bet_sizing.stats if self.secondary_bet_sizing else self.ensemble.stats

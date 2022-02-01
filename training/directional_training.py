@@ -1,6 +1,6 @@
 import pandas as pd
 
-from .types import DirectionalTrainingOutcome
+from .types import DirectionalTrainingOutcome, TrainingOutcome
 from training.train_model import train_model
 from training.walk_forward import walk_forward_process_transformations
 
@@ -42,7 +42,12 @@ def train_directional_models(
     else:
         transformations_over_time = preloaded_training_step.transformations
 
-    training_outcomes = [train_model(
+    def print_stats(outcome: TrainingOutcome) -> TrainingOutcome:
+        if config.mode == 'training':
+            print(outcome.stats)
+        return outcome
+
+    training_outcomes = [print_stats(train_model(
         ticker_to_predict = config.target_asset[1],
         X = X,
         y = y,
@@ -54,9 +59,9 @@ def train_directional_models(
         from_index = from_index,
         no_of_classes = config.no_of_classes,
         level = 'primary',
-        print_results= True,
+        output_stats= config.mode == 'training',
         transformations_over_time = transformations_over_time,
         model_over_time = preloaded_training_step.training[index].model_over_time if preloaded_training_step else None
-    ) for index, model in enumerate(models)]
+    )) for index, model in enumerate(models)]
     return DirectionalTrainingOutcome(training_outcomes, transformations_over_time)
 

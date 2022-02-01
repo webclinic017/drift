@@ -69,7 +69,7 @@ def __run_training(config: Config) -> PipelineOutcome:
     bet_sizing_outcomes = [bet_sizing_with_meta_models(X, outcome.predictions, y, forward_returns, config.meta_models, config, 'meta', None, None, None) for outcome in directional_training_outcome.training]
 
     # 4. Ensemble weights
-    ensemble_outcome = ensemble_weights([o.weights for o in bet_sizing_outcomes], forward_returns, y, config.no_of_classes)
+    ensemble_outcome = ensemble_weights([o.weights for o in bet_sizing_outcomes], forward_returns, y, config.no_of_classes, config.mode == 'training')
 
     # 5. (Optional) Additional bet sizing on top of the ensembled weights
     ensemble_bet_sizing_outcome = bet_sizing_with_meta_models(X, ensemble_outcome.weights, y, forward_returns, config.meta_models, config, 'ensemble', None, None, None) if len(config.meta_models) > 0 else None

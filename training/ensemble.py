@@ -9,14 +9,18 @@ def ensemble_weights(
                     forward_returns: ForwardReturnSeries,
                     y: ySeries,
                     no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced'],
+                    output_stats: bool
                 ) -> EnsembleOutcome:
     weights = pd.concat(input_weights, axis=1).mean(axis=1)
-    stats = evaluate_predictions(
-        forward_returns = forward_returns,
-        y_pred = weights,
-        y_true = y,
-        no_of_classes = no_of_classes,
-        print_results = False,
-        discretize = True,
-    )
+    if output_stats:
+        stats = evaluate_predictions(
+            forward_returns = forward_returns,
+            y_pred = weights,
+            y_true = y,
+            no_of_classes = no_of_classes,
+            discretize = True,
+        )
+        print(stats)
+    else:
+        stats = None
     return EnsembleOutcome(weights, stats)

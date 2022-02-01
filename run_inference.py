@@ -19,6 +19,7 @@ def run_inference(preload_models:bool, fallback_raw_config: RawConfig):
     else:
         pipeline_outcome, config = run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, raw_config=fallback_raw_config)
     
+    config.mode = 'inference'
     __inference(config, pipeline_outcome)
 
 
@@ -39,9 +40,9 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
 
     events, X, y, forward_returns = label_data(config.event_filter, config.labeling, X, returns, forward_returns)
 
-    inference_from: pd.Timestamp = X.index[len(X.index) - 2]
+    inference_from: pd.Timestamp = X.index[len(X.index) - 1]
 
-        # 2. Filter for significant events when we want to trade, and label data
+    # 2. Filter for significant events when we want to trade, and label data
     events, X, y, forward_returns = label_data(config.event_filter, config.labeling, X, returns, forward_returns)
 
     # 3. Train directional models
@@ -51,7 +52,7 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
     bet_sizing_outcomes = [bet_sizing_with_meta_models(X, training_outcome.predictions, y, forward_returns, config.meta_models, config, 'meta', from_index = inference_from, transformations_over_time = preloaded_outcome.meta_transformations, preloaded_models = [b.model_over_time for b in preloaded_outcome.meta_training]) for training_outcome, preloaded_outcome in zip(directional_training_outcome.training, pipeline_outcome.bet_sizing)]
 
     # 4. Ensemble weights
-    ensemble_outcome = ensemble_weights([o.weights for o in bet_sizing_outcomes], forward_returns, y, config.no_of_classes)
+    ensemble_outcome = ensemble_weights([o.weights for o in bet_sizing_outcomes], forward_returns, y, config.no_of_classes, config.mode == 'training')
 
     # 5. (Optional) Additional bet sizing on top of the ensembled weights
     ensemble_bet_sizing_outcome = bet_sizing_with_meta_models(X, ensemble_outcome.weights, y, forward_returns, config.meta_models, config, 'ensemble', from_index = inference_from, transformations_over_time = pipeline_outcome.secondary_bet_sizing.meta_transformations, preloaded_models= [b.model_over_time for b in pipeline_outcome.secondary_bet_sizing.meta_training]) if len(config.meta_models) > 0 else None
