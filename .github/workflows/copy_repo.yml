@@ -1,51 +1,42 @@
 name: Copy Repo, Strip Functions and Git Commit
-on: 
+on:
   push:
+    branches:
+      - main
 jobs:
   Copy-Repo-Strip-Functions:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: false
           activate-environment: strip
           environment-file: environment-strip-action.yaml
           python-version: 3.9
-      - uses: iterative/setup-cml@v1
       - name: Run empty function
         shell: bash -l {0}
         run: |
           python -m libcst.tool codemod replace_functions.ReplaceFunctionCommand .
-      - name: Commit and push changes
+      - name: Clone & push to public repo
+        shell: bash -l {0}
+        env:
+          DESTINATION_SSH_PRIVATE_KEY: ${{ secrets.DESTINATION_SSH_PRIVATE_KEY }}
         run: |
-          git config --global user.name "szemyd"
-          git config --global user.email "szemy2@gmail.com"
+          git config --global user.name "bot"
+          git config --global user.email "mark.szulyovszky@gmail.com.com"
           
-          git fetch
-          git push -d origin clean-public
-          git checkout -m -b clean-public
+          cd ..
+          mkdir -p ~/.ssh
+          echo "$DESTINATION_SSH_PRIVATE_KEY" | sed 's/\\n/\n/g' >~/.ssh/dst_rsa
+          chmod 600 ~/.ssh/dst_rsa
+          
+          git clone -c core.sshCommand="/usr/bin/ssh -i ~/.ssh/dst_rsa" git@github.com:applied-exploration/drift.git
+          rsync -aP --exclude=.git/** ./drift-private/* ./drift/
+          
+          cd drift
+          git config core.sshCommand "/usr/bin/ssh -i ~/.ssh/dst_rsa"
           git add -A
-          git commit -m "Stripped functions again"
-          git push -u origin 'clean-public'
-      - name: Git Sync Action
-        uses: wei/git-sync@v3.0.0
-        with:
-          source_repo: "git@github.com:applied-exploration/drift-private.git"
-          source_branch: "clean-public"
-          destination_repo: "git@github.com:applied-exploration/drift.git"
-          destination_branch: "main"
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} # optional
-          source_ssh_private_key: ${{ secrets.SOURCE_SSH_PRIVATE_KEY }} # optional, will override `SSH_PRIVATE_KEY`
-          destination_ssh_private_key:  ${{ secrets.DESTINATION_SSH_PRIVATE_KEY }} # optional, will override `SSH_PRIVATE_KEY`           
-          
+          git commit -m "update"
+          git push -u origin 'main'
