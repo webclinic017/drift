@@ -3,11 +3,11 @@ from .utils import fetch
 
 def create_endpoints_dict(endpoints):
     return {
-        endpoint['path']: {
-            'assets': {asset['symbol']: asset['tags'] for asset in endpoint['assets']},
-            'currencies': endpoint['currencies'],
-            'resolutions': endpoint['resolutions'],
-            'formats': endpoint['formats']
+        endpoint["path"]: {
+            "assets": {asset["symbol"]: asset["tags"] for asset in endpoint["assets"]},
+            "currencies": endpoint["currencies"],
+            "resolutions": endpoint["resolutions"],
+            "formats": endpoint["formats"],
         }
         for endpoint in endpoints
     }
@@ -37,7 +37,9 @@ class Endpoints(metaclass=MetaEndpoints):
 
     @endpoints.setter
     def endpoints(self, api_key):
-        self._endpoints = create_endpoints_dict(fetch('/v2/metrics/endpoints', {'api_key': api_key}))
+        self._endpoints = create_endpoints_dict(
+            fetch("/v2/metrics/endpoints", {"api_key": api_key})
+        )
 
     def query(self, path):
         return self._endpoints[path]

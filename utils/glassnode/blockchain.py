@@ -4,49 +4,50 @@ from .client import GlassnodeClient
 
 class Blockchain:
     """
-        Blockchain class.
+    Blockchain class.
 
-        Methods
-        -------
-        __init__(glassnode_client):
-            Constructs a Blockchain object.
-        utxos_total():
-            Returns the total number of UTXOs in the network.
-        utxos_created():
-            Returns the number of created unspent transaction outputs.
-        utxos_spent():
-            Returns the number of spent transaction outputs.
-        utxo_value_created_total():
-            Returns the total amount of coins in newly created UTXOs.
-        utxo_value_spent_total():
-            Returns the total amount of coins in spent transaction outputs.
-        utxo_value_created_mean():
-            Returns the mean amount of coins in newly created UTXOs.
-        utxo_value_spent_mean():
-            Returns the mean amount of coins in spent transaction outputs.
-        utxo_value_created_median():
-            Returns the median amount of coins in newly created UTXOs.
-        utxo_value_spent_median():
-            Returns the median amount of coins in spent transaction outputs.
-        utxos_in_profit():
-            Returns the number of unspent transaction outputs in profit.
-        utxos_in_loss():
-            Returns the number of unspent transaction outputs in loss.
-        percent_utxos_in_profit():
-            Returns the percentage of unspent transaction outputs in profit.
-        block_heights():
-            Returns the block height.
-        blocks_mined():
-            Returns the number of blocks mined.
-        block_interval_mean():
-            Returns the mean time (in seconds) between mined blocks.
-        block_interval_median():
-            Returns the median time (in seconds) between mined blocks.
-        block_size_mean():
-            Returns the mean size of all blocks created within the time period (in bytes).
-        block_size_total():
-            Returns the total size of all blocks created within the time period (in bytes).
+    Methods
+    -------
+    __init__(glassnode_client):
+        Constructs a Blockchain object.
+    utxos_total():
+        Returns the total number of UTXOs in the network.
+    utxos_created():
+        Returns the number of created unspent transaction outputs.
+    utxos_spent():
+        Returns the number of spent transaction outputs.
+    utxo_value_created_total():
+        Returns the total amount of coins in newly created UTXOs.
+    utxo_value_spent_total():
+        Returns the total amount of coins in spent transaction outputs.
+    utxo_value_created_mean():
+        Returns the mean amount of coins in newly created UTXOs.
+    utxo_value_spent_mean():
+        Returns the mean amount of coins in spent transaction outputs.
+    utxo_value_created_median():
+        Returns the median amount of coins in newly created UTXOs.
+    utxo_value_spent_median():
+        Returns the median amount of coins in spent transaction outputs.
+    utxos_in_profit():
+        Returns the number of unspent transaction outputs in profit.
+    utxos_in_loss():
+        Returns the number of unspent transaction outputs in loss.
+    percent_utxos_in_profit():
+        Returns the percentage of unspent transaction outputs in profit.
+    block_heights():
+        Returns the block height.
+    blocks_mined():
+        Returns the number of blocks mined.
+    block_interval_mean():
+        Returns the mean time (in seconds) between mined blocks.
+    block_interval_median():
+        Returns the median time (in seconds) between mined blocks.
+    block_size_mean():
+        Returns the mean size of all blocks created within the time period (in bytes).
+    block_size_total():
+        Returns the total size of all blocks created within the time period (in bytes).
     """
+
     def __init__(self, glassnode_client: GlassnodeClient):
         self._gc = glassnode_client
 
@@ -57,7 +58,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_count'
+        endpoint = "/v1/metrics/blockchain/utxo_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -70,7 +71,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_created_count'
+        endpoint = "/v1/metrics/blockchain/utxo_created_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -83,7 +84,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_spent_count'
+        endpoint = "/v1/metrics/blockchain/utxo_spent_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -96,7 +97,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_created_value_sum'
+        endpoint = "/v1/metrics/blockchain/utxo_created_value_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -109,7 +110,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_spent_value_sum'
+        endpoint = "/v1/metrics/blockchain/utxo_spent_value_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -122,7 +123,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_created_value_mean'
+        endpoint = "/v1/metrics/blockchain/utxo_created_value_mean"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -135,7 +136,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_spent_value_mean'
+        endpoint = "/v1/metrics/blockchain/utxo_spent_value_mean"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -148,7 +149,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_created_value_median'
+        endpoint = "/v1/metrics/blockchain/utxo_created_value_median"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -161,7 +162,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_spent_value_median'
+        endpoint = "/v1/metrics/blockchain/utxo_spent_value_median"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -174,7 +175,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_profit_count'
+        endpoint = "/v1/metrics/blockchain/utxo_profit_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -187,7 +188,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_loss_count'
+        endpoint = "/v1/metrics/blockchain/utxo_loss_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -200,7 +201,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/utxo_profit_relative'
+        endpoint = "/v1/metrics/blockchain/utxo_profit_relative"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -213,7 +214,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/block_height'
+        endpoint = "/v1/metrics/blockchain/block_height"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -226,7 +227,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/block_count'
+        endpoint = "/v1/metrics/blockchain/block_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -239,7 +240,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/block_interval_mean'
+        endpoint = "/v1/metrics/blockchain/block_interval_mean"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -252,7 +253,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/block_interval_median'
+        endpoint = "/v1/metrics/blockchain/block_interval_median"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -265,7 +266,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/block_size_mean'
+        endpoint = "/v1/metrics/blockchain/block_size_mean"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -278,7 +279,7 @@ class Blockchain:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/blockchain/block_size_sum'
+        endpoint = "/v1/metrics/blockchain/block_size_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 

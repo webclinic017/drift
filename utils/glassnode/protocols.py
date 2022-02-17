@@ -3,20 +3,21 @@ from .utils import *
 
 class Protocols:
     """
-        Protocols class.
+    Protocols class.
 
-        Methods
-        -------
-        __init__(glassnode_client):
-            Constructs a Protocols object.
-        uniswap_transactions():
-            Returns the total number of transactions
-            that contains an interaction within Uniswap contracts.
-        uniswap_liquidity():
-            Returns the current liquidity on Uniswap.
-        uniswap_volume():
-            Returns the total volume traded on Uniswap.
+    Methods
+    -------
+    __init__(glassnode_client):
+        Constructs a Protocols object.
+    uniswap_transactions():
+        Returns the total number of transactions
+        that contains an interaction within Uniswap contracts.
+    uniswap_liquidity():
+        Returns the current liquidity on Uniswap.
+    uniswap_volume():
+        Returns the total volume traded on Uniswap.
     """
+
     def __init__(self, glassnode_client):
         self._gc = glassnode_client
         self._endpoints = self._gc.endpoints
@@ -30,7 +31,7 @@ class Protocols:
         :return: A DataFrame containing Uniswap transactions data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/protocols/uniswap_transaction_count'
+        endpoint = "/v1/metrics/protocols/uniswap_transaction_count"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -44,7 +45,7 @@ class Protocols:
         :return: A DataFrame containing Uniswap liquidity data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/protocols/uniswap_liquidity_latest'
+        endpoint = "/v1/metrics/protocols/uniswap_liquidity_latest"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -58,7 +59,7 @@ class Protocols:
         :return: A DataFrame containing Uniswap volume data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/protocols/uniswap_volume_sum'
+        endpoint = "/v1/metrics/protocols/uniswap_volume_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 

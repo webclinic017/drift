@@ -3,33 +3,34 @@ from .utils import *
 
 class Market:
     """
-        Market class.
+    Market class.
 
-        Methods
-        -------
-        __init__(glassnode_client):
-            Constructs a Market object.
-        price():
-            Returns the asset's price in USD.
-        price_ohlc():
-            Returns OHLC candlestick data.
-        price_drawdown_from_ath():
-            Returns the percent drawdown from previous all-time high.
-        marketcap():
-            Returns the market capitalization of the asset.
-        mvrv_ratio():
-            Returns MVRV ratio.
-        realized_cap():
-            Returns realized cap data.
-        mvrv_z_score():
-            Returns MVRV Z-Score.
-        sth_mvrv():
-            Returns Short Term Holder MVRV data.
-        lth_mvrv():
-            Returns Long Term Holder MVRV data.
-        realized_price():
-            Returns realized price data.
+    Methods
+    -------
+    __init__(glassnode_client):
+        Constructs a Market object.
+    price():
+        Returns the asset's price in USD.
+    price_ohlc():
+        Returns OHLC candlestick data.
+    price_drawdown_from_ath():
+        Returns the percent drawdown from previous all-time high.
+    marketcap():
+        Returns the market capitalization of the asset.
+    mvrv_ratio():
+        Returns MVRV ratio.
+    realized_cap():
+        Returns realized cap data.
+    mvrv_z_score():
+        Returns MVRV Z-Score.
+    sth_mvrv():
+        Returns Short Term Holder MVRV data.
+    lth_mvrv():
+        Returns Long Term Holder MVRV data.
+    realized_price():
+        Returns realized price data.
     """
+
     def __init__(self, glassnode_client):
         self._gc = glassnode_client
 
@@ -41,7 +42,7 @@ class Market:
         :return: A DataFrame containing the asset's price data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/market/price_usd'
+        endpoint = "/v1/metrics/market/price_usd"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -56,7 +57,7 @@ class Market:
         :return: A DataFrame containing OHLC candlestick data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/market/price_usd_ohlc'
+        endpoint = "/v1/metrics/market/price_usd_ohlc"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -70,7 +71,7 @@ class Market:
         :return: A DataFrame containing the percent drawdown data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/market/price_drawdown_relative'
+        endpoint = "/v1/metrics/market/price_drawdown_relative"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -84,7 +85,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/marketcap_usd'
+        endpoint = "/v1/metrics/market/marketcap_usd"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -98,7 +99,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/mvrv'
+        endpoint = "/v1/metrics/market/mvrv"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -112,7 +113,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/marketcap_realized_usd'
+        endpoint = "/v1/metrics/market/marketcap_realized_usd"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -125,7 +126,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/mvrv_z_score'
+        endpoint = "/v1/metrics/market/mvrv_z_score"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -139,7 +140,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/mvrv_less_155'
+        endpoint = "/v1/metrics/market/mvrv_less_155"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -153,7 +154,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/mvrv_more_155'
+        endpoint = "/v1/metrics/market/mvrv_more_155"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -166,7 +167,7 @@ class Market:
 
         :return: DataFrame
         """
-        endpoint = '/v1/metrics/market/price_realized_usd'
+        endpoint = "/v1/metrics/market/price_realized_usd"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 

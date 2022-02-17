@@ -5,15 +5,22 @@ import pandas as pd
 all_results = []
 all_predictions = []
 for index in range(6):
-    _, _, _, _, results_1, predictions_1, _ = run_pipeline(project_name='price-prediction', with_wandb = False, sweep = False, config= get_default_ensemble_config())
+    _, _, _, _, results_1, predictions_1, _ = run_pipeline(
+        project_name="price-prediction",
+        with_wandb=False,
+        sweep=False,
+        config=get_default_ensemble_config(),
+    )
     all_results.append(results_1)
     all_predictions.append(predictions_1)
 
 correlations = pd.Series()
 
-for asset_name in [c for c in all_predictions[0].columns if 'ensemble' in c]:
+for asset_name in [c for c in all_predictions[0].columns if "ensemble" in c]:
 
-    predictions_for_asset = pd.concat([preds[asset_name] for preds in all_predictions], axis=1)
+    predictions_for_asset = pd.concat(
+        [preds[asset_name] for preds in all_predictions], axis=1
+    )
     correlations[asset_name] = predictions_for_asset.corr().mean()[0]
     print("Correlation for asset ", asset_name, ": ", correlations[asset_name])
 

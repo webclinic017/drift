@@ -3,33 +3,34 @@ from .utils import *
 
 class Mining:
     """
-        Mining class.
+    Mining class.
 
-        Methods
-        -------
-        __init__(glassnode_client):
-            Constructs a Mining object.
-        difficulty():
-            Returns difficulty to mine a block.
-        hash_rate():
-            Returns hash rate.
-        miner_revenue_total():
-            Returns the total miner revenue.
-        miner_revenue_fees():
-            Returns the percentage of miner revenue derived from fees.
-        miner_revenue_block_rewards():
-            Returns the total amount of newly minted coins.
-        miner_outflow_multiple():
-            Returns the miner outflow multiple.
-        thermocap():
-            Returns Thermocap data.
-        market_cap_to_thermocap_ratio():
-            Returns the Marketcap to Thermocap Ratio.
-        miner_unspent_supply():
-            Returns unspent miner supply.
-        miner_names():
-            Returns miner names for a mining endpoint.
+    Methods
+    -------
+    __init__(glassnode_client):
+        Constructs a Mining object.
+    difficulty():
+        Returns difficulty to mine a block.
+    hash_rate():
+        Returns hash rate.
+    miner_revenue_total():
+        Returns the total miner revenue.
+    miner_revenue_fees():
+        Returns the percentage of miner revenue derived from fees.
+    miner_revenue_block_rewards():
+        Returns the total amount of newly minted coins.
+    miner_outflow_multiple():
+        Returns the miner outflow multiple.
+    thermocap():
+        Returns Thermocap data.
+    market_cap_to_thermocap_ratio():
+        Returns the Marketcap to Thermocap Ratio.
+    miner_unspent_supply():
+        Returns unspent miner supply.
+    miner_names():
+        Returns miner names for a mining endpoint.
     """
+
     def __init__(self, glassnode_client):
         self._gc = glassnode_client
 
@@ -41,7 +42,7 @@ class Mining:
         :return: A DataFrame with the latest difficulty data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/difficulty_latest'
+        endpoint = "/v1/metrics/mining/difficulty_latest"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -55,7 +56,7 @@ class Mining:
         :return: A DataFrame with hash rate data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/hash_rate_mean'
+        endpoint = "/v1/metrics/mining/hash_rate_mean"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -69,11 +70,11 @@ class Mining:
         :return: A DataFrame with total revenue data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/revenue_sum'
+        endpoint = "/v1/metrics/mining/revenue_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
-        return response_to_dataframe(self._gc.get(endpoint, {'m': miner}))
+        return response_to_dataframe(self._gc.get(endpoint, {"m": miner}))
 
     def miner_revenue_fees(self) -> pd.DataFrame:
         """
@@ -83,7 +84,7 @@ class Mining:
         :return: A DataFrame with revenue fees data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/revenue_from_fees'
+        endpoint = "/v1/metrics/mining/revenue_from_fees"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -97,11 +98,11 @@ class Mining:
         :return: A DataFrame with revenue block rewards data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/volume_mined_sum'
+        endpoint = "/v1/metrics/mining/volume_mined_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
-        return response_to_dataframe(self._gc.get(endpoint, {'m': miner}))
+        return response_to_dataframe(self._gc.get(endpoint, {"m": miner}))
 
     def miner_outflow_multiple(self, miner=None) -> pd.DataFrame:
         """
@@ -112,11 +113,11 @@ class Mining:
         :return: A DataFrame MOM data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/miners_outflow_multiple'
+        endpoint = "/v1/metrics/mining/miners_outflow_multiple"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
-        return response_to_dataframe(self._gc.get(endpoint, {'m': miner}))
+        return response_to_dataframe(self._gc.get(endpoint, {"m": miner}))
 
     def thermocap(self) -> pd.DataFrame:
         """
@@ -127,7 +128,7 @@ class Mining:
         :return: A DataFrame with thermocap data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/thermocap'
+        endpoint = "/v1/metrics/mining/thermocap"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -142,7 +143,7 @@ class Mining:
         :return: A DataFrame with M/T ratio data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/marketcap_thermocap_ratio'
+        endpoint = "/v1/metrics/mining/marketcap_thermocap_ratio"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -156,13 +157,13 @@ class Mining:
         :return: A DataFrame with unspent miner supply data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/mining/miners_unspent_supply'
+        endpoint = "/v1/metrics/mining/miners_unspent_supply"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
         return response_to_dataframe(self._gc.get(endpoint))
 
-    def miner_names(self, endpoint='revenue_sum') -> list:
+    def miner_names(self, endpoint="revenue_sum") -> list:
         """
         Returns a list of miner names for a mining endpoint.
 
@@ -170,5 +171,5 @@ class Mining:
         :return: A List with miner names.
         :rtype: List
         """
-        miners = self._gc.get(f'/v1/metrics/mining/{endpoint}/miners')
+        miners = self._gc.get(f"/v1/metrics/mining/{endpoint}/miners")
         return miners[self._gc.asset]

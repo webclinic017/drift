@@ -3,33 +3,34 @@ from .utils import *
 
 class Distribution:
     """
-        Distribution class.
+    Distribution class.
 
-        Methods
-        -------
-        __init__(glassnode_client):
-            Constructs a Distribution object.
-        exchange_balance_total(exchange):
-            Returns the total amount of coins held on exchange addresses.
-        exchange_balance_percent(exchange):
-            Returns the percent supply held on exchange addresses.
-        exchange_balance_stacked():
-            Returns the total amount of coins held on exchange addresses.
-        miner_balance():
-            Returns the total supply held in miner addresses.
-        miner_balance_stacked():
-            Returns the total supply held in miner addresses.
-        balance_miners_change():
-            Returns 30d change of the supply held in miner addresses.
-        supply_top_one_pct_addresses():
-            Returns the percentage of supply held by the top 1% addresses.
-        gini_coefficient():
-            Returns gini coefficient data.
-        herfindahl_index():
-            Returns herfindahl index data.
-        supply_in_smart_contracts():
-            Returns percent of total supply that is held in smart contracts.
+    Methods
+    -------
+    __init__(glassnode_client):
+        Constructs a Distribution object.
+    exchange_balance_total(exchange):
+        Returns the total amount of coins held on exchange addresses.
+    exchange_balance_percent(exchange):
+        Returns the percent supply held on exchange addresses.
+    exchange_balance_stacked():
+        Returns the total amount of coins held on exchange addresses.
+    miner_balance():
+        Returns the total supply held in miner addresses.
+    miner_balance_stacked():
+        Returns the total supply held in miner addresses.
+    balance_miners_change():
+        Returns 30d change of the supply held in miner addresses.
+    supply_top_one_pct_addresses():
+        Returns the percentage of supply held by the top 1% addresses.
+    gini_coefficient():
+        Returns gini coefficient data.
+    herfindahl_index():
+        Returns herfindahl index data.
+    supply_in_smart_contracts():
+        Returns percent of total supply that is held in smart contracts.
     """
+
     def __init__(self, glassnode_client):
         self._gc = glassnode_client
 
@@ -41,11 +42,11 @@ class Distribution:
         :return: A DataFrame with exchange balance data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_exchanges'
+        endpoint = "/v1/metrics/distribution/balance_exchanges"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
-        return response_to_dataframe(self._gc.get(endpoint, {'e': exchange}))
+        return response_to_dataframe(self._gc.get(endpoint, {"e": exchange}))
 
     def exchange_balance_percent(self, exchange=None) -> pd.DataFrame:
         """
@@ -55,11 +56,11 @@ class Distribution:
         :return: A DataFrame with exchange balance data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_exchanges_relative'
+        endpoint = "/v1/metrics/distribution/balance_exchanges_relative"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
-        return response_to_dataframe(self._gc.get(endpoint, {'e': exchange}))
+        return response_to_dataframe(self._gc.get(endpoint, {"e": exchange}))
 
     def exchange_balance_stacked(self) -> pd.DataFrame:
         """
@@ -69,7 +70,7 @@ class Distribution:
         :return: A DataFrame with stacked exchange balance data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_exchanges_all'
+        endpoint = "/v1/metrics/distribution/balance_exchanges_all"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -83,7 +84,7 @@ class Distribution:
         :return: A DataFrame miner balance data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_miners_sum'
+        endpoint = "/v1/metrics/distribution/balance_miners_sum"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -97,7 +98,7 @@ class Distribution:
         :return: A DataFrame with stacked miner balance data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_miners_all'
+        endpoint = "/v1/metrics/distribution/balance_miners_all"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -105,13 +106,13 @@ class Distribution:
 
     def balance_miners_change(self) -> pd.DataFrame:
         """
-        The 30d change of the supply held in miner addresses. 
+        The 30d change of the supply held in miner addresses.
         `View in Studio <https://studio.glassnode.com/metrics?a=BTC&m=distribution.BalanceMinersChange>`_
 
         :return: A DataFrame with 30d change of the supply held in miner addresses.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_miners_change'
+        endpoint = "/v1/metrics/distribution/balance_miners_change"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -125,7 +126,7 @@ class Distribution:
         :return: A DataFrame with top 1% supply data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/balance_1pct_holders'
+        endpoint = "/v1/metrics/distribution/balance_1pct_holders"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -139,7 +140,7 @@ class Distribution:
         :return: A DataFrame Gini Coefficient data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/gini'
+        endpoint = "/v1/metrics/distribution/gini"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -153,7 +154,7 @@ class Distribution:
         :return: A DataFrame Herfindahl index data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/herfindahl'
+        endpoint = "/v1/metrics/distribution/herfindahl"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 
@@ -167,7 +168,7 @@ class Distribution:
         :return: A DataFrame smart contracts supply data.
         :rtype: DataFrame
         """
-        endpoint = '/v1/metrics/distribution/supply_contracts'
+        endpoint = "/v1/metrics/distribution/supply_contracts"
         if not is_supported_by_endpoint(self._gc, endpoint):
             return pd.DataFrame()
 

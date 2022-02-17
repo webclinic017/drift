@@ -18,7 +18,7 @@ class RawConfig(BaseModel):
     sliding_window_size_base: int
     sliding_window_size_meta: int
     retrain_every: int
-    scaler: Literal['normalize', 'minmax', 'standardize']
+    scaler: Literal["normalize", "minmax", "standardize"]
 
     assets: list[str]
     target_asset: str
@@ -28,8 +28,8 @@ class RawConfig(BaseModel):
     own_features: list[str]
     other_features: list[str]
     exogenous_features: list[str]
-    event_filter: Literal['none', 'cusum_vol', 'cusum_fixed']
-    labeling: Literal['two_class', 'three_class_balanced', 'three_class_imbalanced']
+    event_filter: Literal["none", "cusum_vol", "cusum_fixed"]
+    labeling: Literal["two_class", "three_class_balanced", "three_class_imbalanced"]
     forecasting_horizon: int
 
     directional_models: list[str]
@@ -46,7 +46,7 @@ class Config:
     sliding_window_size_base: int
     sliding_window_size_meta: int
     retrain_every: int
-    scaler: Literal['normalize', 'minmax', 'standardize']
+    scaler: Literal["normalize", "minmax", "standardize"]
 
     assets: DataCollection
     target_asset: DataSource
@@ -59,28 +59,27 @@ class Config:
     event_filter: EventFilter
     labeling: EventLabeller
     forecasting_horizon: int
-    no_of_classes: Literal['two', 'three-balanced', 'three-imbalanced']
+    no_of_classes: Literal["two", "three-balanced", "three-imbalanced"]
 
-    mode: Literal['training', 'inference']
+    mode: Literal["training", "inference"]
 
     directional_model: Model
     meta_model: Model
 
-    @validator('directional_model', 'meta_model')
+    @validator("directional_model", "meta_model")
     def check_model(cls, v):
         assert isinstance(v, BaseEstimator)
         return v
-    
-    @validator('event_filter')
+
+    @validator("event_filter")
     def check_event_filter(cls, v):
         assert isinstance(v, EventFilter)
         return v
 
-    @validator('labeling')
+    @validator("labeling")
     def check_labeling(cls, v):
         assert isinstance(v, EventLabeller)
         return v
+
     # class Config:
     #     arbitrary_types_allowed = True
-
-

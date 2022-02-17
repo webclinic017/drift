@@ -3,14 +3,16 @@ from typing import Literal, Optional, Union
 from abc import ABC, abstractmethod
 import pandas as pd
 
-class Transformation(ABC):
 
+class Transformation(ABC):
     @abstractmethod
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series]) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def fit_transform(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> pd.DataFrame:
+    def fit_transform(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None
+    ) -> pd.DataFrame:
         raise NotImplementedError
 
     @abstractmethod
@@ -24,5 +26,3 @@ class Transformation(ABC):
     @abstractmethod
     def get_name(self) -> str:
         raise NotImplementedError
-    
-

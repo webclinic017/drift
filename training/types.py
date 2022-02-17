@@ -19,6 +19,7 @@ class TrainingOutcome:
     stats: Optional[Stats]
     model_over_time: ModelOverTime
 
+
 @dataclass
 class BetSizingWithMetaOutcome:
     model_id: str
@@ -27,11 +28,13 @@ class BetSizingWithMetaOutcome:
     weights: WeightsSeries
     stats: Optional[Stats]
 
+
 @dataclass
 class DirectionalTrainingOutcome:
     training: TrainingOutcome
     transformations: TransformationsOverTime
-    
+
+
 @dataclass
 class PipelineOutcome:
     directional_training: DirectionalTrainingOutcome
