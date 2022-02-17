@@ -19,15 +19,19 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest --junit-xml pytest.xml
+      - name: Download data
+        shell: bash -l {0}
+        run: |
+          python run_fetch_data_5min.py
       - name: Run pipeline
         shell: bash -l {0}
         run: |
           export RAY_DISABLE_MEMORY_MONITOR=1
           python run_pipeline.py
-      - name: Run portfolio reporting
-        shell: bash -l {0}
-        run: |
-          python run_portfolio_reporting.py
+#       - name: Run portfolio reporting
+#         shell: bash -l {0}
+#         run: |
+#           python run_portfolio_reporting.py
       - name: Run inference
         shell: bash -l {0}
         run: |

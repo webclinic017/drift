@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from training.walk_forward import walk_forward_train, walk_forward_inference
 from models.base import Model
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 no_of_rows = 100
 
@@ -27,7 +28,7 @@ def __generate_incremental_test_data(no_of_rows) -> tuple[pd.DataFrame, pd.Serie
 
 
 
-class IncrementingStubModel(Model):
+class IncrementingStubModel(Model, BaseEstimator, ClassifierMixin):
     '''
     A deteministic model that can predict the future with 100% accuracy
     It verifies that the X[n][any_column]+1 == y[n]
@@ -48,13 +49,10 @@ class IncrementingStubModel(Model):
             assert X[i][0] + 1 == y[i]
 
     def predict(self, X):
-        return (X[0][0] + 1, np.array([]))
+        return np.array([row[0] + 1 for row in X])
 
-    def clone(self):
-        return self
-    
-    def initialize_network(self, input_dim: int, output_dim: int):
-        pass
+    def predict_proba(self, X):
+        return np.array([[row[0] + 1, 0] for row in X])
     
 def test_walk_forward_train_test():
     X, y = __generate_incremental_test_data(no_of_rows)

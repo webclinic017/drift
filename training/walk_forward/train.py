@@ -5,7 +5,7 @@ from utils.helpers import get_first_valid_return_index
 from tqdm import tqdm
 from typing import Optional
 from data_loader.types import ForwardReturnSeries, XDataFrame, ySeries
-
+from copy import deepcopy
 
 def walk_forward_train(
                     model: Model,
@@ -18,7 +18,7 @@ def walk_forward_train(
                     from_index: Optional[pd.Timestamp],
                     transformations_over_time: TransformationsOverTime,
                 ) -> ModelOverTime:
-    models_over_time = pd.Series(index=y.index).rename(model.name)
+    models_over_time = pd.Series(index=y.index, dtype='object').rename(model.name)
 
     first_nonzero_return = max(get_first_valid_return_index(forward_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
     train_from = first_nonzero_return + window_size + 1 if from_index is None else X.index.to_list().index(from_index)
@@ -43,13 +43,9 @@ def walk_forward_train(
         X_slice = X_slice.to_numpy()
         y_slice = y[train_window_start:train_window_end].to_numpy()
 
-        current_model = model.clone()
-
-        current_model.initialize_network(input_dim = len(X_slice[0]), output_dim=1) 
+        current_model = deepcopy(model)
         current_model.fit(X_slice, y_slice)
 
         models_over_time[X.index[index]] = current_model
-        for transformation_index, transformation in enumerate(current_transformations):
-            transformations_over_time[transformation_index][X.index[index]] = transformation
 
     return models_over_time

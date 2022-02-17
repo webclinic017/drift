@@ -9,8 +9,7 @@ dependencies:
   - python=3.9
   - scikit-learn-intelex=2021.4.0
   - pip:
-    - torch
-    - pytorch-lightning
+    - skorch
     - fracdiff
     - ray
     - diskcache

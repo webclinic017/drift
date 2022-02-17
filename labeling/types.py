@@ -23,6 +23,6 @@ EventsDataFrame = DataFrame[EventSchema]
 class EventLabeller(ABC):
 
     @abstractmethod
-    def label_events(self, event_start_times: pd.DatetimeIndex, forward_returns: ForwardReturnSeries) -> EventsDataFrame:
+    def label_events(self, event_start_times: pd.DatetimeIndex, returns: ReturnSeries) -> tuple[EventsDataFrame, ForwardReturnSeries]:
         raise NotImplementedError
 

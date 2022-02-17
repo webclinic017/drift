@@ -4,21 +4,17 @@ from typing import Optional
 from copy import deepcopy
 from sklearn.feature_selection import RFE
 import pandas as pd
-from models.base import Model
-from models.model_map import default_feature_selector_classification
+from models.sklearn import SKLearnModel
 
 class RFETransformation(Transformation):
 
     rfe: RFE
     n_feature_to_select: int
 
-    def __init__(self, n_feature_to_select: int, model: Model, step = 0.1):
+    def __init__(self, n_feature_to_select: int, model: SKLearnModel, step = 0.1):
         self.n_feature_to_keep = n_feature_to_select
         self.model = model
-        if hasattr(self.model, 'model') == False: return
-        if hasattr(self.model.model, 'feature_importances_') == False and hasattr(self.model.model, 'coef_') == False:
-            model = default_feature_selector_classification
-        self.rfe = RFE(model.model, n_features_to_select= n_feature_to_select, step=step)
+        self.rfe = RFE(model, n_features_to_select= n_feature_to_select, step=step)
 
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> None:
         if self.rfe is None: return

@@ -2,7 +2,6 @@ from .types import RawConfig, Config
 
 def get_dev_config() -> RawConfig:
   
-    regression_models = ["Lasso"]
     classification_models = ["LogisticRegression_two_class"]
 
     return RawConfig(
@@ -29,13 +28,13 @@ def get_dev_config() -> RawConfig:
         meta_models = [],
 
         event_filter = 'none',
-        labeling = 'two_class'
+        labeling = 'two_class',
+        forecasting_horizon = 100,
     )
 
 
 def get_default_ensemble_config() -> RawConfig:
   
-    regression_models = ["Lasso", "KNN", "RFR"]
     classification_models = ["LogisticRegression_two_class", "LDA", "NB", "RFC", "XGB_two_class", "LGBM", "StaticMom"]
     meta_models = ['LogisticRegression_two_class', 'LGBM']
 
@@ -63,42 +62,43 @@ def get_default_ensemble_config() -> RawConfig:
         meta_models = meta_models,
 
         event_filter = 'cusum_vol',
-        labeling = 'two_class'
+        labeling = 'two_class',
+        forecasting_horizon = 100,
     )
 
 
 
 def get_lightweight_ensemble_config() -> RawConfig:
   
-    regression_models = ["Lasso", "KNN"]
-    classification_models = ['LogisticRegression_two_class', 'SVC']
+    classification_models = ['LogisticRegression_two_class', 'LGBM']
     meta_models = ['LogisticRegression_two_class', 'LGBM']
 
     return RawConfig(
         directional_models_meta = True,
         dimensionality_reduction = True,
         n_features_to_select = 30,
-        expanding_window_base = False,
+        expanding_window_base = True,
         expanding_window_meta = True,
-        sliding_window_size_base = 380,
-        sliding_window_size_meta = 240,
-        retrain_every = 40,
+        sliding_window_size_base = 3800,
+        sliding_window_size_meta = 2400,
+        retrain_every = 1000,
         scaler = 'minmax', # 'normalize' 'minmax' 'standardize'
 
-        assets = ['daily_crypto_lightweight'],
-        target_asset = 'BCH_USD',
-        other_assets = ['daily_etf'],
-        exogenous_data = ['daily_glassnode'],
-        load_non_target_asset= True,
-        own_features = ['level_2' ],
-        other_features = ['level_2'],
-        exogenous_features = ['z_score'],
+        assets = ['fivemin_crypto'],
+        target_asset = 'BTC_USD',
+        other_assets = [],
+        exogenous_data = [],
+        load_non_target_asset= False,
+        own_features = ['level_1'],
+        other_features = [],
+        exogenous_features = [],
 
         directional_models = classification_models,
         meta_models = meta_models,
 
-        event_filter = 'none',
-        labeling = 'two_class'
+        event_filter = 'cusum_fixed',
+        labeling = 'two_class',
+        forecasting_horizon = 50,
     )
 
 

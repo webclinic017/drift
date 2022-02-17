@@ -2,6 +2,7 @@ import pandas as pd
 import ssl
 from tqdm import tqdm
 from data_loader.utils import deduplicate_indexes
+from utils.resample import resample_ohlc
 
 base_url = "https://www.cryptodatadownload.com/cdd/"
 
@@ -27,6 +28,10 @@ for file in tqdm(files_to_download):
     data.drop(volume_column_to_delete + ['symbol'], axis=1, inplace=True)
     data.rename({'Volume USD': 'volume'}, axis=1, inplace=True)
     data.index.rename('time', inplace=True)
-    target_file = file.split('_')[1].replace('USD', '') + '_USD'
+    data.sort_index(inplace=True)
     data = deduplicate_indexes(data)
-    data.to_csv(f"data/minute_crypto/{target_file}.csv")
+    data.index = pd.to_datetime(data.index)
+    data = data.resample('1Min').ffill()
+    data = resample_ohlc(data, '5Min')
+    target_file = file.split('_')[1].replace('USD', '') + '_USD'
+    data.to_csv(f"data/5min_crypto/{target_file}.csv")

@@ -22,7 +22,7 @@ class ReplaceFunctionCommand(VisitorBasedCodemodCommand):
 
     def leave_FunctionDef(self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef) -> cst.FunctionDef:
         functions_docstring = updated_node.get_docstring()
-        docstring_should_be = '"""No docstring here yet."""'
+        docstring_should_be = ''
         if functions_docstring is not None:
             docstring_should_be = '"""\n{}\n\n"""'.format(functions_docstring)
 

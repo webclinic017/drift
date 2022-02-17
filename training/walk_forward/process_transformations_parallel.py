@@ -6,6 +6,7 @@ from transformations.base import Transformation
 from typing import Optional
 from data_loader.types import ForwardReturnSeries, XDataFrame, ySeries
 import ray
+from utils.parallel import parallel_compute_with_bar
 
 def walk_forward_process_transformations(
                         X: XDataFrame,
@@ -23,7 +24,7 @@ def walk_forward_process_transformations(
     train_from = first_nonzero_return + window_size + 1 if from_index is None else X.index.to_list().index(from_index)
     train_till = len(y)
     
-    processed_transformations = ray.get([preprocess_transformations_window.remote(X, y, expanding_window, window_size, transformations, first_nonzero_return, index) for index in range(train_from, train_till, retrain_every)])
+    processed_transformations = parallel_compute_with_bar([preprocess_transformations_window.remote(X, y, expanding_window, window_size, transformations, first_nonzero_return, index) for index in range(train_from, train_till, retrain_every)])
         
     for transformation, index_time in processed_transformations:
         for transformation_index, transformation in enumerate(transformation):

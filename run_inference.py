@@ -8,9 +8,8 @@ from config.presets import get_dev_config, get_default_ensemble_config, get_ligh
 from labeling.process import label_data
 import pandas as pd
 
-from training.directional_training import train_directional_models
-from training.bet_sizing import bet_sizing_with_meta_models
-from training.ensemble import ensemble_weights
+from training.directional_training import train_directional_model
+from training.bet_sizing import bet_sizing_with_meta_model
 from training.types import PipelineOutcome
 
 def run_inference(preload_models:bool, fallback_raw_config: RawConfig):
@@ -26,7 +25,7 @@ def run_inference(preload_models:bool, fallback_raw_config: RawConfig):
 def __inference(config: Config, pipeline_outcome: PipelineOutcome):
     
     # 1. Load data, check for validity and process data
-    X, returns, forward_returns = load_data(
+    X, returns = load_data(
         assets = config.assets,
         other_assets = config.other_assets,
         exogenous_data = config.exogenous_data,
@@ -38,26 +37,18 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
     )
     assert check_data(X, config) == True, "Data is not valid. Cancelling Inference." 
 
-    events, X, y, forward_returns = label_data(config.event_filter, config.labeling, X, returns, forward_returns)
+    # 2. Filter for significant events when we want to trade, and label data
+    events, X, y, forward_returns = label_data(config.event_filter, config.labeling, X, returns)
 
     inference_from: pd.Timestamp = X.index[len(X.index) - 1]
 
-    # 2. Filter for significant events when we want to trade, and label data
-    events, X, y, forward_returns = label_data(config.event_filter, config.labeling, X, returns, forward_returns)
-
     # 3. Train directional models
-    directional_training_outcome = train_directional_models(X, y, forward_returns, config, config.directional_models, from_index = inference_from, preloaded_training_step = pipeline_outcome.directional_training)
+    directional_training_outcome = train_directional_model(X, y, forward_returns, config, config.directional_model, from_index = inference_from, preloaded_training_step = pipeline_outcome.directional_training)
     
     # 4. Run bet sizing on primary model's output
-    bet_sizing_outcomes = [bet_sizing_with_meta_models(X, training_outcome.predictions, y, forward_returns, config.meta_models, config, 'meta', from_index = inference_from, transformations_over_time = preloaded_outcome.meta_transformations, preloaded_models = [b.model_over_time for b in preloaded_outcome.meta_training]) for training_outcome, preloaded_outcome in zip(directional_training_outcome.training, pipeline_outcome.bet_sizing)]
+    bet_sizing_outcome = bet_sizing_with_meta_model(X, directional_training_outcome.training.predictions, y, forward_returns, config.meta_model, config, 'meta', from_index = inference_from, transformations_over_time = pipeline_outcome.bet_sizing.meta_transformations, preloaded_models = pipeline_outcome.bet_sizing.meta_training.model_over_time)
 
-    # 4. Ensemble weights
-    ensemble_outcome = ensemble_weights([o.weights for o in bet_sizing_outcomes], forward_returns, y, config.no_of_classes, config.mode == 'training')
-
-    # 5. (Optional) Additional bet sizing on top of the ensembled weights
-    ensemble_bet_sizing_outcome = bet_sizing_with_meta_models(X, ensemble_outcome.weights, y, forward_returns, config.meta_models, config, 'ensemble', from_index = inference_from, transformations_over_time = pipeline_outcome.secondary_bet_sizing.meta_transformations, preloaded_models= [b.model_over_time for b in pipeline_outcome.secondary_bet_sizing.meta_training]) if len(config.meta_models) > 0 else None
-    
-    return PipelineOutcome(directional_training_outcome, bet_sizing_outcomes, ensemble_outcome, ensemble_bet_sizing_outcome)
+    return PipelineOutcome(directional_training_outcome, bet_sizing_outcome)
 
 
 if __name__ == '__main__':

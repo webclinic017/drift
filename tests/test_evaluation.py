@@ -4,6 +4,7 @@ import pandas as pd
 from training.walk_forward import walk_forward_train, walk_forward_inference
 from models.base import Model
 from utils.evaluate import evaluate_predictions
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 no_of_rows = 100
 
@@ -29,7 +30,8 @@ def __generate_even_odd_test_data(no_of_rows) -> tuple[pd.DataFrame, pd.Series]:
 
     return X, y
 
-class EvenOddStubModel(Model):
+
+class EvenOddStubModel(BaseEstimator, ClassifierMixin, Model):
     '''
     A deteministic model that can predict the future with 100% accuracy
     It verifies that the X[n][any_column] == 1 if n is even,
@@ -49,14 +51,10 @@ class EvenOddStubModel(Model):
             assert y[i] == -1 if X[i][0] == 1 else 1
 
     def predict(self, X):
-        return (-1 if X[0][0] == 1 else 1, np.array([]))
+        return np.array([-1 if row[0] == 1 else 1 for row in X])
 
-    def clone(self):
-        return self
-
-
-    def initialize_network(self, input_dim: int, output_dim: int):
-        pass
+    def predict_proba(self, X):
+        return np.array([[row[0] + 1, 0] for row in X])
 
 
 def test_evaluation():

@@ -16,7 +16,7 @@ def walk_forward_inference(
                     retrain_every: int,
                     from_index: Optional[pd.Timestamp],
                 ) -> tuple[PredictionsSeries, ProbabilitiesDataFrame]:
-    predictions = pd.Series(index=X.index).rename(model_name)
+    predictions = pd.Series(index=X.index, dtype='object').rename(model_name)
     probabilities = pd.DataFrame(index=X.index)
 
     inference_from = max(get_first_valid_return_index(model_over_time), get_first_valid_return_index(X.iloc[:,0])) if from_index is None else X.index.to_list().index(from_index)
@@ -49,7 +49,9 @@ def walk_forward_inference(
 
         next_timestep = next_timestep.to_numpy()
 
-        prediction, probs = current_model.predict(next_timestep)
+        prediction = current_model.predict(next_timestep)
+        probs = current_model.predict_proba(next_timestep)
+
         predictions[X.index[index]] = prediction
         if inference_from == index and len(probabilities.columns) != len(probs):
             probabilities = probabilities.reindex(columns = ["prob_" + str(num) for num in range(0, len(probs.T))])

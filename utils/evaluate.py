@@ -49,7 +49,7 @@ def evaluate_predictions(
         return len(series[series != 0])
     no_of_samples = count_non_zero(df.y_pred)
     scorecard['no_of_samples'] = no_of_samples
-    sharpe = sharpe_ratio(df.result)
+    sharpe = sharpe_ratio(df.result + 1e-20)
     scorecard['sharpe'] = sharpe
     benchmark_sharpe = sharpe_ratio(df.forward_returns)
     scorecard['benchmark_sharpe'] = benchmark_sharpe

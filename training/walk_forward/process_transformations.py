@@ -17,7 +17,7 @@ def walk_forward_process_transformations(
                         from_index: Optional[pd.Timestamp],
                         transformations: list[Transformation],
                     ) -> TransformationsOverTime:
-    transformations_over_time = [pd.Series(index=y.index).rename(t.get_name()) for t in transformations]
+    transformations_over_time = [pd.Series(index=y.index, dtype='object').rename(t.get_name()) for t in transformations]
 
     first_nonzero_return = max(get_first_valid_return_index(forward_returns), get_first_valid_return_index(X.iloc[:,0]), get_first_valid_return_index(y))
     train_from = first_nonzero_return + window_size + 1 if from_index is None else X.index.to_list().index(from_index)

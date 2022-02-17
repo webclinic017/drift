@@ -1,7 +1,7 @@
 from data_loader.types import ForwardReturnSeries, XDataFrame, ySeries
 from utils.evaluate import discretize_threeway_threshold, evaluate_predictions
 from utils.helpers import equal_except_nan
-from .train_model import train_models
+from .train_model import train_model
 import pandas as pd
 from models.base import Model
 from models.model_map import default_feature_selector_classification
@@ -13,17 +13,17 @@ from transformations.scaler import get_scaler
 from transformations.rfe import RFETransformation
 from transformations.pca import PCATransformation
 
-def bet_sizing_with_meta_models(
+def bet_sizing_with_meta_model(
                             X: XDataFrame,
                             input_predictions: pd.Series,
                             y: ySeries,
                             forward_returns: ForwardReturnSeries,
-                            models: list[Model],
+                            model: Model,
                             config: Config,
                             model_suffix: str,
                             from_index: Optional[pd.Timestamp],
                             transformations_over_time: Optional[TransformationsOverTime] = None,
-                            preloaded_models: Optional[list[ModelOverTime]] = None
+                            preloaded_models: Optional[ModelOverTime] = None
                         ) -> BetSizingWithMetaOutcome:
 
     input_predictions.name = "model_predictions"
@@ -50,12 +50,12 @@ def bet_sizing_with_meta_models(
             ],
         )
 
-    meta_outcomes = train_models(
+    meta_outcome = train_model(
         ticker_to_predict = "prediction_correct",
         X = meta_X,
         y = meta_y,
         forward_returns = forward_returns,
-        models = models,
+        model = model,
         expanding_window = config.expanding_window_meta,
         sliding_window_size = config.sliding_window_size_meta,
         retrain_every = config.retrain_every,
@@ -64,16 +64,11 @@ def bet_sizing_with_meta_models(
         level = 'meta',
         output_stats = config.mode == 'training',
         transformations_over_time = transformations_over_time,
-        models_over_time = preloaded_models,
+        model_over_time = preloaded_models,
     )
 
-    # Ensemble predictions if necessary
-    if len(models) > 1:
-        meta_predictions = pd.concat([outcome.predictions for outcome in meta_outcomes], axis = 1).mean(axis = 1).apply(discretize_threeway_threshold(0.5))
-        bet_size = pd.concat([outcome.probabilities[outcome.probabilities.columns[1::2]] for outcome in meta_outcomes], axis = 1).mean(axis = 1)
-    else:
-        meta_predictions = meta_outcomes[0].predictions
-        bet_size = meta_outcomes[0].probabilities.iloc[:,1]
+    meta_predictions = meta_outcome.predictions
+    bet_size = meta_outcome.probabilities.iloc[:,1]
     avg_predictions_with_sizing = input_predictions * meta_predictions * bet_size
 
     if config.mode == 'training':
@@ -89,4 +84,4 @@ def bet_sizing_with_meta_models(
         stats = None
     model_id = "model_" + config.target_asset[1] + "_" + model_suffix
 
-    return BetSizingWithMetaOutcome(model_id, meta_outcomes, transformations_over_time, avg_predictions_with_sizing, stats)
+    return BetSizingWithMetaOutcome(model_id, meta_outcome, transformations_over_time, avg_predictions_with_sizing, stats)

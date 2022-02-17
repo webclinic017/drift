@@ -5,6 +5,8 @@ from models.model_map import get_model
 from data_loader.collections import data_collections
 from labeling.eventfilters_map import eventfilters_map
 from labeling.labellers_map import labellers_map
+from models.sklearn import SKLearnModel
+from sklearn.ensemble import VotingClassifier
 
 def preprocess_config(raw_config: RawConfig) -> Config:
     config_dict = vars(raw_config)
@@ -17,7 +19,6 @@ def preprocess_config(raw_config: RawConfig) -> Config:
     config_dict['no_of_classes'] = 'two'
     config_dict['mode'] = 'training'
     config = Config(**config_dict)
-    validate_config(config)
     return config
 
 def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
@@ -28,10 +29,14 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
         data_dict[key] = flatten([feature_extractor_presets[preset_name] for preset_name in preset_names])
     return data_dict
 
-def __preprocess_model_config(model_config:dict) -> dict:
-    model_config['directional_models'] = [get_model(model_name) for model_name in model_config['directional_models']]
+def __preprocess_model_config(model_config: dict) -> dict:
+    directional_models = [get_model(model_name) for model_name in model_config['directional_models']]
+    model_config.pop('directional_models')
+    model_config['directional_model'] = SKLearnModel(VotingClassifier([(m.name, m)for m in directional_models], voting ='soft'))
     if len(model_config['meta_models']) > 0:
-        model_config['meta_models'] = [get_model(model_name) for model_name in  model_config['meta_models']]
+        meta_models = [get_model(model_name) for model_name in model_config['meta_models']]
+        model_config['meta_model'] = SKLearnModel(VotingClassifier([(m.name, m)for m in meta_models], voting ='soft'))
+    model_config.pop('meta_models')
 
     return model_config
 
@@ -49,16 +54,9 @@ def __preprocess_event_filter_config(data_dict: dict) -> dict:
     data_dict['event_filter'] = eventfilters_map[data_dict['event_filter']]
     return data_dict
 
-def __preprocess_event_labeller_config(data_dict: dict) -> dict:
-    data_dict['labeling'] = labellers_map[data_dict['labeling']]
-    return data_dict
+def __preprocess_event_labeller_config(config_dict: dict) -> dict:
+    config_dict['labeling'] = labellers_map[config_dict['labeling']](config_dict['forecasting_horizon'])
+    return config_dict
     
-
-def validate_config(config: Config):
-    # We need to make sure there's only one output from the pipeline
-    # If meta model is there, we need more than one directional models to train
-    if len(config.meta_models) > 1: assert len(config.directional_models) > 0
-    # If there's no level-2 model, we need to have only one level-1 model
-    if len(config.meta_models) == 0: assert len(config.directional_models) == 1
 
 

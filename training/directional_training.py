@@ -13,12 +13,12 @@ from transformations.scaler import get_scaler
 from transformations.rfe import RFETransformation
 from transformations.pca import PCATransformation
 
-def train_directional_models(
+def train_directional_model(
                 X: pd.DataFrame,
                 y: pd.Series,
                 forward_returns: pd.Series,
                 config: Config,
-                models: list[Model],
+                model: Model,
                 from_index: Optional[pd.Timestamp],
                 preloaded_training_step: Optional[DirectionalTrainingOutcome] = None,
             ) -> DirectionalTrainingOutcome:
@@ -42,12 +42,7 @@ def train_directional_models(
     else:
         transformations_over_time = preloaded_training_step.transformations
 
-    def print_stats(outcome: TrainingOutcome) -> TrainingOutcome:
-        if config.mode == 'training':
-            print(outcome.stats)
-        return outcome
-
-    training_outcomes = [print_stats(train_model(
+    training_outcome = train_model(
         ticker_to_predict = config.target_asset[1],
         X = X,
         y = y,
@@ -55,13 +50,16 @@ def train_directional_models(
         model = model,
         expanding_window = config.expanding_window_base,
         sliding_window_size = config.sliding_window_size_base,
-        retrain_every =  config.retrain_every,
+        retrain_every = config.retrain_every,
         from_index = from_index,
         no_of_classes = config.no_of_classes,
         level = 'primary',
         output_stats= config.mode == 'training',
         transformations_over_time = transformations_over_time,
-        model_over_time = preloaded_training_step.training[index].model_over_time if preloaded_training_step else None
-    )) for index, model in enumerate(models)]
-    return DirectionalTrainingOutcome(training_outcomes, transformations_over_time)
+        model_over_time = preloaded_training_step.training.model_over_time if preloaded_training_step else None
+    )
+    if config.mode == 'training':
+        print(training_outcome.stats)
+
+    return DirectionalTrainingOutcome(training_outcome, transformations_over_time)
 

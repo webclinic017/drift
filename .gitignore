@@ -138,4 +138,4 @@ lightning_logs/
 results.csv
 models/saved/
 
-data/minute_crypto/**
+data/5min_crypto/**

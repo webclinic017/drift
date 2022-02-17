@@ -6,10 +6,8 @@ import numpy as np
 class Model(ABC):
 
     name: str = ""
-    method: Literal["regression", "classification"]
     data_transformation: Literal["transformed", "original"]
     only_column: Optional[str]
-    model_type: Literal['ml', 'static']
     predict_window_size: Literal['single_timestamp', 'window_size']
 
     @abstractmethod
@@ -17,17 +15,10 @@ class Model(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def predict(self, X: np.ndarray) -> tuple[float, np.ndarray]:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
     @abstractmethod
-    def clone(self) -> Model:
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
         raise NotImplementedError
-    
-    @abstractmethod
-    def initialize_network(self, input_dim:int, output_dim:int):
-        pass
 
-
-    
-    

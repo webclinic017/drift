@@ -14,7 +14,7 @@ cache = Cache(".cachedir/data")
 
 
 
-def load_data(**kwargs) -> tuple[XDataFrame, ReturnSeries, ForwardReturnSeries]:
+def load_data(**kwargs) -> tuple[XDataFrame, ReturnSeries]:
     hashed = hash_data_config(kwargs)
     if hashed in cache:
         return cache.get(hashed)
@@ -31,7 +31,7 @@ def __load_data(assets: DataCollection,
             own_features: list[tuple[str, FeatureExtractor, list[int]]],
             other_features: list[tuple[str, FeatureExtractor, list[int]]],
             exogenous_features: list[tuple[str, FeatureExtractor, list[int]]],
-        ) -> tuple[XDataFrame, ReturnSeries, ForwardReturnSeries]:
+        ) -> tuple[XDataFrame, ReturnSeries]:
     """
     Loads asset data from the specified path.
     Returns:
@@ -85,12 +85,8 @@ def __load_data(assets: DataCollection,
     ## Create target 
     returns = df_target_asset_only_returns[target_asset[1] + '_returns']
     returns.index = pd.DatetimeIndex(X.index)
-    forward_returns = __create_target_cum_forward_returns(returns, 1)
-    forward_returns.index = pd.DatetimeIndex(X.index)
-    # we need to null out the last forward returns row, because when doing forward-shifting, we automatically get the first row, which is definitely incorrect
-    forward_returns[forward_returns.index[-1]] = 0.
     
-    return X, returns, forward_returns 
+    return X, returns 
 
 
 @ray.remote
@@ -128,11 +124,6 @@ def __apply_feature_extractors(df: pd.DataFrame, feature_extractors: list[tuple[
             else:
                 assert False, "Feature extractor must return a pd.DataFrame or pd.Series"
     return df
-
-
-def __create_target_cum_forward_returns(series: pd.Series, period: int) -> pd.Series:
-    assert period > 0
-    return series.shift(-period).copy()
 
 
 def load_only_returns(assets: DataCollection, returns: Literal['price', 'returns']) -> pd.DataFrame:
