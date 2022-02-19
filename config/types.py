@@ -28,6 +28,7 @@ class RawConfig(BaseModel):
     event_filter: Literal["none", "cusum_vol", "cusum_fixed"]
     labeling: Literal["two_class", "three_class_balanced", "three_class_imbalanced"]
     forecasting_horizon: int
+    save_models: bool
 
     directional_models: list[str]
     meta_models: list[str]
@@ -50,6 +51,7 @@ class Config:
     labeling: EventLabeller
     forecasting_horizon: int
     no_of_classes: Literal["two", "three-balanced", "three-imbalanced"]
+    save_models: bool
 
     mode: Literal["training", "inference"]
 

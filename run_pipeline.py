@@ -35,7 +35,8 @@ def run_pipeline(
         wandb,
         sweep,
     )
-    save_models(pipeline_outcome, config)
+    if config.save_models:
+        save_models(pipeline_outcome, config)
     return pipeline_outcome, config
 
 
