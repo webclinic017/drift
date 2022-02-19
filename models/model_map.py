@@ -75,6 +75,35 @@ def get_model(model_name: str) -> Model:
         return set_name(
             SKLearnModel(LGBMClassifier(n_jobs=-1, max_depth=20, random_state=1))
         )
+
+    elif model_name == "AutoML":
+        from supervised.automl import AutoML
+
+        return set_name(
+            SKLearnModel(
+                AutoML(
+                    total_time_limit=60,
+                    mode="Compete",
+                    algorithms=[
+                        "Baseline",
+                        "Linear",
+                        "Random Forest",
+                        "Extra Trees",
+                        "LightGBM",
+                        "CatBoost",
+                        "Neural Network",
+                        "Nearest Neighbors",
+                    ],
+                    validation_strategy={
+                        "validation_type": "split",
+                        "train_ratio": 0.75,
+                        "shuffle": False,
+                        "stratify": True
+                    },
+                    eval_metric="f1",
+                )
+            )
+        )
     elif model_name == "StaticMom":
         from models.momentum import StaticMomentumModel
 

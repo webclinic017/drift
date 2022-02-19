@@ -32,6 +32,6 @@ def get_default_config() -> RawConfig:
         event_filter="cusum_fixed",
         labeling="two_class",
         forecasting_horizon=50,
-        save_models=False,
+        save_models=True,
         ensembling_method="voting_soft",
     )

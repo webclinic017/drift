@@ -1,3 +1,4 @@
+from sklearn.model_selection import TimeSeriesSplit
 from .types import Config, RawConfig
 from utils.helpers import flatten
 from feature_extractors.feature_extractor_presets import (
@@ -8,9 +9,11 @@ from data_loader.collections import data_collections
 from labeling.eventfilters_map import eventfilters_map
 from labeling.labellers_map import labellers_map
 from models.sklearn import SKLearnModel
-from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import VotingClassifier, StackingClassifier
 from transformations.retrieve import get_pca, get_rfe, get_scaler
 from copy import deepcopy
+from models.base import Model
+from typing import Literal
 
 
 def preprocess_config(raw_config: RawConfig) -> Config:
@@ -40,11 +43,25 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
 
 
 def __preprocess_model_config(model_config: dict) -> dict:
-    def map_ensembling_method(method: str) -> str:
+    def get_ensemble_model(
+        estimators: list[Model], method: Literal["voting_soft", "stacking"]
+    ) -> Model:
+
         if method == "voting_soft":
-            return "soft"
-        elif method == "voing_hard":
-            return "hard"
+            return SKLearnModel(
+                VotingClassifier(
+                    [(m.name, m) for m in directional_models],
+                    voting="soft",
+                )
+            )
+        elif method == "stacking":
+            return SKLearnModel(
+                StackingClassifier(
+                    [(m.name, m) for m in estimators],
+                    final_estimator=estimators[0],
+                    cv=TimeSeriesSplit(gap=100),
+                )
+            )
         else:
             raise Exception(f"Unknown ensembling method: {method}")
 
@@ -52,22 +69,22 @@ def __preprocess_model_config(model_config: dict) -> dict:
         get_model(model_name) for model_name in model_config["directional_models"]
     ]
     model_config.pop("directional_models")
-    model_config["directional_model"] = SKLearnModel(
-        VotingClassifier(
-            [(m.name, m) for m in directional_models],
-            voting=map_ensembling_method(model_config["ensembling_method"]),
+
+    if len(directional_models) > 1:
+        model_config["directional_model"] = get_ensemble_model(
+            directional_models, method=model_config["ensembling_method"]
         )
-    )
-    if len(model_config["meta_models"]) > 0:
-        meta_models = [
-            get_model(model_name) for model_name in model_config["meta_models"]
-        ]
-        model_config["meta_model"] = SKLearnModel(
-            VotingClassifier(
-                [(m.name, m) for m in meta_models],
-                voting=map_ensembling_method(model_config["ensembling_method"]),
-            )
+    else:
+        model_config["directional_model"] = directional_models[0]
+
+    meta_models = [get_model(model_name) for model_name in model_config["meta_models"]]
+    if len(model_config["meta_models"]) > 1:
+        model_config["meta_model"] = get_ensemble_model(
+            meta_models, method=model_config["ensembling_method"]
         )
+    else:
+        model_config["meta_model"] = meta_models[0]
+
     model_config.pop("meta_models")
     model_config.pop("ensembling_method")
 
