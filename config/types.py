@@ -7,16 +7,13 @@ from feature_extractors.types import FeatureExtractor, ScalerTypes
 from labeling.types import EventFilter, EventLabeller
 from sklearn.base import BaseEstimator
 from dataclasses import dataclass
+from transformations.base import Transformation
 
 # RawConfig is needed to ensure we can declare config presets here with static typing, we then convert it to Config
 class RawConfig(BaseModel):
-    directional_models_meta: bool
-    dimensionality_reduction: bool
+    dimensionality_reduction_ratio: float
     n_features_to_select: int
-    expanding_window_base: bool
-    expanding_window_meta: bool
-    sliding_window_size_base: int
-    sliding_window_size_meta: int
+    sliding_window_size: int
     retrain_every: int
     scaler: Literal["normalize", "minmax", "standardize"]
 
@@ -38,15 +35,8 @@ class RawConfig(BaseModel):
 
 @dataclass
 class Config:
-    directional_models_meta: bool
-    dimensionality_reduction: bool
-    n_features_to_select: int
-    expanding_window_base: bool
-    expanding_window_meta: bool
-    sliding_window_size_base: int
-    sliding_window_size_meta: int
+    sliding_window_size: int
     retrain_every: int
-    scaler: Literal["normalize", "minmax", "standardize"]
 
     assets: DataCollection
     target_asset: DataSource
@@ -65,6 +55,8 @@ class Config:
 
     directional_model: Model
     meta_model: Model
+
+    transformations: list[Transformation]
 
     @validator("directional_model", "meta_model")
     def check_model(cls, v):

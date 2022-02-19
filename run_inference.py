@@ -5,7 +5,6 @@ from reporting.saving import load_models
 from run_pipeline import run_pipeline
 from config.types import Config, RawConfig
 from config.presets import (
-    get_dev_config,
     get_default_ensemble_config,
     get_lightweight_ensemble_config,
 )
@@ -56,24 +55,26 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
 
     # 3. Train directional models
     directional_training_outcome = train_directional_model(
-        X,
-        y,
-        forward_returns,
-        config,
-        config.directional_model,
+        X=X,
+        y=y,
+        forward_returns=forward_returns,
+        config=config,
+        model=config.directional_model,
+        transformations=config.transformations,
         from_index=inference_from,
         preloaded_training_step=pipeline_outcome.directional_training,
     )
 
     # 4. Run bet sizing on primary model's output
     bet_sizing_outcome = bet_sizing_with_meta_model(
-        X,
-        directional_training_outcome.training.predictions,
-        y,
-        forward_returns,
-        config.meta_model,
-        config,
-        "meta",
+        X=X,
+        input_predictions=directional_training_outcome.training.predictions,
+        y=y,
+        forward_returns=forward_returns,
+        model=config.meta_model,
+        transformations=config.transformations,
+        config=config,
+        model_suffix="meta",
         from_index=inference_from,
         transformations_over_time=pipeline_outcome.bet_sizing.meta_transformations,
         preloaded_models=pipeline_outcome.bet_sizing.meta_training.model_over_time,

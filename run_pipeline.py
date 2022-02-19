@@ -81,6 +81,7 @@ def __run_training(config: Config) -> PipelineOutcome:
         forward_returns,
         config,
         config.directional_model,
+        config.transformations,
         from_index=None,
         preloaded_training_step=None,
     )
@@ -92,6 +93,7 @@ def __run_training(config: Config) -> PipelineOutcome:
         y,
         forward_returns,
         config.meta_model,
+        config.transformations,
         config,
         "meta",
         None,

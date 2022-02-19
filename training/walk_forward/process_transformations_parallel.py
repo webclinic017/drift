@@ -13,7 +13,6 @@ def walk_forward_process_transformations(
     X: XDataFrame,
     y: ySeries,
     forward_returns: ForwardReturnSeries,
-    expanding_window: bool,
     window_size: int,
     retrain_every: int,
     from_index: Optional[pd.Timestamp],
@@ -40,7 +39,6 @@ def walk_forward_process_transformations(
             preprocess_transformations_window.remote(
                 X,
                 y,
-                expanding_window,
                 window_size,
                 transformations,
                 first_nonzero_return,
@@ -63,17 +61,12 @@ def walk_forward_process_transformations(
 def preprocess_transformations_window(
     X: XDataFrame,
     y: ySeries,
-    expanding_window: bool,
     window_size: int,
     transformations: list[Transformation],
     first_nonzero_return: int,
     index: int,
 ) -> tuple[list[Transformation], int]:
-    train_window_start = (
-        X.index[first_nonzero_return]
-        if expanding_window
-        else X.index[index - window_size - 1]
-    )
+    train_window_start = X.index[first_nonzero_return]
     train_window_end = X.index[index - 1]
 
     X_expanding_window = X[train_window_start:train_window_end]

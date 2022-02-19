@@ -6,28 +6,20 @@ metric:
   goal: maximize
   name: sharpe
 parameters:
-    directional_models_meta:
-      value: True
     assets:
       value: ['daily_crypto']
     other_assets:
       value: ['daily_etf']
     exogenous_data:
       value: ['daily_glassnode']
-    expanding_window_base:
-      value: True
-    expanding_window_meta:
-      value: True
-    sliding_window_size_base: 
+    sliding_window_size: 
       value: 380
-    sliding_window_size_meta: 
-      values: [250, 300, 380]
       distribution: categorical
     n_features_to_select:
       values: [40, 50, 60]
       distribution: categorical
-    dimensionality_reduction:
-      value: True
+    dimensionality_reduction_ratio:
+      value: 0.5
     retrain_every: 
       value: 20
     scaler:

@@ -11,7 +11,6 @@ def walk_forward_process_transformations(
     X: XDataFrame,
     y: ySeries,
     forward_returns: ForwardReturnSeries,
-    expanding_window: bool,
     window_size: int,
     retrain_every: int,
     from_index: Optional[pd.Timestamp],
@@ -36,11 +35,7 @@ def walk_forward_process_transformations(
     iterations_before_retrain = 0
 
     for index in tqdm(range(train_from, train_till)):
-        train_window_start = (
-            X.index[first_nonzero_return]
-            if expanding_window
-            else X.index[index - window_size - 1]
-        )
+        train_window_start = X.index[first_nonzero_return]
 
         if iterations_before_retrain <= 0 or pd.isna(
             transformations_over_time[0][index - 1]

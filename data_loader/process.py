@@ -20,5 +20,5 @@ def has_enough_samples_to_train(X: XDataFrame, config: Config) -> bool:
     samples_to_train = len(X) - first_valid_index
     return (
         samples_to_train
-        > config.sliding_window_size_base + config.sliding_window_size_meta + 100
+        > (config.sliding_window_size *2) + 100
     )

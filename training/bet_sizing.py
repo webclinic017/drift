@@ -9,9 +9,7 @@ from typing import Optional
 from config.types import Config
 from .types import BetSizingWithMetaOutcome, ModelOverTime, TransformationsOverTime
 from training.walk_forward import walk_forward_process_transformations
-from transformations.scaler import get_scaler
-from transformations.rfe import RFETransformation
-from transformations.pca import PCATransformation
+from transformations.base import Transformation
 
 
 def bet_sizing_with_meta_model(
@@ -20,6 +18,7 @@ def bet_sizing_with_meta_model(
     y: ySeries,
     forward_returns: ForwardReturnSeries,
     model: Model,
+    transformations: list[Transformation],
     config: Config,
     model_suffix: str,
     from_index: Optional[pd.Timestamp],
@@ -44,21 +43,10 @@ def bet_sizing_with_meta_model(
             X=meta_X,
             y=meta_y,
             forward_returns=forward_returns,
-            expanding_window=config.expanding_window_meta,
-            window_size=config.sliding_window_size_meta,
+            window_size=config.sliding_window_size,
             retrain_every=config.retrain_every,
             from_index=from_index,
-            transformations=[
-                get_scaler(config.scaler),
-                PCATransformation(
-                    ratio_components_to_keep=0.5,
-                    sliding_window_size=config.sliding_window_size_meta,
-                ),
-                RFETransformation(
-                    n_feature_to_select=40,
-                    model=default_feature_selector_classification,
-                ),
-            ],
+            transformations=transformations,
         )
 
     meta_outcome = train_model(
@@ -67,8 +55,7 @@ def bet_sizing_with_meta_model(
         y=meta_y,
         forward_returns=forward_returns,
         model=model,
-        expanding_window=config.expanding_window_meta,
-        sliding_window_size=config.sliding_window_size_meta,
+        sliding_window_size=config.sliding_window_size,
         retrain_every=config.retrain_every,
         from_index=from_index,
         no_of_classes="two",

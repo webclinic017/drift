@@ -9,6 +9,7 @@ from labeling.eventfilters_map import eventfilters_map
 from labeling.labellers_map import labellers_map
 from models.sklearn import SKLearnModel
 from sklearn.ensemble import VotingClassifier
+from transformations.retrieve import get_pca, get_rfe, get_scaler
 
 
 def preprocess_config(raw_config: RawConfig) -> Config:
@@ -18,6 +19,7 @@ def preprocess_config(raw_config: RawConfig) -> Config:
     config_dict = __preprocess_data_collections_config(config_dict)
     config_dict = __preprocess_event_filter_config(config_dict)
     config_dict = __preprocess_event_labeller_config(config_dict)
+    config_dict = __preprocess_transformations_config(config_dict)
 
     config_dict["no_of_classes"] = "two"
     config_dict["mode"] = "training"
@@ -88,4 +90,19 @@ def __preprocess_event_labeller_config(config_dict: dict) -> dict:
     config_dict["labeling"] = labellers_map[config_dict["labeling"]](
         config_dict["forecasting_horizon"]
     )
+    return config_dict
+
+
+def __preprocess_transformations_config(config_dict: dict) -> dict:
+    transformations = [
+        get_scaler(config_dict["scaler"]),
+        get_pca(config_dict["dimensionality_reduction_ratio"], config_dict["sliding_window_size"]),
+        get_rfe(config_dict["n_features_to_select"]),
+    ]
+    transformations = [x for x in transformations if x is not None]
+    config_dict["transformations"] = transformations
+    config_dict.pop("scaler")
+    config_dict.pop("dimensionality_reduction_ratio")
+    config_dict.pop("n_features_to_select")
+
     return config_dict
