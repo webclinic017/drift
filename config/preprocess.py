@@ -59,7 +59,7 @@ def __preprocess_model_config(model_config: dict) -> dict:
                 StackingClassifier(
                     [(m.name, m) for m in estimators],
                     final_estimator=estimators[0],
-                    cv=TimeSeriesSplit(gap=100),
+                    cv=5,
                 )
             )
         else:

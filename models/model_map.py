@@ -98,7 +98,7 @@ def get_model(model_name: str) -> Model:
                         "validation_type": "split",
                         "train_ratio": 0.75,
                         "shuffle": False,
-                        "stratify": True
+                        "stratify": True,
                     },
                     eval_metric="f1",
                 )
