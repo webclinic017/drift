@@ -2,7 +2,7 @@ from typing import Optional
 
 from config.types import Config, RawConfig
 from config.preprocess import preprocess_config
-from config.presets import get_default_ensemble_config, get_lightweight_ensemble_config
+from config.presets import get_default_config
 
 from data_loader.load import load_data
 from data_loader.process import check_data
@@ -109,5 +109,5 @@ if __name__ == "__main__":
         project_name="price-prediction",
         with_wandb=False,
         sweep=False,
-        raw_config=get_lightweight_ensemble_config(),
+        raw_config=get_default_config(),
     )

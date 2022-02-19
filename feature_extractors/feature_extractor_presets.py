@@ -22,8 +22,8 @@ __presets = dict(
     debug_future_lookahead=[("debug_future", feature_debug_future_lookahead, [1])],
     single_mom=[("mom", feature_mom, [30])],
     single_vol=[("vol", feature_vol, [30])],
-    mom=[("mom", feature_mom, [10, 20, 30, 60, 90])],
-    vol=[("vol", feature_vol, [10, 20, 30, 60])],
+    mom=[("mom", feature_mom, [100, 300, 600, 900, 1800])],
+    vol=[("vol", feature_vol, [100, 300, 600, 1800])],
     lags_up_to_5=[("lag", feature_lag, [1, 2, 3, 4, 5])],
     lags_up_to_10=[("lag", feature_lag, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])],
     date_all=[
@@ -35,13 +35,13 @@ __presets = dict(
         ("day_of_week", feature_day_of_week, [0]),
         ("day_of_month", feature_day_of_month, [0]),
     ],
-    roc=[("roc", feature_ROC, [10, 30])],
-    rsi=[("rsi", feature_ROC, [10, 30, 100])],
-    stod=[("stod", feature_STOD, [10, 30, 200])],
-    stok=[("stok", feature_STOK, [10, 30, 200])],
-    fracdiff=[("fracdiff", feature_fractional_differentiation, [10, 30])],
-    fracdiff_log=[("fracdiff_log", feature_fractional_differentiation_log, [10, 30])],
-    z_score=[("z_score", feature_expanding_zscore, [10])],
+    roc=[("roc", feature_ROC, [100, 300])],
+    rsi=[("rsi", feature_ROC, [100, 300, 1000])],
+    stod=[("stod", feature_STOD, [100, 300, 2000])],
+    stok=[("stok", feature_STOK, [100, 300, 2000])],
+    fracdiff=[("fracdiff", feature_fractional_differentiation, [100, 300])],
+    fracdiff_log=[("fracdiff_log", feature_fractional_differentiation_log, [100, 300])],
+    z_score=[("z_score", feature_expanding_zscore, [100])],
 )
 
 presets = __presets | dict(

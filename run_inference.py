@@ -4,10 +4,7 @@ from reporting.saving import load_models
 
 from run_pipeline import run_pipeline
 from config.types import Config, RawConfig
-from config.presets import (
-    get_default_ensemble_config,
-    get_lightweight_ensemble_config,
-)
+from config.presets import get_default_config
 from labeling.process import label_data
 import pandas as pd
 
@@ -84,6 +81,4 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
 
 
 if __name__ == "__main__":
-    run_inference(
-        preload_models=True, fallback_raw_config=get_lightweight_ensemble_config()
-    )
+    run_inference(preload_models=True, fallback_raw_config=get_default_config())

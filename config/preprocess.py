@@ -96,7 +96,10 @@ def __preprocess_event_labeller_config(config_dict: dict) -> dict:
 def __preprocess_transformations_config(config_dict: dict) -> dict:
     transformations = [
         get_scaler(config_dict["scaler"]),
-        get_pca(config_dict["dimensionality_reduction_ratio"], config_dict["sliding_window_size"]),
+        get_pca(
+            config_dict["dimensionality_reduction_ratio"],
+            config_dict["sliding_window_size"],
+        ),
         get_rfe(config_dict["n_features_to_select"]),
     ]
     transformations = [x for x in transformations if x is not None]
