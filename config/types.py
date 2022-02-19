@@ -29,6 +29,7 @@ class RawConfig(BaseModel):
     labeling: Literal["two_class", "three_class_balanced", "three_class_imbalanced"]
     forecasting_horizon: int
     save_models: bool
+    ensembling_method: Literal["voting_soft", "voting_hard"]
 
     directional_models: list[str]
     meta_models: list[str]

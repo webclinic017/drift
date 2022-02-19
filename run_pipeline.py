@@ -25,8 +25,8 @@ ray.init()
 def run_pipeline(
     project_name: str, with_wandb: bool, sweep: bool, raw_config: RawConfig
 ) -> tuple[PipelineOutcome, Config]:
-    wandb, config = __setup_config(project_name, with_wandb, sweep, raw_config)
-    pipeline_outcome = __run_training(config)
+    wandb, config = setup_config(project_name, with_wandb, sweep, raw_config)
+    pipeline_outcome = run_training(config)
     report_results(
         pipeline_outcome.directional_training.training.stats,
         pipeline_outcome.get_output_stats(),
@@ -40,7 +40,7 @@ def run_pipeline(
     return pipeline_outcome, config
 
 
-def __setup_config(
+def setup_config(
     project_name: str, with_wandb: bool, sweep: bool, raw_config: RawConfig
 ) -> tuple[Optional[object], Config]:
     wandb = None
@@ -54,7 +54,7 @@ def __setup_config(
     return wandb, config
 
 
-def __run_training(config: Config) -> PipelineOutcome:
+def run_training(config: Config) -> PipelineOutcome:
 
     print("---> Load data, check for validity")
     X, returns = load_data(

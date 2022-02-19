@@ -10,10 +10,11 @@ from labeling.labellers_map import labellers_map
 from models.sklearn import SKLearnModel
 from sklearn.ensemble import VotingClassifier
 from transformations.retrieve import get_pca, get_rfe, get_scaler
+from copy import deepcopy
 
 
 def preprocess_config(raw_config: RawConfig) -> Config:
-    config_dict = vars(raw_config)
+    config_dict = vars(deepcopy(raw_config))
     config_dict = __preprocess_model_config(config_dict)
     config_dict = __preprocess_feature_extractors_config(config_dict)
     config_dict = __preprocess_data_collections_config(config_dict)
@@ -39,21 +40,36 @@ def __preprocess_feature_extractors_config(data_dict: dict) -> dict:
 
 
 def __preprocess_model_config(model_config: dict) -> dict:
+    def map_ensembling_method(method: str) -> str:
+        if method == "voting_soft":
+            return "soft"
+        elif method == "voing_hard":
+            return "hard"
+        else:
+            raise Exception(f"Unknown ensembling method: {method}")
+
     directional_models = [
         get_model(model_name) for model_name in model_config["directional_models"]
     ]
     model_config.pop("directional_models")
     model_config["directional_model"] = SKLearnModel(
-        VotingClassifier([(m.name, m) for m in directional_models], voting="soft")
+        VotingClassifier(
+            [(m.name, m) for m in directional_models],
+            voting=map_ensembling_method(model_config["ensembling_method"]),
+        )
     )
     if len(model_config["meta_models"]) > 0:
         meta_models = [
             get_model(model_name) for model_name in model_config["meta_models"]
         ]
         model_config["meta_model"] = SKLearnModel(
-            VotingClassifier([(m.name, m) for m in meta_models], voting="soft")
+            VotingClassifier(
+                [(m.name, m) for m in meta_models],
+                voting=map_ensembling_method(model_config["ensembling_method"]),
+            )
         )
     model_config.pop("meta_models")
+    model_config.pop("ensembling_method")
 
     return model_config
 

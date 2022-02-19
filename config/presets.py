@@ -33,4 +33,5 @@ def get_default_config() -> RawConfig:
         labeling="two_class",
         forecasting_horizon=50,
         save_models=False,
+        ensembling_method="voting_soft",
     )
