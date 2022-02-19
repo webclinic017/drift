@@ -3,7 +3,7 @@ from typing import Literal, Optional
 from labeling.types import EventFilter
 from models.base import Model
 from data_loader.types import DataCollection, DataSource
-from feature_extractors.types import FeatureExtractor, ScalerTypes
+from feature_extractors.types import FeatureExtractor
 from labeling.types import EventFilter, EventLabeller
 from sklearn.base import BaseEstimator
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ class RawConfig(BaseModel):
     n_features_to_select: int
     sliding_window_size: int
     retrain_every: int
-    scaler: Literal["normalize", "minmax", "standardize"]
+    scaler: Literal["normalize", "minmax", "standardize", "robust"]
 
     assets: list[str]
     target_asset: str

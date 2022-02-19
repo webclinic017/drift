@@ -3,9 +3,9 @@ from .pca import PCATransformation
 from .sklearn import SKLearnTransformation
 from typing import Literal, Optional
 from models.model_map import default_feature_selector_classification
-from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler, RobustScaler
 
-ScalerTypes = Literal["normalize", "minmax", "standardize"]
+ScalerTypes = Literal["normalize", "minmax", "standardize", "robust"]
 
 
 def get_rfe(n_feature_to_select: int) -> Optional[RFETransformation]:
@@ -38,5 +38,9 @@ def get_scaler(type: ScalerTypes) -> SKLearnTransformation:
         return SKLearnTransformation(MinMaxScaler(feature_range=(-1, 1)))
     elif type == "standardize":
         return SKLearnTransformation(StandardScaler())
+    elif type == "robust":
+        return SKLearnTransformation(
+            RobustScaler(with_centering=False, quantile_range=(0.10, 0.90))
+        )
     else:
         raise Exception("Scaler type not supported")

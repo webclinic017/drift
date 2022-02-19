@@ -15,10 +15,10 @@ def get_default_config() -> RawConfig:
 
     return RawConfig(
         dimensionality_reduction_ratio=0.5,
-        n_features_to_select=30,
+        n_features_to_select=50,
         sliding_window_size=3800,
         retrain_every=1000,
-        scaler="minmax",  # 'normalize' 'minmax' 'standardize'
+        scaler="minmax",  # 'normalize' 'minmax' 'standardize' 'robust'
         assets=["fivemin_crypto"],
         target_asset="BTC_USD",
         other_assets=[],
