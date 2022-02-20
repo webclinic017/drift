@@ -4,5 +4,5 @@ from .event_filters.cusum import CUSUMVolatilityEventFilter, CUSUMFixedEventFilt
 eventfilters_map = dict(
     none=NoEventFilter(),
     cusum_vol=CUSUMVolatilityEventFilter(vol_period=20),
-    cusum_fixed=CUSUMFixedEventFilter(threshold=120),
+    cusum_fixed=CUSUMFixedEventFilter(threshold=70),
 )
