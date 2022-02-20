@@ -9,13 +9,17 @@ def transform_to_data_collection(path: str, file_names: list[str]) -> DataCollec
 __daily_etf = ["GLD", "IEF", "QQQ", "SPY", "TLT"]
 
 __5min_crypto = [
-    "BTC_USD",
-    "ETC_USD",
-    "ETH_USD",
-    "LTC_USD",
-    "TRX_USD",
-    "XLM_USD",
-    "XMR_USD",
+    "TRXUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "SOLUSDT",
+    "AVAXUSDT",
+    "DOTUSDT",
+    "ETHUSDT",
+    "LTCUSDT",
+    "BNBUSDT",
+    "BTCUSDT",
+    "ETCUSDT",
 ]
 
 __daily_glassnode = [

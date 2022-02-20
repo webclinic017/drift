@@ -1,3 +1,5 @@
+from re import S
+from shutil import ExecError
 import pandas as pd
 import numpy as np
 from .types import DataSource
@@ -111,9 +113,14 @@ def __load_df(
     returns: Literal["none", "price", "returns", "log_returns"],
     feature_extractors: list[tuple[str, FeatureExtractor, list[int]]],
 ) -> pd.DataFrame:
-    df = pd.read_csv(
-        os.path.join(data_source[0], data_source[1] + ".csv"), header=0, index_col=0
-    ).fillna(0)
+    csv_file = os.path.join(data_source[0], data_source[1] + ".csv")
+    parquet_file = os.path.join(data_source[0], data_source[1] + ".parquet")
+    if os.path.isfile(csv_file):
+        df = pd.read_csv(csv_file, header=0, index_col=0).fillna(0)
+    elif os.path.isfile(parquet_file):
+        df = pd.read_parquet(parquet_file).fillna(0)
+    else:
+        raise Exception("File not found: " + data_source[0] + data_source[1])
 
     if returns == "log_returns":
         df["returns"] = np.log(df["close"]).diff(1)

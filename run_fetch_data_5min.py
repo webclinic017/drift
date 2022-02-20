@@ -1,41 +1,62 @@
-import pandas as pd
-import ssl
-from tqdm import tqdm
-from data_loader.utils import deduplicate_indexes
-from utils.resample import resample_ohlc
+from binance_historical_data import CandleDataDumper
+import datetime
 
-base_url = "https://www.cryptodatadownload.com/cdd/"
+data_dumper = CandleDataDumper(
+    path_dir_where_to_dump="./data/5min_crypto/",
+    str_data_frequency="5m",
+)
 
-exchange_name = "Bitfinex"
-period = "minute"  # 1h
-files_to_download = [
-    exchange_name + "_TRXUSD_" + period + ".csv",
-    exchange_name + "_ETHUSD_" + period + ".csv",
-    exchange_name + "_XLMUSD_" + period + ".csv",
-    exchange_name + "_XMRUSD_" + period + ".csv",
-    exchange_name + "_LTCUSD_" + period + ".csv",
-    exchange_name + "_DASHUSD_" + period + ".csv",
-    exchange_name + "_BTCUSD_" + period + ".csv",
-    exchange_name + "_ETCUSD_" + period + ".csv",
+assets = [
+    "TRXUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "SOLUSDT",
+    "AVAXUSDT",
+    "DOTUSDT",
+    "ETHUSDT",
+    "LTCUSDT",
+    "BNBUSDT",
+    "BTCUSDT",
+    "ETCUSDT",
 ]
 
+data_dumper.dump_data(
+    list_tickers=assets,
+    date_start=datetime.date(2018, 1, 1),
+    date_end=datetime.date(2022, 1, 1),
+    is_to_update_existing=False,
+)
 
-for file in tqdm(files_to_download):
-    data_location = base_url + file
-    ssl._create_default_https_context = ssl._create_unverified_context
-    data = pd.read_csv(data_location, skiprows=1, index_col=1, parse_dates=True).drop(
-        columns=["unix"]
-    )
-    volume_column_to_delete = [
-        c for c in data.columns if c.startswith("Volume") and "USD" not in c
-    ]
-    data.drop(volume_column_to_delete + ["symbol"], axis=1, inplace=True)
-    data.rename({"Volume USD": "volume"}, axis=1, inplace=True)
-    data.index.rename("time", inplace=True)
-    data.sort_index(inplace=True)
-    data = deduplicate_indexes(data)
-    data.index = pd.to_datetime(data.index)
-    data = data.resample("1Min").ffill()
-    data = resample_ohlc(data, "5Min")
-    target_file = file.split("_")[1].replace("USD", "") + "_USD"
-    data.to_csv(f"data/5min_crypto/{target_file}.csv")
+import os
+from tqdm import tqdm
+import pandas as pd
+
+for asset in tqdm(assets):
+    path = f"./data/5min_crypto/{asset}/5m/monthly/"
+    files = os.listdir(path)
+
+    def load_df(path):
+        df = pd.read_csv(
+            path,
+            names=[
+                "timestamp",
+                "open",
+                "low",
+                "high",
+                "close",
+                "volume",
+                "Closetime",
+                "Quote asset volume",
+                "Number of trades",
+                "Taker buy base asset volume",
+                "Taker buy quote asset volume",
+                "Ignore",
+            ],
+        )
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df = df[["timestamp", "open", "high", "low", "close", "volume"]]
+        df.set_index("timestamp", inplace=True)
+        return df
+
+    dfs = pd.concat([load_df(path + file) for file in files], axis=0)
+    dfs.to_parquet(f"./data/5min_crypto/{asset}.parquet")

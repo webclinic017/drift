@@ -35,4 +35,5 @@ dependencies:
     - vectorbt
     - pydantic
     - pandera[mypy]
+    - binance_historical_data
 prefix: /usr/local/anaconda3/envs/quant

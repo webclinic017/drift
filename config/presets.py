@@ -20,7 +20,7 @@ def get_default_config() -> RawConfig:
         retrain_every=1000,
         scaler="minmax",  # 'normalize' 'minmax' 'standardize' 'robust'
         assets=["fivemin_crypto"],
-        target_asset="BTC_USD",
+        target_asset="BTCUSDT",
         other_assets=[],
         exogenous_data=[],
         load_non_target_asset=True,

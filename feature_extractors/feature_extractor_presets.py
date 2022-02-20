@@ -15,7 +15,6 @@ from .feature_extractors import (
 )
 from .fractional_differentiation import (
     feature_fractional_differentiation,
-    feature_fractional_differentiation_log,
 )
 
 __presets = dict(
@@ -40,7 +39,6 @@ __presets = dict(
     stod=[("stod", feature_STOD, [100, 300, 2000])],
     stok=[("stok", feature_STOK, [100, 300, 2000])],
     fracdiff=[("fracdiff", feature_fractional_differentiation, [100, 300])],
-    fracdiff_log=[("fracdiff_log", feature_fractional_differentiation_log, [100, 300])],
     z_score=[("z_score", feature_expanding_zscore, [100])],
 )
 

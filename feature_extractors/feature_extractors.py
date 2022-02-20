@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from feature_extractors.utils import get_close_low_high
-from feature_extractors.utils import apply_log_if_necessary_series
 
 
 def feature_debug_future_lookahead(df: pd.DataFrame, period: int) -> pd.Series:
@@ -51,7 +50,7 @@ def feature_STOK(df: pd.DataFrame, period: int) -> pd.Series:
         (close - low.rolling(period).min())
         / (high.rolling(period).max() - low.rolling(period).min())
     ) * 100
-    return apply_log_if_necessary_series(STOK, "stok")
+    return STOK
 
 
 def feature_STOD(df: pd.DataFrame, period: int) -> pd.Series:
@@ -76,7 +75,7 @@ def feature_RSI(df: pd.DataFrame, period: int) -> pd.Series:
         u.ewm(com=period - 1, adjust=False).mean()
         / d.ewm(com=period - 1, adjust=False).mean()
     )
-    return apply_log_if_necessary_series(100 - 100 / (1 + rs), "rsi")
+    return 100 - 100 / (1 + rs)
 
 
 def feature_ROC(df: pd.DataFrame, period: int) -> pd.Series:
@@ -84,4 +83,4 @@ def feature_ROC(df: pd.DataFrame, period: int) -> pd.Series:
     M = returns.diff(period - 1)
     N = returns.shift(period - 1)
     roc = pd.Series(((M / N) * 100), name="ROC_" + str(period))
-    return apply_log_if_necessary_series(roc, "roc")
+    return roc
