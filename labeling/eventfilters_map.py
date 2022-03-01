@@ -3,6 +3,6 @@ from .event_filters.cusum import CUSUMVolatilityEventFilter, CUSUMFixedEventFilt
 
 eventfilters_map = dict(
     none=NoEventFilter(),
-    cusum_vol=CUSUMVolatilityEventFilter(vol_period=20),
-    cusum_fixed=CUSUMFixedEventFilter(threshold=70),
+    cusum_vol=CUSUMVolatilityEventFilter(vol_period=100, multiplier=3.5),
+    cusum_fixed=CUSUMFixedEventFilter(threshold=20),
 )

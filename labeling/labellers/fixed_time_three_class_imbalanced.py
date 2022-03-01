@@ -1,4 +1,4 @@
-from ..types import EventLabeller, EventsDataFrame, ReturnSeries, ForwardReturnSeries
+from ..types import EventLabeller, EventsDataFrame, ReturnSeries
 import pandas as pd
 from .utils import create_forward_returns
 
@@ -12,7 +12,7 @@ class FixedTimeHorionThreeClassImbalancedEventLabeller(EventLabeller):
 
     def label_events(
         self, event_start_times: pd.DatetimeIndex, returns: ReturnSeries
-    ) -> tuple[EventsDataFrame, ForwardReturnSeries]:
+    ) -> EventsDataFrame:
 
         forward_returns = create_forward_returns(returns, self.time_horizon)
         cutoff_point = returns.index[-self.time_horizon]
@@ -42,15 +42,12 @@ class FixedTimeHorionThreeClassImbalancedEventLabeller(EventLabeller):
                 return 1
 
         labels = event_candidates.map(map_class_threeway)
-
-        return (
-            pd.DataFrame(
-                {
-                    "start": event_start_times,
-                    "end": event_start_times + pd.Timedelta(days=self.time_horizon),
-                    "label": labels,
-                    "returns": forward_returns[event_start_times],
-                }
-            ),
-            forward_returns[event_start_times],
+        events = pd.DataFrame(
+            {
+                "start": event_start_times,
+                "end": event_start_times + pd.Timedelta(minutes=self.time_horizon * 5),
+                "label": labels,
+                "returns": forward_returns[event_start_times],
+            }
         )
+        return events

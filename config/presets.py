@@ -17,7 +17,7 @@ def get_default_config() -> RawConfig:
         dimensionality_reduction_ratio=0.5,
         n_features_to_select=50,
         sliding_window_size=3800,
-        retrain_every=1000,
+        retrain_every=2000,
         scaler="minmax",  # 'normalize' 'minmax' 'standardize' 'robust'
         assets=["fivemin_crypto"],
         target_asset="BTCUSDT",
@@ -29,9 +29,11 @@ def get_default_config() -> RawConfig:
         exogenous_features=[],
         directional_models=classification_models,
         meta_models=meta_models,
-        event_filter="cusum_fixed",
+        event_filter="cusum_vol",
+        remove_overlapping_events=False,
         labeling="two_class",
-        forecasting_horizon=50,
+        forecasting_horizon=10,
+        transaction_costs=0.002,
         save_models=True,
         ensembling_method="voting_soft",
     )

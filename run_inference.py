@@ -45,7 +45,11 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
 
     # 2. Filter for significant events when we want to trade, and label data
     events, X, y, forward_returns = label_data(
-        config.event_filter, config.labeling, X, returns
+        event_filter=config.event_filter,
+        event_labeller=config.labeling,
+        X=X,
+        returns=returns,
+        remove_overlapping_events=config.remove_overlapping_events,
     )
 
     inference_from: pd.Timestamp = X.index[len(X.index) - 1]
@@ -65,7 +69,7 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
     # 4. Run bet sizing on primary model's output
     bet_sizing_outcome = bet_sizing_with_meta_model(
         X=X,
-        input_predictions=directional_training_outcome.training.predictions,
+        input_predictions=directional_training_outcome.predictions,
         y=y,
         forward_returns=forward_returns,
         model=config.meta_model,
@@ -73,7 +77,7 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
         config=config,
         model_suffix="meta",
         from_index=inference_from,
-        transformations_over_time=pipeline_outcome.bet_sizing.meta_transformations,
+        transformations_over_time=pipeline_outcome.bet_sizing.meta_training.transformations,
         preloaded_models=pipeline_outcome.bet_sizing.meta_training.model_over_time,
     )
 

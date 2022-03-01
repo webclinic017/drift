@@ -26,8 +26,10 @@ class RawConfig(BaseModel):
     other_features: list[str]
     exogenous_features: list[str]
     event_filter: Literal["none", "cusum_vol", "cusum_fixed"]
+    remove_overlapping_events: bool
     labeling: Literal["two_class", "three_class_balanced", "three_class_imbalanced"]
     forecasting_horizon: int
+    transaction_costs: float
     save_models: bool
     ensembling_method: Literal["voting_soft", "stacking"]
 
@@ -49,8 +51,10 @@ class Config:
     other_features: list[tuple[str, FeatureExtractor, list[int]]]
     exogenous_features: list[tuple[str, FeatureExtractor, list[int]]]
     event_filter: EventFilter
+    remove_overlapping_events: bool
     labeling: EventLabeller
     forecasting_horizon: int
+    transaction_costs: float
     no_of_classes: Literal["two", "three-balanced", "three-imbalanced"]
     save_models: bool
 

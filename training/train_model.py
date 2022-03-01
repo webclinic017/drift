@@ -7,7 +7,11 @@ from training.walk_forward import (
 )
 from utils.evaluate import evaluate_predictions
 from models.base import Model
-from .types import ModelOverTime, TransformationsOverTime, TrainingOutcome
+from .types import (
+    ModelOverTime,
+    TransformationsOverTime,
+    TrainingOutcomeWithoutTransformations,
+)
 
 
 def train_model(
@@ -24,7 +28,7 @@ def train_model(
     output_stats: bool,
     transformations_over_time: TransformationsOverTime,
     model_over_time: Optional[ModelOverTime],
-) -> TrainingOutcome:
+) -> TrainingOutcomeWithoutTransformations:
 
     if model_over_time is None:
         print("Train model")
@@ -74,4 +78,6 @@ def train_model(
     else:
         stats = None
 
-    return TrainingOutcome(model_id, predictions, probabilities, stats, model_over_time)
+    return TrainingOutcomeWithoutTransformations(
+        model_id, predictions, probabilities, stats, model_over_time
+    )

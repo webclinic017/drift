@@ -28,7 +28,7 @@ def run_pipeline(
     wandb, config = setup_config(project_name, with_wandb, sweep, raw_config)
     pipeline_outcome = run_training(config)
     report_results(
-        pipeline_outcome.directional_training.training.stats,
+        pipeline_outcome.directional_training.stats,
         pipeline_outcome.get_output_stats(),
         pipeline_outcome.get_output_weights(),
         config,
@@ -72,7 +72,11 @@ def run_training(config: Config) -> PipelineOutcome:
 
     print("---> Filter for significant events when we want to trade, and label data")
     events, X, y, forward_returns = label_data(
-        config.event_filter, config.labeling, X, returns
+        event_filter=config.event_filter,
+        event_labeller=config.labeling,
+        X=X,
+        returns=returns,
+        remove_overlapping_events=config.remove_overlapping_events,
     )
 
     print("---> Train directional models")
@@ -90,7 +94,7 @@ def run_training(config: Config) -> PipelineOutcome:
     print("---> Run bet sizing on directional model's output")
     bet_sizing_outcomes = bet_sizing_with_meta_model(
         X,
-        directional_training_outcome.training.predictions,
+        directional_training_outcome.predictions,
         y,
         forward_returns,
         config.meta_model,

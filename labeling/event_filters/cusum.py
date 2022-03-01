@@ -7,12 +7,13 @@ from numba.typed import List
 
 
 class CUSUMVolatilityEventFilter(EventFilter):
-    def __init__(self, vol_period: int):
+    def __init__(self, vol_period: int, multiplier: float):
         self.vol_period = vol_period
+        self.multiplier = multiplier
 
     def get_event_start_times(self, returns: ReturnSeries) -> pd.DatetimeIndex:
 
-        rolling_vol = returns.rolling(self.vol_period).std().mean()
+        rolling_vol = returns.rolling(self.vol_period).std() * self.multiplier
 
         filtered_indices = []
         pos_threshold = 0

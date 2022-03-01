@@ -7,7 +7,12 @@ from models.base import Model
 from models.model_map import default_feature_selector_classification
 from typing import Optional
 from config.types import Config
-from .types import BetSizingWithMetaOutcome, ModelOverTime, TransformationsOverTime
+from .types import (
+    BetSizingWithMetaOutcome,
+    ModelOverTime,
+    TrainingOutcome,
+    TransformationsOverTime,
+)
 from training.walk_forward import walk_forward_process_transformations
 from transformations.base import Transformation
 
@@ -64,6 +69,9 @@ def bet_sizing_with_meta_model(
         transformations_over_time=transformations_over_time,
         model_over_time=preloaded_models,
     )
+    meta_outcome = TrainingOutcome(
+        **vars(meta_outcome), transformations=transformations_over_time
+    )
 
     meta_predictions = meta_outcome.predictions
     bet_size = meta_outcome.probabilities.iloc[:, 1]
@@ -85,7 +93,6 @@ def bet_sizing_with_meta_model(
     return BetSizingWithMetaOutcome(
         model_id,
         meta_outcome,
-        transformations_over_time,
         avg_predictions_with_sizing,
         stats,
     )

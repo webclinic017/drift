@@ -2,7 +2,7 @@ import pandas as pd
 
 from transformations.base import Transformation
 
-from .types import DirectionalTrainingOutcome, TrainingOutcome
+from .types import TrainingOutcome
 from training.train_model import train_model
 from training.walk_forward import walk_forward_process_transformations
 
@@ -19,8 +19,8 @@ def train_directional_model(
     model: Model,
     transformations: list[Transformation],
     from_index: Optional[pd.Timestamp],
-    preloaded_training_step: Optional[DirectionalTrainingOutcome] = None,
-) -> DirectionalTrainingOutcome:
+    preloaded_training_step: Optional[TrainingOutcome] = None,
+) -> TrainingOutcome:
 
     if preloaded_training_step is None:
         print("Preprocess transformations")
@@ -49,11 +49,13 @@ def train_directional_model(
         level="primary",
         output_stats=config.mode == "training",
         transformations_over_time=transformations_over_time,
-        model_over_time=preloaded_training_step.training.model_over_time
+        model_over_time=preloaded_training_step.model_over_time
         if preloaded_training_step
         else None,
     )
     if config.mode == "training":
         print(training_outcome.stats)
 
-    return DirectionalTrainingOutcome(training_outcome, transformations_over_time)
+    return TrainingOutcome(
+        **vars(training_outcome), transformations=transformations_over_time
+    )

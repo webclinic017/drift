@@ -1,5 +1,6 @@
 from .types import EventFilter, EventLabeller, EventsDataFrame
 from data_loader.types import ForwardReturnSeries, XDataFrame, ReturnSeries, ySeries
+from .labellers.utils import purge_overlapping_events
 
 
 def label_data(
@@ -7,6 +8,7 @@ def label_data(
     event_labeller: EventLabeller,
     X: XDataFrame,
     returns: ReturnSeries,
+    remove_overlapping_events: bool,
 ) -> tuple[EventsDataFrame, XDataFrame, ySeries, ForwardReturnSeries]:
 
     event_start_times = event_filter.get_event_start_times(returns)
@@ -16,7 +18,14 @@ def label_data(
         "% of timestamps",
     )
 
-    events, forward_returns = event_labeller.label_events(event_start_times, returns)
+    events = event_labeller.label_events(event_start_times, returns)
+    if remove_overlapping_events:
+        events = purge_overlapping_events(events)
+        print(
+            "| Purged ",
+            (1 - (len(events) / len(event_start_times))) * 100,
+            "% of overlapping events",
+        )
 
     X = X.filter(items=events.index, axis=0)
     y = events["label"]

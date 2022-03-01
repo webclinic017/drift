@@ -25,5 +25,5 @@ class EventLabeller(ABC):
     @abstractmethod
     def label_events(
         self, event_start_times: pd.DatetimeIndex, returns: ReturnSeries
-    ) -> tuple[EventsDataFrame, ForwardReturnSeries]:
+    ) -> EventsDataFrame:
         raise NotImplementedError

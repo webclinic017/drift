@@ -1,9 +1,9 @@
-from binance_historical_data import CandleDataDumper
+from binance_historical_data import BinanceDataDumper
 import datetime
 
-data_dumper = CandleDataDumper(
+data_dumper = BinanceDataDumper(
     path_dir_where_to_dump="./data/5min_crypto/",
-    str_data_frequency="5m",
+    data_frequency="5m",
 )
 
 assets = [
@@ -32,7 +32,7 @@ from tqdm import tqdm
 import pandas as pd
 
 for asset in tqdm(assets):
-    path = f"./data/5min_crypto/{asset}/5m/monthly/"
+    path = f"./data/5min_crypto/spot/monthly/klines/{asset}/5m/"
     files = os.listdir(path)
 
     def load_df(path):
@@ -56,6 +56,7 @@ for asset in tqdm(assets):
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         df = df[["timestamp", "open", "high", "low", "close", "volume"]]
         df.set_index("timestamp", inplace=True)
+        df.sort_index(inplace=True)
         return df
 
     dfs = pd.concat([load_df(path + file) for file in files], axis=0)
