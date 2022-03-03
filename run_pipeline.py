@@ -100,7 +100,6 @@ def run_training(config: Config) -> PipelineOutcome:
         config.meta_model,
         config.transformations,
         config,
-        "meta",
         None,
         None,
         None,

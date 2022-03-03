@@ -2,6 +2,7 @@ from data_loader.types import ReturnSeries
 from ..types import EventLabeller, EventsDataFrame
 import pandas as pd
 from .utils import create_forward_returns
+from typing import Callable
 
 
 class FixedTimeHorionThreeClassBalancedEventLabeller(EventLabeller):
@@ -52,3 +53,9 @@ class FixedTimeHorionThreeClassBalancedEventLabeller(EventLabeller):
             }
         )
         return events
+
+    def get_labels(self) -> list[int]:
+        return [-1, 0, 1]
+
+    def get_discretize_function(self) -> Callable:
+        raise NotImplementedError

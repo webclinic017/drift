@@ -1,6 +1,8 @@
 from ..types import EventLabeller, EventsDataFrame, ReturnSeries
 import pandas as pd
 from .utils import create_forward_returns
+from typing import Callable
+from .utils import discretize_binary
 
 
 class FixedTimeHorionTwoClassEventLabeller(EventLabeller):
@@ -32,3 +34,9 @@ class FixedTimeHorionTwoClassEventLabeller(EventLabeller):
             }
         )
         return events
+
+    def get_labels(self) -> list[int]:
+        return [-1, 1]
+
+    def get_discretize_function(self) -> Callable:
+        return discretize_binary

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import pandera as pa
 from pandera.typing import DataFrame, Series
+from typing import Callable
 
 
 class EventFilter(ABC):
@@ -26,4 +27,10 @@ class EventLabeller(ABC):
     def label_events(
         self, event_start_times: pd.DatetimeIndex, returns: ReturnSeries
     ) -> EventsDataFrame:
+        raise NotImplementedError
+
+    def get_labels(self) -> list[int]:
+        raise NotImplementedError
+
+    def get_discretize_function(self) -> Callable:
         raise NotImplementedError

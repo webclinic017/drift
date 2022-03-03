@@ -5,12 +5,11 @@ from training.walk_forward import (
     walk_forward_inference,
     walk_forward_inference_batched,
 )
-from utils.evaluate import evaluate_predictions
 from models.base import Model
 from .types import (
     ModelOverTime,
     TransformationsOverTime,
-    TrainingOutcomeWithoutTransformations,
+    BaseTrainingOutcome,
 )
 
 
@@ -23,12 +22,17 @@ def train_model(
     sliding_window_size: int,
     retrain_every: int,
     from_index: Optional[pd.Timestamp],
-    no_of_classes: Literal["two", "three-balanced", "three-imbalanced"],
     level: str,
-    output_stats: bool,
     transformations_over_time: TransformationsOverTime,
     model_over_time: Optional[ModelOverTime],
-) -> TrainingOutcomeWithoutTransformations:
+) -> BaseTrainingOutcome:
+
+    levelname = ("_" + level) if level == "meta" else ""
+    model_id = (
+        "model_" + model.name + "_" + ticker_to_predict + levelname
+        if model_over_time is None
+        else model_over_time.name
+    )
 
     if model_over_time is None:
         print("Train model")
@@ -43,12 +47,6 @@ def train_model(
             from_index=from_index,
             transformations_over_time=transformations_over_time,
         )
-
-    levelname = ("_" + level) if level == "meta" else ""
-    if model_over_time is None:
-        model_id = "model_" + model.name + "_" + ticker_to_predict + levelname
-    else:
-        model_id = model_over_time.name
 
     inference_function = (
         walk_forward_inference
@@ -67,17 +65,5 @@ def train_model(
     )
 
     assert len(predictions) == len(y)
-    if output_stats:
-        stats = evaluate_predictions(
-            forward_returns=forward_returns,
-            y_pred=predictions,
-            y_true=y,
-            no_of_classes=no_of_classes,
-            discretize=True,
-        )
-    else:
-        stats = None
 
-    return TrainingOutcomeWithoutTransformations(
-        model_id, predictions, probabilities, stats, model_over_time
-    )
+    return BaseTrainingOutcome(model_id, predictions, probabilities, model_over_time)

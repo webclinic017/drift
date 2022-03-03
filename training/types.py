@@ -12,25 +12,22 @@ TransformationsOverTime = list[pd.Series]
 
 
 @dataclass
-class TrainingOutcomeWithoutTransformations:
+class BaseTrainingOutcome:
     model_id: str
     predictions: PredictionsSeries
     probabilities: ProbabilitiesDataFrame
-    stats: Optional[Stats]
     model_over_time: ModelOverTime
 
 
 @dataclass
-class TrainingOutcome(TrainingOutcomeWithoutTransformations):
+class TrainingOutcome(BaseTrainingOutcome):
     transformations: TransformationsOverTime
+    stats: Optional[Stats]
 
 
 @dataclass
-class BetSizingWithMetaOutcome:
-    model_id: str
-    meta_training: TrainingOutcome
+class BetSizingWithMetaOutcome(TrainingOutcome):
     weights: WeightsSeries
-    stats: Optional[Stats]
 
 
 @dataclass

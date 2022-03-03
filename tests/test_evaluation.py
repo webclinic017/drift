@@ -4,6 +4,7 @@ from training.walk_forward import walk_forward_train, walk_forward_inference
 from models.base import Model
 from utils.evaluate import evaluate_predictions
 from sklearn.base import BaseEstimator, ClassifierMixin
+from labeling.labellers.utils import discretize_binary
 
 no_of_rows = 100
 
@@ -97,8 +98,9 @@ def test_evaluation():
         forward_returns=fake_forward_returns,
         y_pred=processed_predictions_to_match_returns,
         y_true=y,
-        no_of_classes="two",
-        discretize=True,
+        discretize_func=discretize_binary,
+        labels=[1, -1],
+        transaction_costs=0.002,
     )
 
     assert result["accuracy"] == 100.0

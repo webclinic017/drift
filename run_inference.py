@@ -75,10 +75,9 @@ def __inference(config: Config, pipeline_outcome: PipelineOutcome):
         model=config.meta_model,
         transformations=config.transformations,
         config=config,
-        model_suffix="meta",
         from_index=inference_from,
-        transformations_over_time=pipeline_outcome.bet_sizing.meta_training.transformations,
-        preloaded_models=pipeline_outcome.bet_sizing.meta_training.model_over_time,
+        transformations_over_time=pipeline_outcome.bet_sizing.transformations,
+        preloaded_models=pipeline_outcome.bet_sizing.model_over_time,
     )
 
     return PipelineOutcome(directional_training_outcome, bet_sizing_outcome)

@@ -1,20 +1,23 @@
 from data_loader.types import ForwardReturnSeries, XDataFrame, ySeries
-from utils.evaluate import discretize_threeway_threshold, evaluate_predictions
+from utils.evaluate import evaluate_predictions
 from utils.helpers import equal_except_nan
 from .train_model import train_model
 import pandas as pd
 from models.base import Model
-from models.model_map import default_feature_selector_classification
 from typing import Optional
 from config.types import Config
 from .types import (
     BetSizingWithMetaOutcome,
     ModelOverTime,
-    TrainingOutcome,
     TransformationsOverTime,
 )
 from training.walk_forward import walk_forward_process_transformations
 from transformations.base import Transformation
+from labeling.labellers.utils import (
+    discretize_binary_zero_one,
+    discretize_threeway_threshold,
+)
+import pprint
 
 
 def bet_sizing_with_meta_model(
@@ -25,7 +28,6 @@ def bet_sizing_with_meta_model(
     model: Model,
     transformations: list[Transformation],
     config: Config,
-    model_suffix: str,
     from_index: Optional[pd.Timestamp],
     transformations_over_time: Optional[TransformationsOverTime] = None,
     preloaded_models: Optional[ModelOverTime] = None,
@@ -63,14 +65,9 @@ def bet_sizing_with_meta_model(
         sliding_window_size=config.sliding_window_size,
         retrain_every=config.retrain_every,
         from_index=from_index,
-        no_of_classes="two",
         level="meta",
-        output_stats=config.mode == "training",
         transformations_over_time=transformations_over_time,
         model_over_time=preloaded_models,
-    )
-    meta_outcome = TrainingOutcome(
-        **vars(meta_outcome), transformations=transformations_over_time
     )
 
     meta_predictions = meta_outcome.predictions
@@ -78,21 +75,34 @@ def bet_sizing_with_meta_model(
     avg_predictions_with_sizing = input_predictions * meta_predictions * bet_size
 
     if config.mode == "training":
+        pp = pprint.PrettyPrinter(depth=2)
+        meta_stats = evaluate_predictions(
+            forward_returns=forward_returns,
+            y_pred=meta_outcome.predictions,
+            y_true=meta_y,
+            discretize_func=discretize_binary_zero_one,
+            labels=[0, 1],
+            transaction_costs=config.transaction_costs,
+        )
+        pp.pprint(meta_stats)
         stats = evaluate_predictions(
             forward_returns=forward_returns,
             y_pred=avg_predictions_with_sizing,
             y_true=y,
-            no_of_classes="three-balanced",
-            discretize=False,
+            discretize_func=config.labeling.get_discretize_function(),
+            labels=config.labeling.get_labels(),
+            transaction_costs=config.transaction_costs,
         )
-        print(stats)
+        pp.pprint(stats)
     else:
         stats = None
-    model_id = "model_" + config.target_asset[1] + "_" + model_suffix
+    model_id = "model_" + config.target_asset[1] + "_meta"
 
+    outcome_dict = vars(meta_outcome)
+    outcome_dict["model_id"] = model_id
     return BetSizingWithMetaOutcome(
-        model_id,
-        meta_outcome,
-        avg_predictions_with_sizing,
-        stats,
+        **outcome_dict,
+        transformations=transformations_over_time,
+        weights=avg_predictions_with_sizing,
+        stats=stats,
     )
