@@ -1,6 +1,5 @@
 from models.sklearn import SKLearnModel
-from sklearnex.ensemble import RandomForestClassifier
-from sklearnex.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from .base import Model
 
 default_feature_selector_classification = SKLearnModel(
@@ -24,7 +23,7 @@ def get_model(model_name: str) -> Model:
             )
         )
     elif model_name == "LogisticRegression_three_class":
-        from sklearnex.linear_model import LogisticRegression as LogisticRegression_EX
+        from sklearn.linear_model import LogisticRegression as LogisticRegression_EX
 
         return set_name(
             SKLearnModel(

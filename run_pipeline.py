@@ -17,10 +17,6 @@ from training.directional_training import train_directional_model
 from training.bet_sizing import bet_sizing_with_meta_model
 from training.types import PipelineOutcome
 
-import ray
-
-ray.init()
-
 
 def run_pipeline(
     project_name: str, with_wandb: bool, sweep: bool, raw_config: RawConfig

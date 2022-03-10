@@ -7,19 +7,21 @@ channels:
   - ranaroussi
 dependencies:
   - python=3.9
-  - scikit-learn-intelex=2021.4.0
+  - numba=0.53.1
+  - xgboost
+  - scikit-learn
+  - lightgbm
+  - pydantic
+  - seaborn
+  - black
+  - ipython
+  - ipykernel
+  - scipy
+  - pip
   - pip:
     - black
-    - skorch
     - fracdiff
-    - ray
     - diskcache
-    - seaborn
-    - ipython
-    - ipykernel
-    - scipy
-    - scikit-learn
-    - numba
     - matplotlib
     - numpy
     - quantstats
@@ -29,11 +31,8 @@ dependencies:
     - tscv
     - tqdm
     - pandas-ta
-    - xgboost
-    - lightgbm
     - alphalens-reloaded
     - vectorbt
-    - pydantic
     - pandera[mypy]
     - binance_historical_data
 prefix: /usr/local/anaconda3/envs/quant

@@ -7,7 +7,7 @@ from feature_extractors.types import FeatureExtractor
 from utils.helpers import drop_columns_if_exist
 from data_loader.collections import DataCollection
 from typing import Literal
-import ray
+
 import os
 from config.hashing import hash_data_config
 from .types import XDataFrame, ReturnSeries, ForwardReturnSeries
@@ -53,8 +53,8 @@ def __load_data(
     ]
     files = other_files + other_assets
 
-    target_asset_future = [
-        __load_df.remote(
+    target_asset_df = [
+        __load_df(
             data_source=data_source,
             prefix=data_source[1],
             returns="log_returns",
@@ -62,18 +62,16 @@ def __load_data(
         )
         for data_source in target_file
     ]
-    target_asset_df = ray.get(target_asset_future)
 
-    target_asset_only_returns_future = __load_df.remote(
+    df_target_asset_only_returns = __load_df(
         data_source=target_file[0],
         prefix=target_file[0][1],
         returns="returns",
         feature_extractors=[],
     )
-    df_target_asset_only_returns = ray.get(target_asset_only_returns_future)
 
-    asset_futures = [
-        __load_df.remote(
+    asset_dfs = [
+        __load_df(
             data_source=data_source,
             prefix=data_source[1],
             returns="log_returns",
@@ -81,10 +79,9 @@ def __load_data(
         )
         for data_source in files
     ]
-    asset_dfs = ray.get(asset_futures)
 
-    exogenous_futures = [
-        __load_df.remote(
+    exogenous_dfs = [
+        __load_df(
             data_source=data_source,
             prefix=data_source[1],
             returns="none",
@@ -92,7 +89,6 @@ def __load_data(
         )
         for data_source in exogenous_data
     ]
-    exogenous_dfs = ray.get(exogenous_futures)
 
     X = target_asset_df + asset_dfs + exogenous_dfs
     X = pd.concat([df.sort_index().reindex(X[0].index) for df in X], axis=1).fillna(0.0)
@@ -107,7 +103,6 @@ def __load_data(
     return X, returns
 
 
-@ray.remote
 def __load_df(
     data_source: DataSource,
     prefix: str,
@@ -162,7 +157,7 @@ def load_only_returns(
 ) -> pd.DataFrame:
 
     assets_future = [
-        __load_df.remote(
+        __load_df(
             data_source=data_source,
             prefix=data_source[1],
             returns=returns,
@@ -170,7 +165,7 @@ def load_only_returns(
         )
         for data_source in assets
     ]
-    dfs = ray.get(assets_future)
+    dfs = assets_future
 
     dfs = pd.concat(dfs, axis=1)
     dfs.index = pd.DatetimeIndex(dfs.index)

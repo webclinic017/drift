@@ -15,7 +15,6 @@ def save_models(pipeline_outcome: PipelineOutcome, config: Config) -> None:
     date_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
 
     if not os.path.exists("output/models"):
-        warnings.warn("No folder exists, creating one.")
         os.makedirs("output/models")
 
     pickle.dump(dict_for_pickle, open("output/models/{}.p".format(date_string), "wb"))
