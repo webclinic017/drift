@@ -1,9 +1,11 @@
-from .types import Path, FileName, DataSource, DataCollection
-from utils.helpers import flatten
+from typing import Literal
+from .types import DataSource, DataCollection
 
 
-def transform_to_data_collection(path: str, file_names: list[str]) -> DataCollection:
-    return list(zip([path] * len(file_names), file_names))
+def transform_to_data_collection(
+    path: str, file_names: list[str], freq: Literal["5m", "1h", "1d"]
+) -> DataCollection:
+    return [DataSource(path, file_name, freq) for file_name in file_names]
 
 
 __daily_etf = ["GLD", "IEF", "QQQ", "SPY", "TLT"]
@@ -52,9 +54,11 @@ __daily_glassnode = [
 
 
 data_collections = dict(
-    daily_etf=transform_to_data_collection("data/daily_etf", __daily_etf),
-    fivemin_crypto=transform_to_data_collection("data/5min_crypto", __5min_crypto),
+    daily_etf=transform_to_data_collection("data/daily_etf", __daily_etf, "1d"),
+    fivemin_crypto=transform_to_data_collection(
+        "data/5min_crypto", __5min_crypto, "5m"
+    ),
     daily_glassnode=transform_to_data_collection(
-        "data/daily_glassnode", __daily_glassnode
+        "data/daily_glassnode", __daily_glassnode, "1d"
     ),
 )

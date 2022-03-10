@@ -103,7 +103,7 @@ def __preprocess_data_collections_config(data_dict: dict) -> dict:
             [
                 asset
                 for asset in data_dict["assets"]
-                if asset[1] == data_dict["target_asset"]
+                if asset.file_name == data_dict["target_asset"]
             ]
         ),
         None,

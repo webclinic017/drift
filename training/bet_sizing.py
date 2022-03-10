@@ -96,7 +96,7 @@ def bet_sizing_with_meta_model(
         pp.pprint(stats)
     else:
         stats = None
-    model_id = "model_" + config.target_asset[1] + "_meta"
+    model_id = "model_" + config.target_asset.file_name + "_meta"
 
     outcome_dict = vars(meta_outcome)
     outcome_dict["model_id"] = model_id

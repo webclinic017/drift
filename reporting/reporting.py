@@ -18,7 +18,9 @@ def report_results(
     send_report_to_wandb(output_stats, wandb)
     pd.Series(output_stats).to_csv("output/results.csv")
 
-    output_weights.rename(config.target_asset[1]).to_csv("output/predictions.csv")
+    output_weights.rename(config.target_asset.file_name).to_csv(
+        "output/predictions.csv"
+    )
 
     print("\n--------\n")
 

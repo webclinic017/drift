@@ -39,7 +39,7 @@ def train_directional_model(
         transformations_over_time = preloaded_training_step.transformations
 
     training_outcome = train_model(
-        ticker_to_predict=config.target_asset[1],
+        ticker_to_predict=config.target_asset.file_name,
         X=X,
         y=y,
         forward_returns=forward_returns,
