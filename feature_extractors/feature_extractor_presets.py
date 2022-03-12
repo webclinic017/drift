@@ -18,7 +18,9 @@ from .fractional_differentiation import (
 )
 
 __presets = dict(
-    debug_future_lookahead=[("debug_future", feature_debug_future_lookahead, [1])],
+    debug_future_lookahead=[
+        ("debug_future", feature_debug_future_lookahead, [1, 5, 10])
+    ],
     single_mom=[("mom", feature_mom, [30])],
     single_vol=[("vol", feature_vol, [30])],
     mom=[("mom", feature_mom, [100, 300, 600, 900, 1800])],

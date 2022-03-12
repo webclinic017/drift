@@ -6,7 +6,7 @@ from feature_extractors.types import FeatureExtractor
 from utils.helpers import drop_columns_if_exist
 from data_loader.collections import DataCollection
 from typing import Literal, Optional
-from utils.resample import resample_ohlc
+from utils.resample import upsample
 from config.hashing import hash_data_config
 from .types import XDataFrame, ReturnSeries
 from diskcache import Cache
@@ -98,7 +98,6 @@ def __load_data(
     X = pd.concat([df.sort_index().reindex(X[0].index) for df in X], axis=1).fillna(0.0)
 
     X.index = pd.DatetimeIndex(X.index)
-    X.sort_index(inplace=True)
 
     ## Create target
     returns = df_target_asset_only_returns[target_asset.file_name + "_returns"]
@@ -134,8 +133,10 @@ def __load_df(
 
     df = df.replace([np.inf, -np.inf], 0.0)
     df.index = pd.DatetimeIndex(df.index)
+    df.sort_index(inplace=True)
+
     if resample_to_freq is not None and resample_to_freq != data_source.freq:
-        df = resample_ohlc(df, resample_to_freq)
+        df = upsample(df, resample_to_freq)
 
     df = drop_columns_if_exist(df, ["open", "high", "low", "close", "volume"])
 

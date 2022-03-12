@@ -4,7 +4,7 @@ from feature_extractors.utils import get_close_low_high
 
 
 def feature_debug_future_lookahead(df: pd.DataFrame, period: int) -> pd.Series:
-    return df["returns"].shift(-period)
+    return df["returns"].rolling(window=pd.api.indexers.FixedForwardWindowIndexer(window_size=period)).sum()
 
 
 def feature_lag(df: pd.DataFrame, period: int) -> pd.Series:
