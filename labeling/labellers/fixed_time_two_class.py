@@ -18,7 +18,7 @@ class FixedTimeHorionTwoClassEventLabeller(EventLabeller):
 
         forward_returns = create_forward_returns(returns, self.time_horizon)
         cutoff_point = returns.index[-self.time_horizon]
-        event_start_times[event_start_times < cutoff_point]
+        event_start_times = event_start_times[event_start_times < cutoff_point]
         event_candidates = forward_returns[event_start_times]
 
         def get_class_binary(x: float) -> int:

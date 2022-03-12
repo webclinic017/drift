@@ -27,7 +27,7 @@ def label_data(
             "% of overlapping events",
         )
 
-    X = X.filter(items=events.index, axis=0)
+    X = X.loc[events.index]
     y = events["label"]
     forward_returns = events["returns"]
 
