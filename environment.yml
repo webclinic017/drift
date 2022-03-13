@@ -17,22 +17,23 @@ dependencies:
   - ipython
   - ipykernel
   - scipy
+  - tqdm
+  - numpy
+  - pandas
+  - matplotlib
+  - quantstats
+  - pytest
+  - wandb
+  - pandas-ta
   - pip
   - pip:
     - black
     - fracdiff
     - diskcache
-    - matplotlib
-    - numpy
-    - quantstats
-    - pytest
-    - wandb
     - python-dotenv
-    - tscv
-    - tqdm
-    - pandas-ta
-    - alphalens-reloaded
     - vectorbt
     - pandera[mypy]
     - binance_historical_data
+    - alphalens-reloaded
+
 prefix: /usr/local/anaconda3/envs/quant

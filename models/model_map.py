@@ -1,5 +1,5 @@
 from models.sklearn import SKLearnModel
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 from .base import Model
 
 default_feature_selector_classification = SKLearnModel(
@@ -73,6 +73,19 @@ def get_model(model_name: str) -> Model:
 
         return set_name(
             SKLearnModel(LGBMClassifier(n_jobs=-1, max_depth=20, random_state=1))
+        )
+
+    elif model_name == "HyperOpt":
+        from hpsklearn import HyperoptEstimator
+        from hyperopt import tpe
+
+        return set_name(
+            SKLearnModel(
+                HyperoptEstimator(
+                    algo=tpe.suggest,
+                    trial_timeout=300,
+                )
+            )
         )
 
     elif model_name == "AutoML":
