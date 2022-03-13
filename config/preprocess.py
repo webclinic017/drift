@@ -131,7 +131,7 @@ def __preprocess_transformations_config(config_dict: dict) -> dict:
         get_scaler(config_dict["scaler"]),
         get_pca(
             config_dict["dimensionality_reduction_ratio"],
-            config_dict["sliding_window_size"],
+            config_dict["initial_window_size"],
         ),
         get_rfe(config_dict["n_features_to_select"]),
     ]

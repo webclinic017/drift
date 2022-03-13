@@ -19,13 +19,13 @@ def get_rfe(n_feature_to_select: int) -> Optional[RFETransformation]:
 
 
 def get_pca(
-    ratio_components_to_keep: float, sliding_window_size: int
+    ratio_components_to_keep: float, initial_window_size: int
 ) -> Optional[PCATransformation]:
 
     if ratio_components_to_keep > 0:
         return PCATransformation(
             ratio_components_to_keep=ratio_components_to_keep,
-            sliding_window_size=sliding_window_size,
+            initial_window_size=initial_window_size,
         )
     else:
         return None

@@ -12,7 +12,7 @@ parameters:
       value: ['daily_etf']
     exogenous_data:
       value: ['daily_glassnode']
-    sliding_window_size: 
+    initial_window_size: 
       value: 380
       distribution: categorical
     n_features_to_select:

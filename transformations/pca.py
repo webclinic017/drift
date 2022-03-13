@@ -10,15 +10,15 @@ class PCATransformation(Transformation):
 
     pca: PCA
 
-    def __init__(self, ratio_components_to_keep: float, sliding_window_size: int):
+    def __init__(self, ratio_components_to_keep: float, initial_window_size: int):
         self.ratio_components_to_keep = ratio_components_to_keep
-        self.sliding_window_size = sliding_window_size
+        self.initial_window_size = initial_window_size
 
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> None:
         self.pca = PCA(
             n_components=min(
                 int(len(X.columns) * self.ratio_components_to_keep),
-                self.sliding_window_size,
+                self.initial_window_size,
             )
         )
         self.pca.fit(X, y)

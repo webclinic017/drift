@@ -44,7 +44,7 @@ def evaluate_predictions(
     labels: list[int],
     transaction_costs: float,
 ) -> Stats:
-    # ignore the predictions until we see a non-zero returns (and definitely skip the first sliding_window_size)
+    # ignore the predictions until we see a non-zero returns (and definitely skip the first initial_window_size)
     evaluate_from = max(
         get_first_valid_return_index(forward_returns),
         get_first_valid_return_index(y_pred),

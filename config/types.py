@@ -13,7 +13,7 @@ from transformations.base import Transformation
 class RawConfig(BaseModel):
     dimensionality_reduction_ratio: float
     n_features_to_select: int
-    sliding_window_size: int
+    initial_window_size: int
     retrain_every: int
     scaler: Literal["normalize", "minmax", "standardize", "robust"]
 
@@ -39,7 +39,7 @@ class RawConfig(BaseModel):
 
 @dataclass
 class Config:
-    sliding_window_size: int
+    initial_window_size: int
     retrain_every: int
 
     assets: DataCollection
