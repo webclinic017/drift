@@ -1,7 +1,7 @@
 from data_loader.types import ReturnSeries
 from ..types import EventLabeller, EventsDataFrame
 import pandas as pd
-from .utils import create_forward_returns
+from .utils import create_forward_returns, discretize_threeway_threshold
 from typing import Callable
 
 
@@ -58,4 +58,4 @@ class FixedTimeHorionThreeClassBalancedEventLabeller(EventLabeller):
         return [-1, 0, 1]
 
     def get_discretize_function(self) -> Callable:
-        raise NotImplementedError
+        return discretize_threeway_threshold(0.02)

@@ -11,7 +11,6 @@ def report_results(
     output_weights: WeightsSeries,
     config: Config,
     wandb,
-    sweep: bool,
 ):
 
     # Only send the results of the final model to wandb
@@ -44,7 +43,3 @@ def report_results(
         "Mean Probabilistic Sharpe ratio for Level-2 (Ensemble) models: ",
         output_stats["prob_sharpe"],
     )
-
-    if sweep:
-        if wandb.run is not None:
-            wandb.finish()

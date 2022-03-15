@@ -3,9 +3,18 @@ from .pca import PCATransformation
 from .sklearn import SKLearnTransformation
 from typing import Literal, Optional
 from models.model_map import default_feature_selector_classification
-from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler, RobustScaler
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    Normalizer,
+    StandardScaler,
+    RobustScaler,
+    PowerTransformer,
+    QuantileTransformer,
+)
 
-ScalerTypes = Literal["normalize", "minmax", "standardize", "robust"]
+ScalerTypes = Literal[
+    "normalize", "minmax", "standardize", "robust", "box-cox", "quantile"
+]
 
 
 def get_rfe(n_feature_to_select: int) -> Optional[RFETransformation]:
@@ -41,6 +50,14 @@ def get_scaler(type: ScalerTypes) -> SKLearnTransformation:
     elif type == "robust":
         return SKLearnTransformation(
             RobustScaler(with_centering=False, quantile_range=(0.10, 0.90))
+        )
+    elif type == "box-cox":
+        return SKLearnTransformation(
+            PowerTransformer(method="box-cox", standardize=True)
+        )
+    elif type == "quantile":
+        return SKLearnTransformation(
+            QuantileTransformer(n_quantiles=100, output_distribution="normal")
         )
     else:
         raise Exception("Scaler type not supported")

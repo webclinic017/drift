@@ -20,7 +20,6 @@ def run_inference(preload_models: bool, fallback_raw_config: RawConfig):
         pipeline_outcome, config = run_pipeline(
             project_name="price-prediction",
             with_wandb=False,
-            sweep=False,
             raw_config=fallback_raw_config,
         )
 

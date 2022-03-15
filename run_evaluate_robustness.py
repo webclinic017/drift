@@ -8,7 +8,6 @@ for index in range(6):
     _, _, _, _, results_1, predictions_1, _ = run_pipeline(
         project_name="price-prediction",
         with_wandb=False,
-        sweep=False,
         config=get_default_ensemble_config(),
     )
     all_results.append(results_1)

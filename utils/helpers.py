@@ -3,7 +3,7 @@ import numpy as np
 import os
 import string
 import random
-from itertools import dropwhile
+from itertools import chain, combinations, dropwhile
 
 
 def get_files_from_dir(path: str) -> list[str]:
@@ -78,3 +78,8 @@ def drop_until_first_valid_index(
         get_first_valid_return_index(series),
     )
     return df.iloc[first_valid_index:], series.iloc[first_valid_index:]
+
+
+def powerset(input: list) -> list[list]:
+    p_set = list(chain.from_iterable(combinations(input, r) for r in range(len(input) + 1)))  # type: ignore
+    return [list(item) for item in p_set if len(item) > 0]

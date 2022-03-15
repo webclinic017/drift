@@ -1,13 +1,9 @@
-import pandas as pd
 from config.types import RawConfig
 from typing import Optional
-from utils.helpers import weighted_average
 from training.types import Stats
 
 
-def launch_wandb(
-    project_name: str, default_config: RawConfig, sweep: bool = False
-) -> Optional[object]:
+def launch_wandb(project_name: str, default_config: RawConfig) -> Optional[object]:
     from wandb_setup import get_wandb
 
     wandb = get_wandb()
@@ -15,10 +11,6 @@ def launch_wandb(
         raise Exception(
             "Wandb can not be initalized, the environment variable WANDB_API_KEY is missing (can also use .env file)"
         )
-
-    elif sweep:
-        wandb.init(project=project_name, config=vars(default_config))
-        return wandb
     else:
         wandb.init(project=project_name, config=vars(default_config), reinit=True)
         return wandb

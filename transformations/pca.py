@@ -19,7 +19,8 @@ class PCATransformation(Transformation):
             n_components=min(
                 int(len(X.columns) * self.ratio_components_to_keep),
                 self.initial_window_size,
-            )
+            ),
+            # whiten=True,
         )
         self.pca.fit(X, y)
 

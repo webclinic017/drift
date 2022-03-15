@@ -20,10 +20,13 @@ def walk_forward_inference_batched(
     expanding_window: bool,
     window_size: int,
     retrain_every: int,
+    class_labels: list[int],
     from_index: Optional[pd.Timestamp],
 ) -> tuple[PredictionsSeries, ProbabilitiesDataFrame]:
     predictions = pd.Series(index=X.index, dtype="object").rename(model_name)
-    probabilities = pd.DataFrame(index=X.index, columns=["0", "1"])
+    probabilities = pd.DataFrame(
+        index=X.index, columns=[str(label) for label in class_labels]
+    )
 
     inference_from = (
         max(

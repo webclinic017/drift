@@ -25,6 +25,7 @@ dependencies:
   - pytest
   - wandb
   - pandas-ta
+  - optuna
   - pip
   - pip:
     - black

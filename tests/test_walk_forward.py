@@ -80,6 +80,7 @@ def test_walk_forward_train_test():
         expanding_window=False,
         window_size=window_length,
         retrain_every=retrain_every,
+        class_labels=[0, 1],
         from_index=None,
     )
 

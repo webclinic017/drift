@@ -66,6 +66,7 @@ def bet_sizing_with_meta_model(
         retrain_every=config.retrain_every,
         from_index=from_index,
         level="meta",
+        class_labels=[0, 1],
         transformations_over_time=transformations_over_time,
         model_over_time=preloaded_models,
     )

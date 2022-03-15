@@ -1,4 +1,4 @@
-from .types import RawConfig, Config
+from .types import RawConfig
 
 
 def get_default_config() -> RawConfig:
@@ -22,14 +22,15 @@ def get_default_config() -> RawConfig:
         assets=["fivemin_crypto"],
         target_asset="BTCUSDT",
         other_assets=[],
-        exogenous_data=["daily_glassnode"],
+        exogenous_data=[],
         load_non_target_asset=True,
         own_features=["level_2"],
         other_features=["z_score"],
-        exogenous_features=["z_score"],
+        exogenous_features=[],
         directional_models=classification_models,
         meta_models=meta_models,
         event_filter="cusum_vol",
+        event_filter_multiplier=3.5,
         remove_overlapping_events=False,
         labeling="two_class",
         forecasting_horizon=10,

@@ -57,4 +57,4 @@ class FixedTimeHorionThreeClassImbalancedEventLabeller(EventLabeller):
         return [-1, 0, 1]
 
     def get_discretize_function(self) -> Callable:
-        raise NotImplementedError
+        return discretize_threeway_threshold(0.02)

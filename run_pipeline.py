@@ -19,31 +19,28 @@ from training.types import PipelineOutcome
 
 
 def run_pipeline(
-    project_name: str, with_wandb: bool, sweep: bool, raw_config: RawConfig
+    project_name: str, with_wandb: bool, raw_config: RawConfig
 ) -> tuple[PipelineOutcome, Config]:
-    wandb, config = setup_config(project_name, with_wandb, sweep, raw_config)
-    pipeline_outcome = run_training(config)
+    wandb, config = setup_config(project_name, with_wandb, raw_config)
+    outcome = run_training(config)
     report_results(
-        pipeline_outcome.directional_training.stats,
-        pipeline_outcome.get_output_stats(),
-        pipeline_outcome.get_output_weights(),
+        outcome.directional_training.stats,
+        outcome.get_output_stats(),
+        outcome.get_output_weights(),
         config,
         wandb,
-        sweep,
     )
     if config.save_models:
-        save_models(pipeline_outcome, config)
-    return pipeline_outcome, config
+        save_models(outcome, config)
+    return outcome, config
 
 
 def setup_config(
-    project_name: str, with_wandb: bool, sweep: bool, raw_config: RawConfig
+    project_name: str, with_wandb: bool, raw_config: RawConfig
 ) -> tuple[Optional[object], Config]:
     wandb = None
     if with_wandb:
-        wandb = launch_wandb(
-            project_name=project_name, default_config=raw_config, sweep=sweep
-        )
+        wandb = launch_wandb(project_name=project_name, default_config=raw_config)
         raw_config = override_config_with_wandb_values(wandb, raw_config)
     config = preprocess_config(raw_config)
 
@@ -108,6 +105,5 @@ if __name__ == "__main__":
     run_pipeline(
         project_name="price-prediction",
         with_wandb=False,
-        sweep=False,
         raw_config=get_default_config(),
     )

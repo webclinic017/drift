@@ -48,6 +48,7 @@ def train_directional_model(
         retrain_every=config.retrain_every,
         from_index=from_index,
         level="primary",
+        class_labels=config.labeling.get_labels(),
         transformations_over_time=transformations_over_time,
         model_over_time=preloaded_training_step.model_over_time
         if preloaded_training_step

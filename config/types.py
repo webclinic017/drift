@@ -26,6 +26,7 @@ class RawConfig(BaseModel):
     other_features: list[str]
     exogenous_features: list[str]
     event_filter: Literal["none", "cusum_vol", "cusum_fixed"]
+    event_filter_multiplier: float
     remove_overlapping_events: bool
     labeling: Literal["two_class", "three_class_balanced", "three_class_imbalanced"]
     forecasting_horizon: int

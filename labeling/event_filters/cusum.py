@@ -7,7 +7,7 @@ from numba.typed import List
 
 
 class CUSUMVolatilityEventFilter(EventFilter):
-    def __init__(self, vol_period: int, multiplier: float):
+    def __init__(self, multiplier: float, vol_period=100):
         self.vol_period = vol_period
         self.multiplier = multiplier
 
@@ -23,13 +23,14 @@ class CUSUMVolatilityEventFilter(EventFilter):
 
 
 class CUSUMFixedEventFilter(EventFilter):
-    def __init__(self, threshold: float):
-        self.threshold = threshold
+    def __init__(self, threshold_multiplier: float):
+        self.threshold_multiplier = threshold_multiplier
 
     def get_event_start_times(self, returns: ReturnSeries) -> pd.DatetimeIndex:
         diffed_returns = returns.diff()
-        int_indicies = _process_fixed(
-            List(diffed_returns.to_list()), abs(returns.mean()) * self.threshold
+        int_indicies = _process(
+            List(diffed_returns.to_list()),
+            abs(returns.mean()) * self.threshold_multiplier,
         )
 
         return pd.DatetimeIndex([returns.index[i] for i in int_indicies])

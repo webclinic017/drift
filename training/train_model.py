@@ -23,6 +23,7 @@ def train_model(
     retrain_every: int,
     from_index: Optional[pd.Timestamp],
     level: str,
+    class_labels: list[int],
     transformations_over_time: TransformationsOverTime,
     model_over_time: Optional[ModelOverTime],
 ) -> BaseTrainingOutcome:
@@ -61,6 +62,7 @@ def train_model(
         expanding_window=True,
         window_size=initial_window_size,
         retrain_every=retrain_every,
+        class_labels=class_labels,
         from_index=from_index,
     )
 

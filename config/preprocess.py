@@ -1,4 +1,3 @@
-from sklearn.model_selection import TimeSeriesSplit
 from .types import Config, RawConfig
 from utils.helpers import flatten
 from feature_extractors.feature_extractor_presets import (
@@ -114,9 +113,12 @@ def __preprocess_data_collections_config(data_dict: dict) -> dict:
     return data_dict
 
 
-def __preprocess_event_filter_config(data_dict: dict) -> dict:
-    data_dict["event_filter"] = eventfilters_map[data_dict["event_filter"]]
-    return data_dict
+def __preprocess_event_filter_config(config_dict: dict) -> dict:
+    config_dict["event_filter"] = eventfilters_map[config_dict["event_filter"]](
+        config_dict["event_filter_multiplier"]
+    )
+    config_dict.pop("event_filter_multiplier")
+    return config_dict
 
 
 def __preprocess_event_labeller_config(config_dict: dict) -> dict:
