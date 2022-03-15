@@ -33,6 +33,7 @@ def __load_data(
     own_features: list[tuple[str, FeatureExtractor, list[int]]],
     other_features: list[tuple[str, FeatureExtractor, list[int]]],
     exogenous_features: list[tuple[str, FeatureExtractor, list[int]]],
+    start_date: Optional[str],
 ) -> tuple[XDataFrame, ReturnSeries]:
     """
     Loads asset data from the specified path.
@@ -98,6 +99,9 @@ def __load_data(
     X = pd.concat([df.reindex(X[0].index) for df in X], axis=1).fillna(0.0)
 
     X.index = pd.DatetimeIndex(X.index)
+    if start_date is not None:
+        X = X[start_date:]
+        df_target_asset_only_returns = df_target_asset_only_returns[start_date:]
 
     ## Create target
     returns = df_target_asset_only_returns[target_asset.file_name + "_returns"]

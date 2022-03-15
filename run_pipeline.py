@@ -59,6 +59,7 @@ def run_training(config: Config) -> PipelineOutcome:
         own_features=config.own_features,
         other_features=config.other_features,
         exogenous_features=config.exogenous_features,
+        start_date=config.start_date,
     )
 
     assert check_data(X, config) == True, "Data is not valid."

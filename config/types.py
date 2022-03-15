@@ -11,6 +11,7 @@ from transformations.base import Transformation
 
 # RawConfig is needed to ensure we can declare config presets here with static typing, we then convert it to Config
 class RawConfig(BaseModel):
+    start_date: Optional[str]
     dimensionality_reduction_ratio: float
     n_features_to_select: int
     initial_window_size: int
@@ -40,9 +41,9 @@ class RawConfig(BaseModel):
 
 @dataclass
 class Config:
+    start_date: Optional[str]
     initial_window_size: int
     retrain_every: int
-
     assets: DataCollection
     target_asset: DataSource
     other_assets: DataCollection

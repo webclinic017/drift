@@ -14,6 +14,7 @@ def get_default_config() -> RawConfig:
     meta_models = ["LogisticRegression_two_class", "LGBM"]
 
     return RawConfig(
+        start_date=None,
         dimensionality_reduction_ratio=0.5,
         n_features_to_select=50,
         initial_window_size=3800,
