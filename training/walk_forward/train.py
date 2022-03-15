@@ -13,7 +13,6 @@ def walk_forward_train(
     X: XDataFrame,
     y: ySeries,
     forward_returns: ForwardReturnSeries,
-    expanding_window: bool,
     window_size: int,
     retrain_every: int,
     from_index: Optional[pd.Timestamp],
@@ -40,11 +39,7 @@ def walk_forward_train(
         transformations_over_time = []
 
     for index in tqdm(range(train_from, train_till, retrain_every)):
-        train_window_start = (
-            X.index[first_nonzero_return]
-            if expanding_window
-            else X.index[index - window_size - 1]
-        )
+        train_window_start = X.index[first_nonzero_return]
 
         train_window_end = X.index[index - 1]
         current_transformations = [

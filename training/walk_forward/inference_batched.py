@@ -57,8 +57,6 @@ def walk_forward_inference_batched(
             X,
             model_over_time,
             transformations_over_time,
-            expanding_window,
-            window_size,
         )
         for index in tqdm(batch_indices)
     ]
@@ -76,8 +74,6 @@ def __inference_from_window(
     X: XDataFrame,
     model_over_time: ModelOverTime,
     transformations_over_time: TransformationsOverTime,
-    expanding_window: bool,
-    window_size: int,
 ) -> list[tuple[int, float, pd.Series]]:
     current_model = model_over_time[X.index[index_start]]
     current_transformations = [

@@ -42,7 +42,6 @@ def train_model(
             X=X,
             y=y,
             forward_returns=forward_returns,
-            expanding_window=True,
             window_size=initial_window_size,
             retrain_every=retrain_every,
             from_index=from_index,

@@ -39,7 +39,6 @@ def walk_forward_process_transformations(
             preprocess_transformations_window.remote(
                 X,
                 y,
-                window_size,
                 transformations,
                 first_nonzero_return,
                 index,
@@ -61,7 +60,6 @@ def walk_forward_process_transformations(
 def preprocess_transformations_window(
     X: XDataFrame,
     y: ySeries,
-    window_size: int,
     transformations: list[Transformation],
     first_nonzero_return: int,
     index: int,

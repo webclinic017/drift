@@ -46,15 +46,14 @@ class EvenOddStubModel(BaseEstimator, ClassifierMixin, Model):
         self.window_length = window_length
 
     def fit(self, X, y):
-        assert len(X) == self.window_length
         for i in range(len(X)):
             assert y[i] == -1 if X[i][0] == 1 else 1
 
     def predict(self, X):
-        return np.array([-1 if row[0] == 1 else 1 for row in X])
+        return np.array([-1 if row[-1] == 1 else 1 for row in X])
 
     def predict_proba(self, X):
-        return np.array([[row[0] + 1, 0] for row in X])
+        return np.array([[row[-1] + 1, 0] for row in X])
 
 
 def test_evaluation():
@@ -70,7 +69,6 @@ def test_evaluation():
         X=X,
         y=y,
         forward_returns=y,
-        expanding_window=False,
         window_size=window_length,
         retrain_every=retrain_every,
         from_index=None,
