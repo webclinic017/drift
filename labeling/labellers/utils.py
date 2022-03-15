@@ -8,9 +8,7 @@ import numpy as np
 def create_forward_returns(series: pd.Series, period: int) -> ForwardReturnSeries:
     assert period > 0
     indexer = pd.api.indexers.FixedForwardWindowIndexer(window_size=period)
-
-    forward_returns = series.rolling(window=indexer).sum()
-    return forward_returns
+    return series.rolling(window=indexer).sum().shift(-1)
 
 
 def purge_overlapping_events(events: EventsDataFrame) -> EventsDataFrame:

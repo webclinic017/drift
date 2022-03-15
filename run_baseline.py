@@ -1,6 +1,3 @@
-from re import S
-from typing import Optional
-
 from sklearn.model_selection import train_test_split
 
 from config.types import Config, RawConfig
@@ -65,5 +62,5 @@ def run_sklearn_training(config: Config):
 
 if __name__ == "__main__":
     run_sklearn_pipeline(
-        raw_config=get_minimal_config(),
+        raw_config=get_default_config(),
     )
