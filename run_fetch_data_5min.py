@@ -60,4 +60,5 @@ for asset in tqdm(assets):
         return df
 
     dfs = pd.concat([load_df(path + file) for file in files], axis=0)
+    dfs.sort_index(inplace=True)
     dfs.to_parquet(f"./data/5min_crypto/{asset}.parquet")

@@ -95,7 +95,7 @@ def __load_data(
     ]
 
     X = target_asset_df + asset_dfs + exogenous_dfs
-    X = pd.concat([df.sort_index().reindex(X[0].index) for df in X], axis=1).fillna(0.0)
+    X = pd.concat([df.reindex(X[0].index) for df in X], axis=1).fillna(0.0)
 
     X.index = pd.DatetimeIndex(X.index)
 
