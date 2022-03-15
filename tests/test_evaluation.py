@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from training.walk_forward import walk_forward_train, walk_forward_inference
+from training.walk_forward import walk_forward_train, walk_forward_inference_batched
 from models.base import Model
 from utils.evaluate import evaluate_predictions
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -74,7 +74,7 @@ def test_evaluation():
         from_index=None,
         transformations_over_time=[],
     )
-    predictions, _ = walk_forward_inference(
+    predictions, _ = walk_forward_inference_batched(
         model_name="test",
         model_over_time=model_over_time,
         transformations_over_time=[],
