@@ -11,20 +11,20 @@ from config.hashing import hash_data_config
 from .types import XDataFrame, ReturnSeries
 from diskcache import Cache
 
-cache = Cache(".cachedir/data")
+# cache = Cache(".cachedir/data")
 
 
-def load_data(**kwargs) -> tuple[XDataFrame, ReturnSeries]:
-    hashed = hash_data_config(kwargs)
-    if hashed in cache:
-        return cache.get(hashed)
-    else:
-        return_value = __load_data(**kwargs)
-        cache[hashed] = return_value
-        return return_value
+# def load_data(**kwargs) -> tuple[XDataFrame, ReturnSeries]:
+#     hashed = hash_data_config(kwargs)
+#     if hashed in cache:
+#         return cache.get(hashed)
+#     else:
+#         return_value = __load_data(**kwargs)
+#         cache[hashed] = return_value
+#         return return_value
 
 
-def __load_data(
+def load_data(
     assets: DataCollection,
     other_assets: DataCollection,
     exogenous_data: DataCollection,

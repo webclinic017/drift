@@ -54,6 +54,7 @@ def get_minimal_config() -> RawConfig:
     meta_models = ["LogisticRegression_two_class", "LGBM"]
 
     return RawConfig(
+        start_date="2021-01-01",
         dimensionality_reduction_ratio=0,
         n_features_to_select=0,
         initial_window_size=3800,
@@ -71,7 +72,7 @@ def get_minimal_config() -> RawConfig:
         meta_models=meta_models,
         event_filter="none",
         event_filter_multiplier=3.5,
-        remove_overlapping_events=True,
+        remove_overlapping_events=False,
         labeling="two_class",
         forecasting_horizon=10,
         transaction_costs=0.002,

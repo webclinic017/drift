@@ -20,7 +20,6 @@ def hash_data_config(data_config: dict) -> str:
                 data_config["target_asset"].path
                 + data_config["target_asset"].file_name,
                 data_config["load_non_target_asset"],
-                data_config["start_date"],
                 hash_feature_extractors(data_config["own_features"]),
                 hash_feature_extractors(data_config["other_features"]),
                 hash_feature_extractors(data_config["exogenous_features"]),
